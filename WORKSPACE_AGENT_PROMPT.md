@@ -112,7 +112,7 @@ Das Projekt verwendet **kein min-devkit Framework** mehr. Stattdessen wird ein r
    cmake -B build -G "Visual Studio 18 2026" -A x64
    cmake --build build --config Debug
    ```
-3. **Result:** Compiled `mab_tilde.mxe64` will be in `build/Debug/`
+3. **Result:** Compiled `mab~.mxe64` will be in `build/Debug/`
 
 ### VS Code Tasks:
 - **Build Debug**: Configure and build Debug configuration
@@ -130,6 +130,9 @@ Das Projekt verwendet **kein min-devkit Framework** mehr. Stattdessen wird ein r
 - **Unknown CMake command "min_project"**: Nicht mehr relevant – kein min-devkit mehr
 - **Compiler-Fehler (CLASS_NOFLOAT, std::wstring)**: Verwende `0L` statt `CLASS_NOFLOAT`, `t_symbol*` statt `std::wstring`
 - **MSVC 2026 (VS 18)**: Generator `"Visual Studio 18 2026"` verwenden, nicht VS 17
+- **undefined ext_main**: Verwende `__declspec(dllexport)` für MSVC, alle Callbacks in `extern "C"` Block
+- **Objekt wird rot**: Dateiname muss `mab~.mxe64` heißen (OUTPUT_NAME "mab~" in CMakeLists.txt)
+- **Crash in mab_tilde_new**: Verwende `long` statt `std::atomic<bool>` in C-Struct (object_alloc = malloc)
 
 ---
 
