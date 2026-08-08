@@ -14,6 +14,9 @@ include("${CMAKE_CURRENT_LIST_DIR}/git-rev.cmake")
 
 set(ADD_VERINFO YES)
 
+# Set default version
+set(PACKAGE_VERSION "${GIT_VERSION_MAJ}.${GIT_VERSION_MIN}.${GIT_VERSION_SUB}")
+
 # Update package-info.json, if present
 if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/package-info.json.in")
 	set(C74_PACKAGE_NAME "${THIS_FOLDER_NAME}")
@@ -77,9 +80,8 @@ MACRO(SUBDIRLIST result curdir)
   SET(dirlist "")
   FOREACH(child ${children})
     IF(IS_DIRECTORY ${curdir}/${child})
-        LIST(APPEND dirlist ${child})
+      LIST(APPEND dirlist ${child})
     ENDIF()
   ENDFOREACH()
   SET(${result} ${dirlist})
 ENDMACRO()
-

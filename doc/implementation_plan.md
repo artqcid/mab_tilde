@@ -13,59 +13,74 @@ Create a crash‑safe, process‑isolated MaxMSP external (`mab~`, `mc.mab~`) an
 
 ---
 
-## 2. Critical Architecture Additions (Real-Time Safety & IPC)
+## 2. First Debug Test Milestone
 
-### 2.1 Asynchronous Initialization (Preventing Max Freezes)
-- **Rule:** Do *not* block the Max main thread during object instantiation (`new`) while Python and PyTorch load.
-- **Implementation:** Spawn the Python process and wait for initialization inside a detached C++ background thread. The external starts in a safe "bypassed/muted" state and seamlessly enables itself once the shared memory and backend are fully active.
-- **Key Changes:**
-  - `mab_tilde_new()` returns immediately after launching the background thread
-  - Background thread handles Python process creation and initialization
-  - Audio processing remains in bypass mode until `is_ready` flag is set atomically
-  - Use `std::thread` with `std::async` or `_beginthreadex` for detached execution
+### Goal: First successful test in Max MSP
+The external must be recognized by Max, load without errors, communicate with Python, and terminate cleanly.
 
-### 2.2 Strict Real-Time Safety (No OS Locks in Audio Thread)
-- **Rule:** Never use blocking OS synchronization primitives (e.g., `WaitForSingleObject`, mutexes) inside the Max audio callback (`dsp64`).
-- **Implementation:** Synchronization must rely *exclusively* on lock-free SPSC ring buffers and atomic indices (`std::atomic`) with non-blocking poll mechanisms. Any blocking call in the audio thread causes immediate audio dropouts/cracking.
-- **Key Changes:**
-  - Replace `WaitForSingleObject` with `std::atomic<bool>` flags for ready/processed state
-  - Use lock-free ring buffer for control messages (already using `moodycamel::ConcurrentQueue`)
-  - Implement non-blocking poll in `dsp64` callback: check `is_input_ready.load()` and `is_output_ready.load()`
-  - Audio thread copies data if ready, otherwise passes through (bypass mode)
+### Success Criteria for First Test:
+- [ ] **External recognized by Max**: No errors when loading the package
+- [ ] **mab~ object loads**: `[mab~]` can be instantiated in a patch
+- [ ] **Python server starts**: Background process launches successfully
+- [ ] **Initial handshake**: C++ and Python exchange shared memory names
+- [ ] **Shared memory mapped**: Both sides can read/write audio buffers
+- [ ] **Python signals ready**: `is_python_ready` flag set to true
+- [ ] **C++ detects ready**: `is_ready` flag becomes true
+- [ ] **Clean shutdown**: Object deletion terminates Python process cleanly
 
-### 2.3 Shared Memory Handshake & Lifecycle
-- **Rule:** Enforce a strict creation order to prevent race conditions.
-- **Implementation:** Python boots, loads the `.ts` model, extracts required parameters (exact block size, channel count), creates the Windows Shared Memory (Memory-Mapped File) dynamically, and notifies C++ to attach. C++ must only attempt to map the memory *after* Python has initialized it.
-- **Key Changes:**
-  - Python creates shared memory segments named with a unique ID
-  - Python writes block size and channel count to a header in shared memory
-  - C++ polls for Python's "ready" signal via atomic flag or named event
-  - C++ maps the already-created shared memory (no CreateFileMapping)
-  - Use `OpenFileMappingW` instead of `CreateFileMappingW` in C++
-
-### 2.4 Multi-Channel Memory Layout (`mc.mab~`)
-- **Rule:** Standardize the raw data layout in shared memory for zero-copy efficiency.
-- **Implementation:** Use a contiguous layout (e.g., shape `[num_channels, block_size]`) so Python can wrap it directly into a NumPy array and PyTorch tensor via `torch.from_numpy()` without expensive memory-copy overhead.
-- **Key Changes:**
-  - Shared memory layout: `[num_channels * block_size]` contiguous float array
-  - Python creates tensor with `torch.from_numpy(np_array.reshape(num_channels, block_size))`
-  - C++ provides channel count via handshake protocol
-  - Support up to 16 channels (Max `mc.` convention)
+### Test Procedure:
+1. Build Debug: `cmake --build build --config Debug`
+2. Copy `mab_tilde.mxf` to Max Packages folder
+3. Open Max, create patch with `[mab~ test.ts forward 2048]`
+4. Verify no errors in Max console
+5. Turn DSP on, verify audio passes through
+6. Delete object, verify clean shutdown
 
 ---
 
-## 3. Phase‑Based Implementation Roadmap
+## 3. Critical Architecture Requirements
 
-| Phase | Goal | Key Deliverables | Estimated Effort |
-|------|------|------------------|------------------|
-| **0️⃣ Setup** | Workspace preparation | `WORKSPACE_AGENT_PROMPT.md`, `doc/` folder, `requirements.txt`, `setup_env.bat`, skeleton files | 0.5 day |
-| **1️⃣ Core C++ External** | Build `mab~` / `mc.mab~` objects | `source/projects/mab_tilde/mab_tilde.cpp` (async init, lock-free dsp, handshake protocol) | 2.5 days |
-| **2️⃣ Python Backend** | Implement `inference_worker.py` | Model loading, CPU/GPU switching, shared memory creation, inference loop, control queue, `dump`/`reload`/`set` handling | 2.5 days |
-| **3️⃣ IPC & Synchronization** | Verify lock‑free ring buffer & shared‑memory alignment | End‑to‑end test of block transfer, no audio dropouts | 1.5 days |
-| **4️⃣ Feature Completeness** | Implement all Max messages & attributes | `enable`, `gpu`, `reload`, `dump`, `set`, `get`, `method`, `load`, `print_available_models`, `download`, `delete` | 2 days |
-| **5️⃣ Testing & Debug** | Unit & integration testing on Windows | Test scripts, valgrind/ASAN checks, performance profiling | 1.5 days |
-| **6️⃣ Documentation & Polish** | Update docs, create user guide, versioning | `doc/` folder with full API reference, checklist sign‑off | 0.5 day |
-| **7️⃣ Release Prep** | Package for distribution | CMake integration, installer scripts, licensing | 0.5 day |
+### 3.1 Asynchronous Background Initialization (Non-Blocking Startup)
+- **Rule:** Never block the Max main thread during object creation (`new`) while Python boots and PyTorch loads the `.ts` model.
+- **Implementation:** 
+  - Instantiation must immediately return. 
+  - Spawn the Python background process and perform model loading inside a **detached C++ background thread**.
+  - The object starts in a safe **Bypass/Muted state**. 
+  - Once the background thread confirms the shared memory and backend are fully initialized, it atomically flips a flag to transition the object into active mode.
+
+### 3.2 State Management: Bypass, `enable 0`, and DSP Toggling
+- **Rule:** Never terminate or restart the Python process on `enable 0`, `bypass`, or when Max's global DSP is switched off. Restarting PyTorch takes seconds; state changes must be instantaneous.
+- **Implementation:**
+  - **`enable 0` / Bypass:** The C++ audio callback (`dsp64`) continues to run smoothly, but skips writing to the ring buffer, routing audio directly to the output (or silence). The Python process remains alive and waiting in a low-cpu poll state.
+  - **DSP Off in Max:** Max stops calling `dsp64`. Python remains passively waiting. Data flow resumes instantly when DSP is turned back on.
+
+### 3.3 Clean Shutdown & Destructor Logic
+- **Rule:** Prevent zombie processes, dangling shared memory, and kernel leaks when the Max patch is closed or the object is deleted.
+- **Implementation:**
+  - In the C++ destructor (`~mab_tilde`):
+    1. Send a clean shutdown signal/flag via the control ring buffer to Python.
+    2. Wait briefly (max 500ms) for Python to exit gracefully.
+    3. If it doesn't respond, forcefully terminate the background process using its process handle.
+    4. Unmap Windows memory-mapped files and close all shared handles cleanly.
+
+### 3.4 Crash Recovery & Monitoring
+- **Rule:** If the Python worker crashes (e.g., due to a PyTorch OOM error), MaxMSP must survive completely unhindered.
+- **Implementation:**
+  - C++ must monitor the background process handle.
+  - If the Python process dies unexpectedly, C++ instantly falls back to a safe **Bypass-Mode** and outputs a clear error message to the Max Console (e.g., `mab~: Python worker crashed. Check VRAM!`).
+  - The user can fix the issue and use the `reload` command to restart the worker without restarting Max.
+
+### 3.5 Real-Time Safety (No OS Locks in Audio Thread)
+- **Rule:** Never use blocking OS synchronization primitives (e.g., `WaitForSingleObject`, mutexes) inside the Max audio callback (`dsp64`).
+- **Implementation:** Synchronization must rely *exclusively* on lock-free SPSC ring buffers and atomic indices (`std::atomic`) with non-blocking poll mechanisms.
+
+### 3.6 Shared Memory Handshake & Lifecycle
+- **Rule:** Enforce a strict creation order to prevent race conditions.
+- **Implementation:** Python boots, loads the `.ts` model, extracts required parameters (exact block size, channel count), creates the Windows Shared Memory (Memory-Mapped File) dynamically, and notifies C++ to attach. C++ must only attempt to map the memory *after* Python has initialized it.
+
+### 3.7 Multi-Channel Memory Layout (`mc.mab~`)
+- **Rule:** Standardize the raw data layout in shared memory for zero-copy efficiency.
+- **Implementation:** Use a contiguous layout (e.g., shape `[num_channels, block_size]`) so Python can wrap it directly into a NumPy array and PyTorch tensor via `torch.from_numpy()` without expensive memory-copy overhead.
 
 ---
 
@@ -78,6 +93,9 @@ Create a crash‑safe, process‑isolated MaxMSP external (`mab~`, `mc.mab~`) an
 - [x] Create `requirements.txt` with minimal dependencies (`torch>=2.0.0`, `numpy>=1.20.0`).
 - [x] Create `setup_env.bat` to bootstrap the virtual environment and install dependencies.
 - [x] Update `mab_tilde.cpp` for smart Python path resolution (detect `.venv` or `env` in package folder).
+- [x] **Native Max SDK Build**: Migriert von min-devkit-Framework zu reinem nativen Max SDK (ext.h, z_dsp.h). Siehe `doc/toolchain.md`.
+- [x] **Build-System**: Root `CMakeLists.txt` verwendet `add_library(mab_tilde MODULE ...)` mit direkten SDK-Include-Pfaden und `MaxAPI.lib`/`MaxAudio.lib` Import Libraries.
+- [x] **Build verifiziert**: `mab_tilde.mxe64` (55.296 Bytes) erfolgreich gebaut mit VS 2026 / MSVC 19.51.
 
 ### Phase 1 – Core C++ External (with Critical Architecture)
 
@@ -189,52 +207,6 @@ Create a crash‑safe, process‑isolated MaxMSP external (`mab~`, `mc.mab~`) an
 
 #### 2.9 Graceful Exit
 - [x] Monitor global `running` flag to break loop and exit.
-
-### Phase 3 – IPC & Synchronization
-- [ ] **Block Alignment Test**
-  - [ ] Verify input buffer size matches model's required block size.
-  - [ ] Confirm output buffer is written with same length.
-- [ ] **Handshake Verification**
-  - [ ] Test Python creates shared memory before C++ maps it
-  - [ ] Verify no race conditions in initialization
-- [ ] **Latency & Drop‑out Check**
-  - [ ] Measure end‑to‑end latency; ensure no audio buffer underruns.
-- [ ] **Lock‑Free Correctness**
-  - [ ] Stress test with high message rate; verify no lost messages.
-
-### Phase 4 – Feature Completeness
-- [ ] Implement `enable` toggle (bypass vs. active).
-- [ ] Implement `gpu` switch (CPU ↔ CUDA).
-- [ ] Implement `reload` (re‑initialize model safely).
-- [ ] Implement `dump` (full model info printed to Max console).
-- [ ] Implement `set` for arbitrary attributes (type‑aware conversion).
-- [ ] Implement `get` to query attribute values.
-- [ ] Implement `method` to change inference method dynamically.
-- [ ] Implement `load` to change model dynamically.
-- [ ] Implement `print_available_models` (IRCAM API integration).
-- [ ] Implement `download` to download models from IRCAM Forum.
-- [ ] Implement `delete` to remove downloaded models.
-
-### Phase 5 – Testing & Debug
-- [ ] Write unit tests for each Max message handler.
-- [ ] Run integration test with a sample TorchScript model (e.g., RAVE).
-- [ ] Profile CPU/GPU usage; verify no audio thread blocking.
-- [ ] Use Windows Event Viewer / DebugView to confirm clean process shutdown.
-- [ ] Test async initialization doesn't freeze Max.
-
-### Phase 6 – Documentation & Polish
-- [ ] Update `doc/` with:
-  - API reference for `mab~` / `mc.mab~`.
-  - Python API (`inference_worker.py`) usage.
-  - Build instructions (CMake integration).
-- [ ] Add a short user guide in `README.md` (if not already present).
-- [ ] Verify licensing headers are intact.
-
-### Phase 7 – Release Preparation
-- [ ] Create CMake target for the external.
-- [ ] Ensure `min-api` and `max-api` includes are correctly referenced.
-- [ ] Package the Python script alongside the built external.
-- [ ] Perform final sign‑off checklist review.
 
 ---
 

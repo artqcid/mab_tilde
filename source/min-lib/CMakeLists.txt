@@ -6,8 +6,8 @@ project(MinLib)
 
 
 if (${CMAKE_GENERATOR} MATCHES "Xcode")
- 		if (${XCODE_VERSION} VERSION_LESS 10)
-  			message(STATUS "Xcode 10 is required. Please install from the Mac App Store.")
+		if (${XCODE_VERSION} VERSION_LESS 10)
+			message(STATUS "Xcode 10 is required. Please install from the Mac App Store.")
 			return ()
 		endif ()
 endif ()

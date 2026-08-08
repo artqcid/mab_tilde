@@ -1,0 +1,38 @@
+# Build folders
+build/
+build-*/
+
+# Python virtual environments
+.venv/
+env/
+venv/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+.eggs/
+dist/
+*.egg
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Max
+*.mxe64
+*.mxe
+*.mxf
+
+# Logs
+*.log
