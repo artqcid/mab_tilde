@@ -53,6 +53,18 @@ target_link_libraries(mab_tilde PRIVATE
     ${MAX_SDK_DIR}/max-includes/x64/MaxAPI.lib
     ${MAX_SDK_DIR}/msp-includes/x64/MaxAudio.lib
 )
+
+if(MSVC)
+    target_compile_definitions(mab_tilde PRIVATE
+        WIN32_LEAN_AND_MEAN
+        NOMINMAX
+        _CRT_SECURE_NO_WARNINGS
+    )
+    set_target_properties(mab_tilde PROPERTIES
+        PREFIX ""
+        SUFFIX ".mxe64"
+    )
+endif()
 ```
 
 ### 3.2 SDK-Struktur
@@ -109,6 +121,7 @@ cmake --build build --config Release
 | `class_dspinit64(...)` | `class_dspinit(c)` | DSP-Initialisierung |
 | `CLASS_NOFLOAT` | `0L` | class_new Flags |
 | `bind64` | `gensym("dsp_add64")` | Perform-Methoden-Registrierung |
+| `int main()` | `void ext_main()` | Max External Einstiegspunkt |
 
 ---
 
@@ -128,11 +141,23 @@ cmake --build build --config Release
 
 ### 6.4 std::wstring Konvertierungsfehler
 **Problem**: `std::wstring(atom_getsym(argv)->s_name)` versucht, ein `char*` in `std::wstring` zu konvertieren.  
-**Lösung**: Verwende `t_symbol*` direkt oder konvertiere explizit mit `std::wstring(atom_getsym(argv)->s_name)` → `std::string(atom_getsym(argv)->s_name)`.
+**Lösung**: Verwende `t_symbol*` direkt oder konvertiere explizit mit `std::string(atom_getsym(argv)->s_name)`.
 
 ### 6.5 MSVC 2026 Generator nicht gefunden
 **Problem**: `cmake -G "Visual Studio 17 2022"` schlägt fehl, weil VS 2026 (Version 18) installiert ist.  
 **Lösung**: Verwende `-G "Visual Studio 18 2026"`.
+
+### 6.6 Crash beim Objekt-Instanziieren (std::atomic in C-Struct)
+**Problem**: `std::atomic<bool>` in einem C-Struct, dessen Speicher über `object_alloc()` (malloc) reserviert wird. C++ Konstruktoren werden nie aufgerufen → Undefined Behavior → Crash.  
+**Lösung**: Verwende `long` Variablen statt `std::atomic<bool>`. Auf x86/x64 sind einfache `long`-Lese/Schreib-Operationen atomar genug für Flags.
+
+### 6.7 Falscher Einstiegspunkt (main statt ext_main)
+**Problem**: Max erwartet `ext_main` als Einstiegspunkt für `.mxe64` Externals, nicht `int main()`.  
+**Lösung**: Verwende `extern "C" { C74_EXPORT void ext_main(void* r) { ... } }` als Einstiegspunkt. Der `extern "C"` Block verhindert C++ Name Mangling, `void* r` ist der Parameter, den das moderne Max SDK erwartet.
+
+### 6.8 Makro-Neudefinition Warnungen (WIN32_LEAN_AND_MEAN, NOMINMAX)
+**Problem**: Diese Defines werden sowohl in der CMakeLists.txt als auch in mab_tilde.cpp definiert.  
+**Lösung**: Entferne die Defines aus mab_tilde.cpp (sie werden über CMake-Compile-Definitions bereitgestellt). Alternativ: Verwende `#ifndef` Guards.
 
 ---
 

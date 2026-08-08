@@ -97,6 +97,8 @@ The external must be recognized by Max, load without errors, communicate with Py
 - [x] **Build-System**: Root `CMakeLists.txt` verwendet `add_library(mab_tilde MODULE ...)` mit direkten SDK-Include-Pfaden und `MaxAPI.lib`/`MaxAudio.lib` Import Libraries.
 - [x] **Build verifiziert**: `mab_tilde.mxe64` (55.296 Bytes) erfolgreich gebaut mit VS 2026 / MSVC 19.51.
 - [x] **Crash-Fix**: `std::atomic<bool>` aus C-Struct entfernt → `long` Variablen verwendet (object_alloc() ruft keine C++ Konstruktoren auf).
+- [x] **Entry-Point Fix**: `int main()` → `void ext_main()` (Max erwartet `ext_main` als Einstiegspunkt für .mxe64).
+- [x] **ext_main**: `extern "C"` entfernt (bereits in `ext.h` deklariert).
 
 ### Phase 1 – Core C++ External (with Critical Architecture)
 

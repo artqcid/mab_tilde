@@ -21,24 +21,26 @@ void mab_tilde_assist(t_mab_tilde* x, void* b, long m, long a, char* s);
 void mab_tilde_dsp64(t_mab_tilde* x, t_object* dsp64, short* count, double samplerate, long maxvectorsize, long flags);
 void mab_tilde_perform64(t_mab_tilde* x, t_object* dsp64, double** ins, long numins, double** outs, long numouts, long sampleframes, long flags, void* userparam);
 
-extern "C" int C74_EXPORT main(void) {
-    t_class* c = class_new("mab~",
-                           (method)mab_tilde_new,
-                           (method)mab_tilde_free,
-                           (long)sizeof(t_mab_tilde),
-                           0L,
-                           A_GIMME,
-                           0);
+// Korrekter Einstiegspunkt mit C-Linkage für C++ Dateien
+extern "C" {
+    C74_EXPORT void ext_main(void* r) {
+        t_class* c = class_new("mab~",
+                               (method)mab_tilde_new,
+                               (method)mab_tilde_free,
+                               (long)sizeof(t_mab_tilde),
+                               0L,
+                               A_GIMME,
+                               0);
 
-    class_addmethod(c, (method)mab_tilde_dsp64, "dsp64", A_CANT, 0);
-    class_addmethod(c, (method)mab_tilde_assist, "assist", A_CANT, 0);
+        class_addmethod(c, (method)mab_tilde_dsp64, "dsp64", A_CANT, 0);
+        class_addmethod(c, (method)mab_tilde_assist, "assist", A_CANT, 0);
 
-    class_dspinit(c);
-    class_register(CLASS_BOX, c);
-    mab_tilde_class = c;
+        class_dspinit(c);
+        class_register(CLASS_BOX, c);
+        mab_tilde_class = c;
 
-    post("mab~: Native Max SDK external loaded successfully.");
-    return 0;
+        post("mab~: Native Max SDK external loaded successfully.");
+    }
 }
 
 void* mab_tilde_new(t_symbol* s, long argc, t_atom* argv) {
