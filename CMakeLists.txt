@@ -17,7 +17,7 @@ target_include_directories(mab_tilde PRIVATE
     ${MAX_SDK_DIR}/msp-includes
 )
 
-# Native Max SDK Import Libraries verlinken
+# Native Max SDK Import Libraries verlinken (mit vollständigen Pfaden)
 target_link_libraries(mab_tilde PRIVATE
     ${MAX_SDK_DIR}/max-includes/x64/MaxAPI.lib
     ${MAX_SDK_DIR}/msp-includes/x64/MaxAudio.lib
@@ -30,8 +30,10 @@ if(MSVC)
         _CRT_SECURE_NO_WARNINGS
     )
     # Max-Externals unter Windows müssen die Endung .mxe64 haben und kein 'lib'-Präfix
+    # Der Output-Name muss exakt dem Objektnamen entsprechen (mab~)
     set_target_properties(mab_tilde PROPERTIES
         PREFIX ""
+        OUTPUT_NAME "mab~"
         SUFFIX ".mxe64"
     )
 endif()

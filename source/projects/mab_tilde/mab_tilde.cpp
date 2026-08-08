@@ -14,19 +14,18 @@ typedef struct _mab_tilde {
     long is_bypass;
 } t_mab_tilde;
 
-void* mab_tilde_new(t_symbol* s, long argc, t_atom* argv);
-void mab_tilde_free(t_mab_tilde* x);
-void mab_tilde_assist(t_mab_tilde* x, void* b, long m, long a, char* s);
-void mab_tilde_dsp64(t_mab_tilde* x, t_object* dsp64, short* count, double samplerate, long maxvectorsize, long flags);
-void mab_tilde_perform64(t_mab_tilde* x, t_object* dsp64, double** ins, long numins, double** outs, long numouts, long sampleframes, long flags, void* userparam);
+// Alle Callbacks müssen C-Linkage haben
+extern "C" {
+    void* mab_tilde_new(t_symbol* s, long argc, t_atom* argv);
+    void mab_tilde_free(t_mab_tilde* x);
+    void mab_tilde_assist(t_mab_tilde* x, void* b, long m, long a, char* s);
+    void mab_tilde_dsp64(t_mab_tilde* x, t_object* dsp64, short* count, double samplerate, long maxvectorsize, long flags);
+    void mab_tilde_perform64(t_mab_tilde* x, t_object* dsp64, double** ins, long numins, double** outs, long numouts, long sampleframes, long flags, void* userparam);
 
-#ifdef _MSC_VER
-    #define MAB_EXPORT extern "C" __declspec(dllexport)
-#else
-    #define MAB_EXPORT extern "C"
-#endif
+    __declspec(dllexport) void ext_main(void* r);
+}
 
-MAB_EXPORT void ext_main(void* r) {
+void ext_main(void* r) {
     t_class* c = class_new("mab~",
                            (method)mab_tilde_new,
                            (method)mab_tilde_free,
@@ -53,13 +52,9 @@ void* mab_tilde_new(t_symbol* s, long argc, t_atom* argv) {
         object_error(nullptr, "mab~ error: object_alloc fehlgeschlagen!");
         return nullptr;
     }
-    post("mab~ debug: object_alloc erfolgreich bei %p", x);
 
     dsp_setup((t_pxobject*)x, 1);
-    post("mab~ debug: dsp_setup erfolgreich.");
-
     outlet_new(x, "signal");
-    post("mab~ debug: outlet_new erfolgreich.");
 
     x->is_ready = 0;
     x->is_bypass = 1;

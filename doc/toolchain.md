@@ -62,6 +62,7 @@ if(MSVC)
     )
     set_target_properties(mab_tilde PROPERTIES
         PREFIX ""
+        OUTPUT_NAME "mab~"
         SUFFIX ".mxe64"
     )
 endif()
@@ -82,8 +83,8 @@ source/min-api/max-sdk-base/c74support/
 ```
 
 ### 3.3 Output
-- **Datei**: `mab_tilde.mxe64`
-- **Ort**: `build/Debug/mab_tilde.mxe64` (Debug) oder `build/Release/mab_tilde.mxe64` (Release)
+- **Datei**: `mab~.mxe64` (Name muss exakt dem Objektnamen entsprechen)
+- **Ort**: `build/Debug/mab~.mxe64` (Debug) oder `build/Release/mab~.mxe64` (Release)
 - **Format**: Windows DLL mit `.mxe64` Extension (Max External)
 
 ---
@@ -121,7 +122,7 @@ cmake --build build --config Release
 | `class_dspinit64(...)` | `class_dspinit(c)` | DSP-Initialisierung |
 | `CLASS_NOFLOAT` | `0L` | class_new Flags |
 | `bind64` | `gensym("dsp_add64")` | Perform-Methoden-Registrierung |
-| `int main()` | `void ext_main()` | Max External Einstiegspunkt |
+| `int main()` | `void ext_main(void* r)` | Max External Einstiegspunkt |
 
 ---
 
@@ -153,9 +154,9 @@ cmake --build build --config Release
 
 ### 6.7 Falscher Einstiegspunkt (main statt ext_main)
 **Problem**: Max erwartet `ext_main` als Einstiegspunkt für `.mxe64` Externals, nicht `int main()`.  
-**Lösung**: Verwende `MAB_EXPORT void ext_main(void* r)` als Einstiegspunkt. Der `extern "C"` Block verhindert C++ Name Mangling, `void* r` ist der Parameter, den das moderne Max SDK erwartet.
+**Lösung**: Verwende `void ext_main(void* r)` als Einstiegspunkt.
 
-### 6.9 Symbol nicht exportiert (undefined ext_main)
+### 6.8 Symbol nicht exportiert (undefined ext_main)
 **Problem**: MSVC exportiert DLL-Symbole nicht automatisch. Das `C74_EXPORT` Makro funktioniert nicht zuverlässig in rohen CMake-Konfigurationen, wodurch `ext_main` in der Export-Tabelle der DLL unsichtbar bleibt. Max meldet "undefined ext_main or main".  
 **Lösung**: Verwende explizit `__declspec(dllexport)` für MSVC:
 ```cpp
@@ -167,11 +168,35 @@ cmake --build build --config Release
 MAB_EXPORT void ext_main(void* r) { ... }
 ```
 
-### 6.8 Makro-Neudefinition Warnungen (WIN32_LEAN_AND_MEAN, NOMINMAX)
+### 6.9 C++ Name Mangling bei Callbacks
+**Problem**: Obwohl `ext_main` als `extern "C"` deklariert war, waren alle anderen Callback-Funktionen (new, free, dsp64, etc.) das nicht. Dadurch konnte Max zur Laufzeit die Funktionszeiger für die Instanziierung nicht korrekt auflösen.  
+**Lösung**: Alle Callbacks in einem `extern "C"` Block deklarieren:
+```cpp
+extern "C" {
+    void* mab_tilde_new(t_symbol* s, long argc, t_atom* argv);
+    void mab_tilde_free(t_mab_tilde* x);
+    void mab_tilde_dsp64(t_mab_tilde* x, t_object* dsp64, short* count, double samplerate, long maxvectorsize, long flags);
+    void mab_tilde_perform64(t_mab_tilde* x, t_object* dsp64, double** ins, long numins, double** outs, long numouts, long sampleframes, long flags, void* userparam);
+    __declspec(dllexport) void ext_main(void* r);
+}
+```
+
+### 6.10 Dateiname vs. Klassenname
+**Problem**: Max erwartet bei nativen Externals, dass der Dateiname der `.mxe64` exakt dem Objektnamen entspricht.  
+**Lösung**: Setze `OUTPUT_NAME "mab~"` in der CMakeLists.txt:
+```cmake
+set_target_properties(mab_tilde PROPERTIES
+    PREFIX ""
+    OUTPUT_NAME "mab~"
+    SUFFIX ".mxe64"
+)
+```
+
+### 6.11 Makro-Neudefinition Warnungen (WIN32_LEAN_AND_MEAN, NOMINMAX)
 **Problem**: Diese Defines werden sowohl in der CMakeLists.txt als auch in mab_tilde.cpp definiert.  
 **Lösung**: Entferne die Defines aus mab_tilde.cpp (sie werden über CMake-Compile-Definitions bereitgestellt). Alternativ: Verwende `#ifndef` Guards. Diese Warnungen sind harmlos und beeinträchtigen den Build nicht.
 
-### 6.10 Debug-Ausgaben für Instanziierungs-Fehler
+### 6.12 Debug-Ausgaben für Instanziierungs-Fehler
 **Problem**: Max färbt das Objekt rot, wenn `mab_tilde_new` abstürzt, ohne Fehlermeldung.  
 **Lösung**: Füge `post()` Debug-Aufrufe in `mab_tilde_new` hinzu, um den genauen Absturzpunkt zu identifizieren:
 ```cpp
@@ -191,7 +216,7 @@ post("mab~ debug: outlet_new erfolgreich.");
 
 Nach erfolgreichem Build sollte folgende Datei existieren:
 ```
-build/Debug/mab_tilde.mxe64  (ca. 55 KB)
+build/Debug/mab~.mxe64  (ca. 55 KB)
 ```
 
 Die Datei kann direkt in den Max Packages-Ordner kopiert werden:
