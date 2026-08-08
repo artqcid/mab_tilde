@@ -153,11 +153,37 @@ cmake --build build --config Release
 
 ### 6.7 Falscher Einstiegspunkt (main statt ext_main)
 **Problem**: Max erwartet `ext_main` als Einstiegspunkt für `.mxe64` Externals, nicht `int main()`.  
-**Lösung**: Verwende `extern "C" { C74_EXPORT void ext_main(void* r) { ... } }` als Einstiegspunkt. Der `extern "C"` Block verhindert C++ Name Mangling, `void* r` ist der Parameter, den das moderne Max SDK erwartet.
+**Lösung**: Verwende `MAB_EXPORT void ext_main(void* r)` als Einstiegspunkt. Der `extern "C"` Block verhindert C++ Name Mangling, `void* r` ist der Parameter, den das moderne Max SDK erwartet.
+
+### 6.9 Symbol nicht exportiert (undefined ext_main)
+**Problem**: MSVC exportiert DLL-Symbole nicht automatisch. Das `C74_EXPORT` Makro funktioniert nicht zuverlässig in rohen CMake-Konfigurationen, wodurch `ext_main` in der Export-Tabelle der DLL unsichtbar bleibt. Max meldet "undefined ext_main or main".  
+**Lösung**: Verwende explizit `__declspec(dllexport)` für MSVC:
+```cpp
+#ifdef _MSC_VER
+    #define MAB_EXPORT extern "C" __declspec(dllexport)
+#else
+    #define MAB_EXPORT extern "C"
+#endif
+MAB_EXPORT void ext_main(void* r) { ... }
+```
 
 ### 6.8 Makro-Neudefinition Warnungen (WIN32_LEAN_AND_MEAN, NOMINMAX)
 **Problem**: Diese Defines werden sowohl in der CMakeLists.txt als auch in mab_tilde.cpp definiert.  
-**Lösung**: Entferne die Defines aus mab_tilde.cpp (sie werden über CMake-Compile-Definitions bereitgestellt). Alternativ: Verwende `#ifndef` Guards.
+**Lösung**: Entferne die Defines aus mab_tilde.cpp (sie werden über CMake-Compile-Definitions bereitgestellt). Alternativ: Verwende `#ifndef` Guards. Diese Warnungen sind harmlos und beeinträchtigen den Build nicht.
+
+### 6.10 Debug-Ausgaben für Instanziierungs-Fehler
+**Problem**: Max färbt das Objekt rot, wenn `mab_tilde_new` abstürzt, ohne Fehlermeldung.  
+**Lösung**: Füge `post()` Debug-Aufrufe in `mab_tilde_new` hinzu, um den genauen Absturzpunkt zu identifizieren:
+```cpp
+post("mab~ debug: Starte Erstellung (new)...");
+t_mab_tilde* x = (t_mab_tilde*)object_alloc(mab_tilde_class);
+if (!x) { object_error(nullptr, "mab~ error: object_alloc fehlgeschlagen!"); return nullptr; }
+post("mab~ debug: object_alloc erfolgreich bei %p", x);
+dsp_setup((t_pxobject*)x, 1);
+post("mab~ debug: dsp_setup erfolgreich.");
+outlet_new(x, "signal");
+post("mab~ debug: outlet_new erfolgreich.");
+```
 
 ---
 

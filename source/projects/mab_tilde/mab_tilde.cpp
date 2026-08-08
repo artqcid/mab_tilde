@@ -14,43 +14,57 @@ typedef struct _mab_tilde {
     long is_bypass;
 } t_mab_tilde;
 
-// Funktionsprototypen
 void* mab_tilde_new(t_symbol* s, long argc, t_atom* argv);
 void mab_tilde_free(t_mab_tilde* x);
 void mab_tilde_assist(t_mab_tilde* x, void* b, long m, long a, char* s);
 void mab_tilde_dsp64(t_mab_tilde* x, t_object* dsp64, short* count, double samplerate, long maxvectorsize, long flags);
 void mab_tilde_perform64(t_mab_tilde* x, t_object* dsp64, double** ins, long numins, double** outs, long numouts, long sampleframes, long flags, void* userparam);
 
-// Korrekter Einstiegspunkt mit C-Linkage für C++ Dateien
-extern "C" {
-    C74_EXPORT void ext_main(void* r) {
-        t_class* c = class_new("mab~",
-                               (method)mab_tilde_new,
-                               (method)mab_tilde_free,
-                               (long)sizeof(t_mab_tilde),
-                               0L,
-                               A_GIMME,
-                               0);
+#ifdef _MSC_VER
+    #define MAB_EXPORT extern "C" __declspec(dllexport)
+#else
+    #define MAB_EXPORT extern "C"
+#endif
 
-        class_addmethod(c, (method)mab_tilde_dsp64, "dsp64", A_CANT, 0);
-        class_addmethod(c, (method)mab_tilde_assist, "assist", A_CANT, 0);
+MAB_EXPORT void ext_main(void* r) {
+    t_class* c = class_new("mab~",
+                           (method)mab_tilde_new,
+                           (method)mab_tilde_free,
+                           (long)sizeof(t_mab_tilde),
+                           0L,
+                           A_GIMME,
+                           0);
 
-        class_dspinit(c);
-        class_register(CLASS_BOX, c);
-        mab_tilde_class = c;
+    class_addmethod(c, (method)mab_tilde_dsp64, "dsp64", A_CANT, 0);
+    class_addmethod(c, (method)mab_tilde_assist, "assist", A_CANT, 0);
 
-        post("mab~: Native Max SDK external loaded successfully.");
-    }
+    class_dspinit(c);
+    class_register(CLASS_BOX, c);
+    mab_tilde_class = c;
+
+    post("mab~: Native Max SDK external loaded successfully.");
 }
 
 void* mab_tilde_new(t_symbol* s, long argc, t_atom* argv) {
+    post("mab~ debug: Starte Erstellung (new)...");
+
     t_mab_tilde* x = (t_mab_tilde*)object_alloc(mab_tilde_class);
-    if (x) {
-        dsp_setup((t_pxobject*)x, 1);
-        outlet_new(x, "signal");
-        x->is_ready = 0;
-        x->is_bypass = 1; // Start im sicheren Pass-Through Modus
+    if (!x) {
+        object_error(nullptr, "mab~ error: object_alloc fehlgeschlagen!");
+        return nullptr;
     }
+    post("mab~ debug: object_alloc erfolgreich bei %p", x);
+
+    dsp_setup((t_pxobject*)x, 1);
+    post("mab~ debug: dsp_setup erfolgreich.");
+
+    outlet_new(x, "signal");
+    post("mab~ debug: outlet_new erfolgreich.");
+
+    x->is_ready = 0;
+    x->is_bypass = 1;
+
+    post("mab~ debug: Instanziierung komplett abgeschlossen.");
     return x;
 }
 
@@ -75,7 +89,6 @@ void mab_tilde_perform64(t_mab_tilde* x, t_object* dsp64, double** ins, long num
     double* out = outs[0];
     long n = sampleframes;
 
-    // Pass-Through / Bypass Logik
     for (long i = 0; i < n; i++) {
         out[i] = in[i];
     }
