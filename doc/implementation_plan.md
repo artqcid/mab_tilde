@@ -96,6 +96,7 @@ The external must be recognized by Max, load without errors, communicate with Py
 - [x] **Native Max SDK Build**: Migriert von min-devkit-Framework zu reinem nativen Max SDK (ext.h, z_dsp.h). Siehe `doc/toolchain.md`.
 - [x] **Build-System**: Root `CMakeLists.txt` verwendet `add_library(mab_tilde MODULE ...)` mit direkten SDK-Include-Pfaden und `MaxAPI.lib`/`MaxAudio.lib` Import Libraries.
 - [x] **Build verifiziert**: `mab_tilde.mxe64` (55.296 Bytes) erfolgreich gebaut mit VS 2026 / MSVC 19.51.
+- [x] **Crash-Fix**: `std::atomic<bool>` aus C-Struct entfernt → `long` Variablen verwendet (object_alloc() ruft keine C++ Konstruktoren auf).
 
 ### Phase 1 – Core C++ External (with Critical Architecture)
 
