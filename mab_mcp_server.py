@@ -13,6 +13,7 @@ import subprocess
 import os
 import sys
 import re
+import ast
 import hashlib
 import sqlite3
 from contextlib import closing
@@ -22,20 +23,42 @@ mcp = FastMCP("MAB-RAVE-Assistant")
 
 
 # ============================================================================
-# SQLite-RAG-System (Retrieval-Augmented Generation)
+# RAG-LLM-Wiki (Retrieval-Augmented Generation + Code-Wiki)
 # ----------------------------------------------------------------------------
-# Leichtgewichtiges RAG ausschließlich mit Pythons eingebautem `sqlite3` und
-# FTS5 (Full-Text-Search). Kein schweres Embedding-Framework nötig.
+# Leichtgewichtige Kombination der drei Konzepte, ausschließlich mit Pythons
+# Standardbibliothek (ast, sqlite3, re) - keine neuen Pakete nötig:
 #
-# Besonderheit: Es wird der FTS5-*Trigramm*-Tokenizer verwendet. Anders als
-# klassische Tokenizer (unicode61/porter) zerlegt er Code nicht an
-# Wortgrenzen/Unterstrichen, sondern ermöglicht Substring-Matches auf echten
-# Identifikatoren wie `mab_tilde`, `block_size` oder `dsp_setup`.
-# Das ist für Code-Retrieval deutlich treffsicherer als semantische Suche.
+#   1. Strukturelles Code-Chunking (Repo-Level-RAG / AST statt Zeilen-Chunking):
+#      - Python: stdlib `ast` -> Klassen/Funktionen/Methoden mit qualified names,
+#        Signaturen und Docstrings; Importe bleiben im Modul-Chunk erhalten.
+#      - C++: brace-basierter Scanner (ohne tree-sitter) -> Funktionen, Klassen
+#        (inkl. Methoden), Namespaces/extern "C"; #includes bleiben im Modul-Chunk.
+#      - Markdown: Chunking nach Überschriften (Sections).
+#      Jeder Chunk trägt Metadaten (symbol_type, symbol_name, signature,
+#      docstring) -> Kontext von Klassen/Methoden bleibt erhalten und der
+#      Symbol-Index speist das Code-Wiki.
+#
+#   2. Hybride Suche: SQLite FTS5 mit Trigramm-Tokenizer (bm25, lexikalisch -
+#      findet auch Identifikator-Substrings) plus Re-Ranking über exakte
+#      Identifier-Treffer (Syntax/Hybrid-Boost). Keine Vektor-DB nötig.
+#
+#   3. Code-Wiki (doc/code_wiki.md): stabiler, eingecheckter Symbolindex
+#      (Datei -> Symbole mit Signatur/Docstring/Zeilen). Agents lesen das Wiki
+#      einmalig pro Session (stabiler Kontext = prompt-cache-freundlich) und
+#      nutzen query_code_rag/query_code_wiki für gezielte Codestellen.
 # ============================================================================
 
 # Datenbankdatei liegt neben diesem Skript im Projektverzeichnis
 RAG_DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "mab_rag.db")
+
+# Pfad zum generierten Code-Wiki (stabiler Symbolindex, wird eingecheckt)
+WIKI_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "doc", "code_wiki.md"
+)
+
+# Schema-Version: bump bei strukturellen Änderungen -> erzwingt Rebuild der DB.
+# v1 = Zeilen-Chunking, v2 = strukturelles Chunking + Symbol-Metadaten.
+RAG_SCHEMA_VERSION = 2
 
 # Zu indizierende Sprachen und ihre Dateiendungen.
 # `.md` ist inkludiert, damit auch die zentrale Anleitung
@@ -51,10 +74,8 @@ RAG_LANGUAGE_EXTENSIONS = {
     ".md": "markdown",
 }
 
-# Chunking: Code wird zeilenweise in Blöcke mit Überlappung zerlegt, damit
-# zusammenhängender Kontext (z.B. eine Funktion) nicht auseinandergerissen wird.
-RAG_CHUNK_LINES = 60
-RAG_CHUNK_OVERLAP = 10
+# Maximale Länge eines Modul-Chunks (Code außerhalb benannter Symbole) in Zeilen.
+MODULE_CHUNK_LINES = 60
 
 # Verzeichnisse, die beim Scan übersprungen werden.
 # max-sdk-base: komplettes Cycling74-SDK (tausende Header) würde den Index
@@ -67,6 +88,257 @@ RAG_IGNORED_DIRS = {
 
 # Maximale Dateigröße, die indiziert wird (Bytes) - verhindert große Binaries
 RAG_MAX_FILE_SIZE = 2 * 1024 * 1024
+
+# Eigenes generiertes Wiki nicht mit-indizieren (Meta-Rauschen, neuer Hash je Lauf)
+RAG_IGNORED_FILENAMES = {"code_wiki.md"}
+
+
+# ---------------------------------------------------------------------------
+# Strukturelles Chunking (AST / brace-basiert / Überschriften)
+# ---------------------------------------------------------------------------
+
+def _emit_chunk(lines, start, end, symbol_type, symbol_name, signature, docstring) -> dict:
+    """Baut einen Chunk-Datensatz aus 0-basiertem Zeilenbereich [start, end]."""
+    return {
+        "line_start": start + 1,
+        "line_end": end + 1,
+        "content": "\n".join(lines[start:end + 1]),
+        "symbol_type": symbol_type,
+        "symbol_name": symbol_name,
+        "signature": (signature or "").strip() or None,
+        "docstring": docstring,
+    }
+
+
+def _module_chunks(lines, start, end) -> list:
+    """Zerlegt einen Bereich ohne benannte Symbole in max. 60-Zeilen-Blöcke."""
+    start = max(0, start)
+    end = min(len(lines) - 1, end)
+    if start > end:
+        return []
+    out = []
+    for s in range(start, end + 1, MODULE_CHUNK_LINES):
+        e = min(end, s + MODULE_CHUNK_LINES - 1)
+        out.append(_emit_chunk(lines, s, e, "module", None, None, None))
+    return out
+
+
+def _py_arglist(args) -> str:
+    """Baut aus einem ast.arguments eine kompakte Parameterliste."""
+    parts = [a.arg for a in args.args]
+    if args.vararg:
+        parts.append("*" + args.vararg.arg)
+    parts.extend(a.arg for a in args.kwonlyargs)
+    if args.kwarg:
+        parts.append("**" + args.kwarg.arg)
+    return "(" + ", ".join(parts) + ")"
+
+
+def _py_bases(node) -> str:
+    if not node.bases:
+        return ""
+    names = []
+    for b in node.bases:
+        try:
+            names.append(ast.unparse(b))
+        except Exception:
+            names.append("...")
+    return "(" + ", ".join(names) + ")"
+
+
+def _chunk_python(source: str) -> list:
+    """Zerlegt Python-Code über das stdlib-`ast` in Klassen/Funktionen/Methoden.
+
+    Liefert Chunks mit symbol_type (class/function/method), qualified name,
+    Signatur und Docstring. Zeilen außerhalb von Definitionen (Imports,
+    Konstanten) werden als `module`-Chunks gesammelt.
+    """
+    lines = source.split("\n")
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        return _module_chunks(lines, 0, len(lines) - 1)
+
+    chunks = []
+    covered = []  # 1-basierte Intervalle [lineno, end_lineno] der Definitionen
+
+    def walk(body, parent):
+        for node in body:
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                name = f"{parent}.{node.name}" if parent else node.name
+                kind = "method" if parent else "function"
+                sig = "def " + node.name + _py_arglist(node.args)
+                doc = ast.get_docstring(node)
+                chunks.append(_emit_chunk(
+                    lines, node.lineno - 1, node.end_lineno - 1,
+                    kind, name, sig, doc))
+                covered.append((node.lineno, node.end_lineno))
+            elif isinstance(node, ast.ClassDef):
+                name = f"{parent}.{node.name}" if parent else node.name
+                sig = "class " + node.name + _py_bases(node)
+                doc = ast.get_docstring(node)
+                chunks.append(_emit_chunk(
+                    lines, node.lineno - 1, node.end_lineno - 1,
+                    "class", name, sig, doc))
+                covered.append((node.lineno, node.end_lineno))
+                walk(node.body, name)
+
+    walk(tree.body, None)
+
+    if not covered:
+        return _module_chunks(lines, 0, len(lines) - 1)
+
+    cursor = 1
+    for a, b in sorted(covered):
+        if a > cursor:
+            chunks.extend(_module_chunks(lines, cursor - 1, a - 2))
+        cursor = max(cursor, b + 1)
+    if cursor <= len(lines):
+        chunks.extend(_module_chunks(lines, cursor - 1, len(lines) - 1))
+
+    chunks.sort(key=lambda c: c["line_start"])
+    return chunks
+
+
+# Steuer-Schlüsselwörter, die kein Funktionskopf sind (C++-Heuristik)
+_CPP_CTRL = {"if", "for", "while", "switch", "catch", "do", "else", "return",
+             "sizeof", "new", "delete"}
+
+
+def _cpp_def_kind(header: str):
+    """Klassifiziert einen C++-Block-Kopf -> (kind, name).
+
+    kinds: namespace, extern, class, function, block.
+    """
+    h = header.strip()
+    if not h or h.startswith("#") or h.endswith(";"):
+        return ("block", None)
+    m = re.match(r"namespace\s+([A-Za-z_]\w*)", h)
+    if m:
+        return ("namespace", m.group(1))
+    if re.match(r'extern\s*"C"', h):
+        return ("extern", None)
+    m = re.match(
+        r"(?:template\s*<[^>]*>\s*)?"
+        r"(?:(?:class|struct|union)\s+([A-Za-z_]\w*)|"
+        r"enum(?:\s+class)?\s+([A-Za-z_]\w*))",
+        h,
+    )
+    if m:
+        return ("class", m.group(1) or m.group(2))
+    m = re.search(r"([A-Za-z_]\w*)\s*\(", h)
+    if m and m.group(1) not in _CPP_CTRL:
+        return ("function", m.group(1))
+    return ("block", None)
+
+
+def _cpp_sub_blocks(lines, start, end, base) -> list:
+    """Findet Blöcke auf Tiefe base+1 im Bereich [start, end].
+
+    Liefert (header_idx, header_line, end_idx). Header wird aus der Zeile vor
+    dem `{` rekonstruiert (unterstützt mehrzeilige Signaturen). Einzelzeilen-
+    Blöcke (z.B. `int a[] = {1,2};`) werden ignoriert (Rauschen).
+    """
+    blocks = []
+    depth = base
+    pending = None
+    for idx in range(start, end + 1):
+        line = lines[idx]
+        if pending is None and depth == base and "{" in line:
+            brace = line.index("{")
+            prefix = line[:brace].strip()
+            if prefix:
+                pending = (idx, prefix)
+            else:
+                j = idx - 1
+                while j >= start and not lines[j].strip():
+                    j -= 1
+                pending = (idx, lines[j].strip() if j >= start else prefix)
+        depth += line.count("{") - line.count("}")
+        if pending is not None and depth == base:
+            if pending[0] < idx:  # echte Blöcke, keine Einzeiler
+                blocks.append((pending[0], pending[1], idx))
+            pending = None
+    return blocks
+
+
+def _chunk_cpp_class(lines, start, end, base, name) -> list:
+    """Zerlegt eine C++-Klasse: Methoden separat, Header/Members als class-Chunk."""
+    blocks = _cpp_sub_blocks(lines, start + 1, end - 1, base + 1)
+    if not blocks:
+        return [_emit_chunk(lines, start, end, "class", name, lines[start].strip(), None)]
+
+    chunks = []
+    cursor = start
+    for (hdr_idx, hdr_line, end_idx) in blocks:
+        if hdr_idx > cursor:
+            chunks.append(_emit_chunk(lines, cursor, hdr_idx - 1, "class", name,
+                                      lines[start].strip(), None))
+        kind, mname = _cpp_def_kind(hdr_line)
+        if kind == "function" and mname:
+            chunks.append(_emit_chunk(lines, hdr_idx, end_idx, "method",
+                                      f"{name}::{mname}", hdr_line, None))
+        else:
+            chunks.append(_emit_chunk(lines, hdr_idx, end_idx, "block", name,
+                                      hdr_line, None))
+        cursor = end_idx + 1
+    if cursor <= end:
+        chunks.append(_emit_chunk(lines, cursor, end, "class", name,
+                                  lines[start].strip(), None))
+    return chunks
+
+
+def _chunk_cpp_region(lines, start, end, base) -> list:
+    """Zerlegt einen C++-Bereich: Blöcke auf Tiefe base+1 + Modul-Lücken."""
+    chunks = []
+    blocks = _cpp_sub_blocks(lines, start, end, base)
+    cursor = start
+    for (hdr_idx, hdr_line, end_idx) in blocks:
+        if hdr_idx > cursor:
+            chunks.extend(_module_chunks(lines, cursor, hdr_idx - 1))
+        kind, name = _cpp_def_kind(hdr_line)
+        if kind in ("namespace", "extern"):
+            inner = _chunk_cpp_region(lines, hdr_idx + 1, end_idx - 1, base + 1)
+            if inner:
+                chunks.extend(inner)
+            else:
+                chunks.append(_emit_chunk(lines, hdr_idx, end_idx, kind, name,
+                                          hdr_line, None))
+        elif kind == "class":
+            chunks.extend(_chunk_cpp_class(lines, hdr_idx, end_idx, base, name))
+        elif kind == "function":
+            chunks.append(_emit_chunk(lines, hdr_idx, end_idx, "function", name,
+                                      hdr_line, None))
+        else:
+            chunks.append(_emit_chunk(lines, hdr_idx, end_idx, "block", name,
+                                      hdr_line, None))
+        cursor = end_idx + 1
+    if cursor <= end:
+        chunks.extend(_module_chunks(lines, cursor, end))
+    return chunks
+
+
+def _chunk_cpp(source: str) -> list:
+    """Zerlegt C++-Code strukturiert (brace-basiert, ohne tree-sitter)."""
+    lines = source.split("\n")
+    return _chunk_cpp_region(lines, 0, len(lines) - 1, 0)
+
+
+def _chunk_markdown(source: str) -> list:
+    """Zerlegt Markdown nach Überschriften (Sections = Chunks)."""
+    lines = source.split("\n")
+    headings = [i for i, ln in enumerate(lines) if re.match(r"^#{1,6}\s", ln)]
+    chunks = []
+    if not headings:
+        return _module_chunks(lines, 0, len(lines) - 1)
+    if headings[0] > 0:
+        chunks.extend(_module_chunks(lines, 0, headings[0] - 1))
+    for k, hi in enumerate(headings):
+        e = headings[k + 1] - 1 if k + 1 < len(headings) else len(lines) - 1
+        title = re.sub(r"^#+\s*", "", lines[hi]).strip() or lines[hi].strip()
+        chunks.append(_emit_chunk(lines, hi, e, "section", title,
+                                  lines[hi].strip(), None))
+    return chunks
 
 
 class ProjectRAG:
@@ -87,9 +359,14 @@ class ProjectRAG:
 
     # -- Schema --------------------------------------------------------------
     def _init_schema(self):
-        """Legt die Tabellen an, sofern sie noch nicht existieren."""
+        """Legt die Tabellen an; migriert alte Schemas (Zeilen-Chunking -> v2)."""
         with closing(self._connect()) as conn:
             with conn:
+                version = conn.execute("PRAGMA user_version").fetchone()[0]
+                if version < RAG_SCHEMA_VERSION:
+                    conn.execute("DROP TABLE IF EXISTS code_fts")
+                    conn.execute("DROP TABLE IF EXISTS code_chunks")
+                    conn.execute("PRAGMA user_version = {}".format(RAG_SCHEMA_VERSION))
                 conn.execute("""
                     CREATE TABLE IF NOT EXISTS code_chunks (
                         id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -99,6 +376,10 @@ class ProjectRAG:
                         line_start  INTEGER NOT NULL,
                         line_end    INTEGER NOT NULL,
                         content     TEXT    NOT NULL,
+                        symbol_type TEXT,
+                        symbol_name TEXT,
+                        signature   TEXT,
+                        docstring   TEXT,
                         file_sha    TEXT    NOT NULL,
                         UNIQUE(file_path, chunk_index)
                     )
@@ -120,6 +401,10 @@ class ProjectRAG:
                     "CREATE INDEX IF NOT EXISTS idx_code_chunks_path "
                     "ON code_chunks(file_path)"
                 )
+                conn.execute(
+                    "CREATE INDEX IF NOT EXISTS idx_code_chunks_symbol "
+                    "ON code_chunks(symbol_name)"
+                )
 
     # -- Scanning ------------------------------------------------------------
     def _scan_directory(self, directory_path: str) -> list:
@@ -128,6 +413,8 @@ class ProjectRAG:
         for root, dirs, names in os.walk(directory_path):
             dirs[:] = [d for d in dirs if d not in RAG_IGNORED_DIRS]
             for name in names:
+                if name in RAG_IGNORED_FILENAMES:
+                    continue
                 ext = os.path.splitext(name)[1].lower()
                 lang = RAG_LANGUAGE_EXTENSIONS.get(ext)
                 if not lang:
@@ -152,21 +439,13 @@ class ProjectRAG:
                 })
         return files
 
-    @staticmethod
-    def _chunk_lines(lines, chunk_lines: int = RAG_CHUNK_LINES,
-                     overlap: int = RAG_CHUNK_OVERLAP) -> list:
-        """Zerlegt eine Zeilenliste in überlappende Blöcke (1-basierte Zeilennummern)."""
-        chunks = []
-        step = max(1, chunk_lines - overlap)
-        total = len(lines)
-        start = 0
-        while start < total:
-            end = min(total, start + chunk_lines)
-            chunks.append((start + 1, end, "\n".join(lines[start:end])))
-            if end >= total:
-                break
-            start += step
-        return chunks
+    def _chunk_file(self, language: str, content: str) -> list:
+        """Chunkt eine Quelldatei sprachabhängig (strukturell statt Zeilenblöcke)."""
+        if language == "python":
+            return _chunk_python(content)
+        if language == "cpp":
+            return _chunk_cpp(content)
+        return _chunk_markdown(content)
 
     # -- Indexierung ---------------------------------------------------------
     def index_directory(self, directory_path: str) -> dict:
@@ -196,24 +475,25 @@ class ProjectRAG:
                     conn.execute("DELETE FROM code_fts WHERE file_path = ?", (f["path"],))
                     conn.execute("DELETE FROM code_chunks WHERE file_path = ?", (f["path"],))
 
-                    # Datei in Chunks zerlegen und einfügen
-                    for idx, (line_start, line_end, text) in enumerate(
-                        self._chunk_lines(f["content"].splitlines())
-                    ):
+                    # Datei strukturell in Chunks zerlegen und einfügen
+                    for idx, chunk in enumerate(self._chunk_file(f["language"], f["content"])):
                         cur = conn.execute(
                             "INSERT INTO code_chunks "
                             "(file_path, language, chunk_index, line_start, "
-                            " line_end, content, file_sha) "
-                            "VALUES (?, ?, ?, ?, ?, ?, ?)",
-                            (f["path"], f["language"], idx, line_start, line_end,
-                             text, f["sha"]),
+                            " line_end, content, symbol_type, symbol_name, "
+                            " signature, docstring, file_sha) "
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                            (f["path"], f["language"], idx, chunk["line_start"],
+                             chunk["line_end"], chunk["content"],
+                             chunk.get("symbol_type"), chunk.get("symbol_name"),
+                             chunk.get("signature"), chunk.get("docstring"), f["sha"]),
                         )
                         conn.execute(
                             "INSERT INTO code_fts "
                             "(rowid, file_path, language, line_start, line_end, content) "
                             "VALUES (?, ?, ?, ?, ?, ?)",
                             (cur.lastrowid, f["path"], f["language"],
-                             line_start, line_end, text),
+                             chunk["line_start"], chunk["line_end"], chunk["content"]),
                         )
                     indexed += 1
 
@@ -244,7 +524,7 @@ class ProjectRAG:
                 stale.append(row["file_path"])
         return stale
 
-    # -- Abfrage -------------------------------------------------------------
+    # -- Abfrage (hybrid: FTS/bm25 + exakter Identifier-Boost) ---------------
     @staticmethod
     def _build_match_expr(query: str) -> str | None:
         """Baut aus der Suchanfrage einen sicheren FTS5-MATCH-Ausdruck.
@@ -258,24 +538,67 @@ class ProjectRAG:
         return " AND ".join('"' + t + '"' for t in tokens)
 
     def query(self, query: str, top_k: int = 3) -> list:
-        """Sucht die top_k relevantesten Code-Chunks (bm25-Ranking)."""
+        """Hybride Suche: FTS5/bm25-Kandidaten + Re-Ranking nach exakten Treffern."""
         match_expr = self._build_match_expr(query)
         if not match_expr:
             return []
         with closing(self._connect()) as conn:
             rows = conn.execute(
                 """
-                SELECT file_path, language, line_start, line_end, content,
-                       bm25(code_fts) AS rank
+                SELECT c.file_path, c.language, c.line_start, c.line_end,
+                       c.content, c.symbol_type, c.symbol_name, c.signature,
+                       c.docstring, bm25(code_fts) AS rank
                 FROM code_fts
+                JOIN code_chunks c ON c.id = code_fts.rowid
                 WHERE code_fts MATCH ?
                 ORDER BY rank
                 LIMIT ?
                 """,
-                (match_expr, top_k),
+                (match_expr, max(top_k * 4, top_k)),
+            ).fetchall()
+        rows = [dict(r) for r in rows]
+
+        tokens = [t for t in re.findall(r"[A-Za-z_][A-Za-z0-9_]*", query) if len(t) >= 2]
+
+        def combined(r):
+            hay = " ".join([
+                r.get("content") or "",
+                r.get("symbol_name") or "",
+                r.get("signature") or "",
+            ])
+            exact = sum(
+                1 for t in tokens
+                if re.search(r"(?<!\w)" + re.escape(t) + r"(?!\w)", hay, re.IGNORECASE)
+            )
+            return (r["rank"], -exact)
+
+        rows.sort(key=combined)
+        return rows[:top_k]
+
+    # -- Wiki-Symbolabfrage --------------------------------------------------
+    def query_wiki(self, query: str, max_results: int = 12) -> list:
+        """Symbol-basierte Suche im Code-Wiki (name/signature/docstring)."""
+        tokens = [t for t in re.findall(r"[A-Za-z_][A-Za-z0-9_]*", query) if len(t) >= 3]
+        if not tokens:
+            return []
+        with closing(self._connect()) as conn:
+            like = "%" + query.strip().lower() + "%"
+            rows = conn.execute(
+                """
+                SELECT file_path, language, line_start, line_end, symbol_type,
+                       symbol_name, signature, docstring
+                FROM code_chunks
+                WHERE symbol_name IS NOT NULL
+                  AND (LOWER(symbol_name) LIKE ? OR LOWER(signature) LIKE ?
+                       OR LOWER(docstring) LIKE ?)
+                ORDER BY file_path, line_start
+                LIMIT ?
+                """,
+                (like, like, like, max_results),
             ).fetchall()
         return [dict(r) for r in rows]
 
+    # -- Formatierung --------------------------------------------------------
     @staticmethod
     def format_results(results: list, query: str) -> str:
         """Formatiert die Suchergebnisse als lesbaren Markdown-Block für den Chat."""
@@ -296,8 +619,114 @@ class ProjectRAG:
                 f"[{i}] {r['file_path']} (Zeilen {r['line_start']}-{r['line_end']})"
             )
             lines.append(f"    Sprache: {lang}")
+            if r.get("symbol_name"):
+                lines.append(f"    Symbol: {r['symbol_name']} ({r.get('symbol_type')})")
+            if r.get("signature"):
+                lines.append(f"    Signatur: {r['signature']}")
             lines.append(f"    ```{lang}\n{indented}\n    ```")
         return "\n".join(lines)
+
+    # -- Wiki-Generierung ----------------------------------------------------
+    @staticmethod
+    def _file_dependencies(conn, file_path: str, language: str) -> list:
+        """Sammelt Importe/#includes einer Datei aus den Modul-Chunks."""
+        if language == "markdown":
+            return []
+        rows = conn.execute(
+            "SELECT content FROM code_chunks WHERE file_path = ? AND symbol_type = 'module'",
+            (file_path,),
+        ).fetchall()
+        deps = []
+        seen = set()
+        for r in rows:
+            for line in r["content"].splitlines():
+                line = line.strip()
+                is_dep = (
+                    language == "python" and (line.startswith("import ") or line.startswith("from "))
+                ) or (
+                    language == "cpp" and line.startswith("#include")
+                )
+                if is_dep and line not in seen:
+                    seen.add(line)
+                    deps.append(line)
+                if len(deps) >= 60:
+                    return deps
+        return deps
+
+    def generate_wiki(self, wiki_path: str = WIKI_PATH) -> dict:
+        """Generiert das Code-Wiki (stabiler Symbolindex) als Markdown-Datei."""
+        with closing(self._connect()) as conn:
+            files = conn.execute(
+                "SELECT DISTINCT file_path, language FROM code_chunks ORDER BY file_path"
+            ).fetchall()
+            n_chunks = conn.execute("SELECT COUNT(*) AS n FROM code_chunks").fetchone()["n"]
+            n_syms = conn.execute(
+                "SELECT COUNT(*) AS n FROM code_chunks WHERE symbol_name IS NOT NULL"
+            ).fetchone()["n"]
+
+            out = [
+                "# mab~ Code-Wiki",
+                "",
+                f"_Automatisch generiert von `index_project_code` (MCP-Server). "
+                f"{len(files)} Dateien, {n_chunks} Chunks, {n_syms} Symbole._",
+                "",
+                "Dieses Wiki ist der strukturierte Symbolindex der Codebasis. Coding-Agents",
+                "lesen es einmalig pro Session als stabilen Kontext (prompt-cache-freundlich)",
+                "und verifizieren Details immer am echten Quellcode (Pfad + Zeilennummern).",
+                "",
+                "## Inhaltsverzeichnis",
+            ]
+            for f in files:
+                out.append(f"- [`{f['file_path']}`](#{_wiki_anchor(f['file_path'])})")
+            out.append("")
+
+            for f in files:
+                out.append(f"## {f['file_path']}")
+                out.append("")
+                out.append(f"- Sprache: `{f['language']}`")
+                deps = self._file_dependencies(conn, f["file_path"], f["language"])
+                if deps:
+                    out.append("- Abhängigkeiten: " + ", ".join(deps))
+                syms = conn.execute(
+                    """
+                    SELECT symbol_type, symbol_name, signature, docstring,
+                           line_start, line_end
+                    FROM code_chunks
+                    WHERE file_path = ? AND symbol_name IS NOT NULL
+                    ORDER BY line_start
+                    """,
+                    (f["file_path"],),
+                ).fetchall()
+                out.append("")
+                if not syms:
+                    out.append("(keine benannten Symbole - nur Text/Markdown)")
+                else:
+                    out.append("Symbole:")
+                    for s in syms:
+                        kind = s["symbol_type"] or ""
+                        sig = (s["signature"] or "").replace("|", "\\|")
+                        doc_lines = (s["docstring"] or "").strip().splitlines()
+                        doc1 = doc_lines[0][:120] if doc_lines else ""
+                        entry = (
+                            f"- `{s['symbol_name']}` ({kind}, "
+                            f"Zeilen {s['line_start']}-{s['line_end']}) - {sig}"
+                        )
+                        if doc1:
+                            entry += f" - {doc1}"
+                        out.append(entry)
+                out.append("")
+
+        out_dir = os.path.dirname(os.path.abspath(wiki_path))
+        os.makedirs(out_dir, exist_ok=True)
+        with open(wiki_path, "w", encoding="utf-8") as fh:
+            fh.write("\n".join(out) + "\n")
+        return {"path": wiki_path, "files": len(files), "chunks": n_chunks, "symbols": n_syms}
+
+
+def _wiki_anchor(path: str) -> str:
+    """Baut einen GitHub-Stil-Markdown-Anker aus einem Dateipfad."""
+    base = os.path.splitext(os.path.basename(path))[0].lower()
+    return re.sub(r"[^a-z0-9]+", "-", base).strip("-")
 
 
 # RAG-Instanz wird global gehalten, damit alle Tools dieselbe Datenbank nutzen.
@@ -981,12 +1410,18 @@ def validate_ipc_sync() -> str:
 
 @mcp.tool()
 def index_project_code(directory_path: str) -> str:
-    """Indiziert das Projektverzeichnis in die lokale SQLite-RAG-Datenbank (mab_rag.db).
+    """Indiziert das Projektverzeichnis in die SQLite-RAG-Datenbank (mab_rag.db).
 
     Scannt rekursiv nach C++-Dateien (.cpp/.h/.hpp/.cc/.cxx/.c), Python-Dateien
-    (.py) und Markdown-Dokumentation (.md, inkl. AGENTS.md/WORKSPACE_AGENT_PROMPT.md),
-    zerlegt sie in überlappende Chunks und speichert sie
-    für die Volltextsuche (FTS5/Trigramm). Unveränderte Dateien werden per
+    (.py) und Markdown-Dokumentation (.md, inkl. AGENTS.md/WORKSPACE_AGENT_PROMPT.md)
+    und zerlegt sie **strukturell** statt in feste Zeilenblöcke: Python via
+    `ast` (Klassen/Funktionen/Methoden), C++ über einen brace-basierten Scanner
+    (Funktionen/Klassen/Methoden/Namespaces), Markdown nach Überschriften.
+    Jeder Chunk trägt Symbol-Metadaten (Typ, Name, Signatur, Docstring).
+
+    Anschließend wird das Code-Wiki `doc/code_wiki.md` regeneriert (stabiler
+    Symbolindex mit Dateipfaden und Zeilennummern - der von Coding-Agents
+    einmalig pro Session gelesen wird). Unveränderte Dateien werden per
     SHA-256-Hash erkannt und übersprungen (inkrementelles Re-Indexing).
 
     Args:
@@ -994,7 +1429,7 @@ def index_project_code(directory_path: str) -> str:
             Workspace-Root `mab_tilde`).
 
     Returns:
-        Zusammenfassung des Indexierungsvorgangs.
+        Zusammenfassung des Indexierungsvorgangs inkl. Wiki-Status.
     """
     try:
         stats = _rag.index_directory(directory_path)
@@ -1003,13 +1438,25 @@ def index_project_code(directory_path: str) -> str:
     except sqlite3.Error as e:
         return f"Fehler bei der Datenbank-Operation: {e}"
 
+    wiki_line = ""
+    try:
+        wiki = _rag.generate_wiki(WIKI_PATH)
+        wiki_line = (
+            f"\n  - Code-Wiki regeneriert: {wiki['path']}\n"
+            f"    ({wiki['symbols']} Symbole in {wiki['files']} Dateien)"
+        )
+    except OSError as e:
+        wiki_line = f"\n  - Wiki-Erzeugung übersprungen: {e}"
+
     return (
         f"Indexierung abgeschlossen:\n"
         f"  - Dateien gescannt: {stats['total_files']}\n"
         f"  - Neu indiziert: {stats['indexed']}\n"
         f"  - Unverändert übersprungen: {stats['skipped']}\n"
-        f"  - Datenbank: {_rag.db_path}\n\n"
-        "Verwende `query_code_rag`, um gezielt nach Code-Stellen zu suchen."
+        f"  - Datenbank: {_rag.db_path}"
+        f"{wiki_line}\n\n"
+        "Verwende `query_code_rag` für gezielte Codestellen und "
+        "`query_code_wiki` für die Symbol-/Struktur-Suche."
     )
 
 
@@ -1017,10 +1464,11 @@ def index_project_code(directory_path: str) -> str:
 def query_code_rag(query: str, top_k: int = 3) -> str:
     """Durchsucht die RAG-Datenbank nach Code-Stellen passend zur Suchanfrage.
 
-    Nutzt SQLite FTS5 mit Trigramm-Tokenizer: Suchbegriffe werden als
-    Substrings gematcht, daher funktionieren auch Identifikatoren wie
-    `mab_tilde`, `block_size` oder `dsp_setup` direkt. Die Chunks werden nach
-    bm25-Relevanz sortiert und als formatierte Code-Snippets zurückgegeben.
+    Hybride Suche: SQLite FTS5 mit Trigramm-Tokenizer (bm25, lexikalisch -
+    matcht auch Identifikator-Substrings wie `mab_tilde`, `block_size`,
+    `dsp_setup`) plus Re-Ranking nach exakten Identifier-Treffern (Syntax-
+    Boost). Treffer werden mit Symbol-Metadaten, Dateipfad und Zeilennummern
+    als formatierte Code-Snippets zurückgegeben.
 
     Args:
         query: Suchanfrage, z.B. "shared memory handshake" oder "enable handler".
@@ -1036,6 +1484,50 @@ def query_code_rag(query: str, top_k: int = 3) -> str:
         )
     results = _rag.query(query, top_k=top_k)
     return _rag.format_results(results, query)
+
+
+@mcp.tool()
+def query_code_wiki(query: str, max_results: int = 12) -> str:
+    """Durchsucht den Code-Wiki-Symbolindex nach Klassen, Funktionen und Methoden.
+
+    Sucht über symbol_name, Signatur und Docstring der strukturierten Chunks
+    (nicht über den Volltext der Implementierung). Liefert die gefundenen
+    Symbole mit Typ, Dateipfad und Zeilennummern - ideal als Einstieg für
+    Struktur-/Architekturfragen ("welche Methode macht X?", "wo ist Y
+    definiert?"). Für Implementierungsdetails danach `query_code_rag` nutzen.
+
+    Args:
+        query: Suchbegriff, z.B. "apply_io", "SharedMemoryManager" oder "handshake".
+        max_results: Maximale Anzahl an Symbolen (Standard: 12).
+
+    Returns:
+        Gefundene Symbole mit Dateipfad, Zeilennummern, Signatur und Docstring.
+    """
+    if not _rag_has_data():
+        return (
+            "Die RAG-Datenbank ist noch leer.\n"
+            "Führe zuerst `index_project_code` auf dem Projektverzeichnis aus."
+        )
+    rows = _rag.query_wiki(query, max_results)
+    if not rows:
+        return (
+            f"Keine Wiki-Symbole für: '{query}'\n"
+            "Tipp: `query_code_wiki` sucht nach Symbolnamen/Signaturen. Für "
+            "Volltext im Implementierungscode `query_code_rag` verwenden."
+        )
+    lines = [f"Code-Wiki-Symbole für: '{query}'", "=" * 60]
+    for i, r in enumerate(rows, 1):
+        sig = r.get("signature") or ""
+        doc_lines = (r.get("docstring") or "").strip().splitlines()
+        doc1 = doc_lines[0][:160] if doc_lines else ""
+        lines.append("")
+        lines.append(f"[{i}] {r['symbol_name']} ({r['symbol_type']})")
+        lines.append(f"    {r['file_path']}:{r['line_start']}-{r['line_end']}")
+        if sig:
+            lines.append(f"    {sig}")
+        if doc1:
+            lines.append(f"    {doc1}")
+    return "\n".join(lines)
 
 
 def _rag_has_data() -> bool:

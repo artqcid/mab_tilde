@@ -250,10 +250,15 @@ Für Coding mit Cloud-Modellen (z.B. über OpenRouter) dient der lokale MCP-Serv
 ### 6.1 RAG-Tools (MCP)
 - `index_project_code(directory_path)` – Indiziert alle Projektdateien
   (C++, Python, Markdown) rekursiv in die SQLite-FTS5-Datenbank `mab_rag.db`.
-  Inkrementell (SHA-256), entfernte Dateien werden aufgeräumt.
+  Inkrementell (SHA-256), entfernte Dateien werden aufgeräumt. **Regeneriert
+  anschließend automatisch das Code-Wiki** `doc/code_wiki.md`.
 - `query_code_rag(query, top_k)` – FTS5-Volltextsuche mit Trigramm-Tokenizer.
   Findet auch Identifikatoren wie `mab_tilde`, `block_size`, `dsp_setup`
   (Substring-Matching) und liefert Chunks mit Dateipfad + Zeilennummern.
+- `query_code_wiki(query, max_results)` – Struktursuche über den Code-Wiki-
+  Symbolindex (Klassen, Funktionen, Methoden, Sections) anhand von
+  Symbolname/Signatur/Docstring. Liefert Typ + Dateipfad + Zeilennummern.
+  Für Implementierungsdetails danach `query_code_rag` verwenden.
 - `inspect_rave_model(model_path)` – RAVE/ONNX/TorchScript-Analyse (Hop-Size,
   Ein-/Ausgangs-Shapes, `encode`/`decode`/`forward`).
 
@@ -268,14 +273,23 @@ Weitere Tools: `validate_ipc_sync`, `search_max_sdk_docs`, `inspect_model_metada
 2. **RAG nutzen:** Vor Implementierungen `query_code_rag` aufrufen, um exakte
    Signaturen, Konstanten (`CONTROL_RING_SIZE`, `MAX_BLOCK_SIZE`, `MAGIC_NUMBER`)
    und Message-Handler zu verifizieren.
-3. **Index aktuell halten:** Nach Änderungen an `.cpp/.h/.py/.md` ggf.
-   `index_project_code` erneut ausführen, damit die RAG-Datenbank nicht veraltet.
-4. **Doku pflegen:** `WORKSPACE_AGENT_PROMPT.md` und `AGENTS.md` sind die zentrale
+3. **Code-Wiki nutzen:** `query_code_wiki` für Strukturfragen („welche Methode
+   macht X?“, „wo ist Y definiert?“); für Implementierungsdetails immer
+   `query_code_rag` + Verifikation im Quellcode.
+4. **Index aktuell halten:** Nach Änderungen an `.cpp/.h/.py/.md` ggf.
+   `index_project_code` erneut ausführen, damit RAG-Datenbank und Code-Wiki
+   nicht veraltet sind.
+5. **Doku pflegen:** `WORKSPACE_AGENT_PROMPT.md` und `AGENTS.md` sind die zentrale
    Anleitung. Architektur-Änderungen müssen dort mitdokumentiert werden.
 
-### 6.3 RAG-Datenbank
+### 6.3 RAG-Datenbank & Code-Wiki
 - `mab_rag.db` wird von `index_project_code` erzeugt (Laufzeit-Artefakt, in
   `.gitignore`). `Remove-Item mab_rag.db*` erzwingt einen vollständigen Neuaufbau.
+- `doc/code_wiki.md` wird von `index_project_code` automatisch regeneriert
+  (stabiler Symbolindex mit Dateipfaden + Zeilennummern, ~550 Symbole für das
+  aktuelle Projekt). Coding-Agents lesen das Wiki **einmalig pro Session**
+  (prompt-cache-freundlich) und verifizieren Details am echten Quellcode.
+  Das Wiki indiziert sich nicht selbst (`code_wiki.md` ist ausgeschlossen).
 - **Referenz-Repo nn_tilde:** lokaler Clone `C:\Users\marku\Documents\GitHub\thirdParty\nn_tilde`
   (Remote `acids-ircam/nn_tilde`). Dessen Kerndateien
   (`src/frontend/maxmsp/shared/nn_base.h`, `nn_tilde/nn_tilde.cpp`, `nn.info/nn.info.cpp`,
@@ -303,8 +317,9 @@ Weitere Tools: `validate_ipc_sync`, `search_max_sdk_docs`, `inspect_model_metada
    - Responds to `dump` and `set` commands
 
 3. **`mab_mcp_server.py`** – MCP server with SQLite-RAG tools
-   (`index_project_code`, `query_code_rag`, `inspect_rave_model`) plus
-   Validierungs-/Analyse-Tools für Entwicklung und Agent-Support.
+   (`index_project_code`, `query_code_rag`, `query_code_wiki`,
+   `inspect_rave_model`) plus Validierungs-/Analyse-Tools für Entwicklung
+   und Agent-Support sowie Code-Wiki-Generierung (`doc/code_wiki.md`).
 
 4. **`AGENTS.md`** – Agent-Instructions (auto-load von opencode/Continue),
    verweist auf diese Datei als zentrale Anleitung.
