@@ -356,69 +356,85 @@ Send the following messages to `mab~` and verify console output:
 
 ### Phase 3 – Method-Aware Processing & Latent Inlets (encode/decode/forward)
 
-**Status:** 🔲 NICHT GESTARTET – aktueller Stand: `dsp_setup(x, 1)` fixiert, keine Methoden-Metadaten im Header.
+**Status:** 🟢 FERTIG (Tasks 3.1–3.3); Task 3.4 (Max-Verifikation) offen – Max-Runtime-Test nötig.
 
-**Befund (Bug „keine latent inlets bei `decode`"):**
+**Umsetzung:** `dsp_setup(x, 1)` ist NICHT mehr fixiert – nach dem Handshake wird das
+IO-Layout über `mab_tilde_apply_io` auf dem Max-Main-Thread neu aufgebaut
+(`dsp_resize` + Outlet-Recreate via `t_qelem`, nie vom Audio-/Init-Thread).
+Der Worker extrahiert `{method}_params`, schreibt sie vor `signal_ready()` in
+`SharedMemoryHeader` v2 und dispatched in `infer_method` (decode/prior:
+Last-Sample-Selektion `(1, ci, 1)`, encode/forward: voller Block; `repeat_interleave`
+für Ratio-Hold). Latent-Kanäle werden im Shared Memory mit voller Blockbreite
+gehalten, C++ akkumuliert/leert über `block_accumulator.h`.
+
+**Befund (Bug „keine latent inlets bei `decode`"):** (historisch, behoben)
 Beim Laden von `D:\AI-Models\ts models\musicnet.ts` (AFTER / `VariationalScriptedRAVE`) mit
-`method decode` erscheinen keine latenten Inlets, nur Audio-In/Out – ohne Fehlermeldung.
+`method decode` erschienen keine latenten Inlets, nur Audio-In/Out – ohne Fehlermeldung.
 Ursachen (verifiziert am Quellcode):
-1. `mab_tilde_new()` ruft fix `dsp_setup(x, 1)` + 1 Signal-Outlet auf (`mab_tilde.cpp:138`).
-   Die Inlet-/Outlet-Anzahl hängt nicht von der Methode ab.
-2. Der Worker liest die Methoden-Metadaten nie und überträgt sie nicht an C++:
-   `SharedMemoryHeader` kennt nur `block_size`/`num_channels`. Das Modell liefert aber
+1. `mab_tilde_new()` rief fix `dsp_setup(x, 1)` + 1 Signal-Outlet auf.
+   Die Inlet-/Outlet-Anzahl hing nicht von der Methode ab.
+2. Der Worker las die Methoden-Metadaten nie und übertrug sie nicht an C++:
+   `SharedMemoryHeader` kannte nur `block_size`/`num_channels`. Das Modell liefert aber
    `decode_params = [16, 2048, 1, 1]` und `encode_params = [1, 1, 16, 2048]` (Tensor).
    Format identisch zu nn_tilde (`get_method_params` → `[channels_in, ratio_in, channels_out, ratio_out]`).
-3. `mab_tilde_method()` leitet `method` nicht an Python weiter (nur `post`); der Worker-Handler
-   `method` druckt nur, er wechselt die Inferenzfunktion nicht.
-4. `infer_block()` ruft hartcodiert `model(tensor)` auf – nie `model.encode()` / `model.decode()`.
+3. `mab_tilde_method()` leitete `method` nicht an Python weiter (nur `post`); der Worker-Handler
+   `method` druckte nur, er wechselte die Inferenzfunktion nicht.
+4. `infer_block()` rief hartcodiert `model(tensor)` auf – nie `model.encode()` / `model.decode()`.
 
 **Konsequenz für `musicnet.ts` mit `decode`:** Modell erwartet 16 Latent-Kanäle
 (`channels_in=16`, `ratio_in=2048`) und liefert 1 Audiokanal (`channels_out=1`, `ratio_out=1`).
 Zielzustand: **16 Latent-Inlets + 1 Audio-Outlet** (bei `encode` umgekehrt).
 
-#### Task 3.1 – Model-Method-Metadaten-Handshake (Python + C++)
-- [ ] Worker liest nach dem Laden alle `{method}_params`-Tensoren
+#### Task 3.1 – Model-Method-Metadaten-Handshake (Python + C++) ✅
+- [x] Worker liest nach dem Laden alle `{method}_params`-Tensoren
       (`[channels_in, ratio_in, channels_out, ratio_out]`) für die vorhandenen Methoden
-      (`encode`/`decode`/`forward`) via `model._c.get_method(name)` + `model.attr(name + "_params")`.
-- [ ] `SharedMemoryHeader` auf Version 2 erweitern (C++ + ctypes-`_fields_`):
-  - [ ] `uint32_t channels_in` / `uint32_t channels_out`
-  - [ ] `uint32_t input_ratio` / `uint32_t output_ratio`
-  - [ ] `uint32_t latent_size` (= `channels_in` bei decode, `channels_out` bei encode)
-  - [ ] `char method[64]` (aktive Methode)
-- [ ] Python schreibt diese Felder vor `signal_ready()` in den Header.
-- [ ] C++ `init_worker()` liest die Felder nach `MapViewOfFile` aus und speichert sie im Struct.
-- [ ] `test_shared_memory_header_compatibility` auf v2 aktualisieren.
+      (`encode`/`decode`/`forward`) via `get_method_params` (versionstolerantes
+      `_c`-API, Fallback-Heuristik).
+- [x] `SharedMemoryHeader` auf Version 2 erweitert (C++ + ctypes-`_fields_`):
+  - [x] `uint32_t channels_in` / `uint32_t channels_out`
+  - [x] `uint32_t input_ratio` / `uint32_t output_ratio`
+  - [x] `uint32_t latent_size` (= `channels_in` bei decode/prior, `channels_out` bei encode)
+  - [x] `char method[64]` (aktive Methode)
+- [x] Python schreibt diese Felder vor `signal_ready()` in den Header (`apply_method`).
+- [x] C++ `init_worker()` liest die Felder nach `MapViewOfFile` aus (`mab_tilde_apply_io`
+      auf dem Main-Thread via qelem).
+- [x] `test_shared_memory_header_compatibility` auf v2 aktualisiert (Offsets, 128 Bytes)
+      + Python-Pendant `test/test_shared_memory_v2.py`.
 
-#### Task 3.2 – Latent-Buffer & Ratio-Handling (Python)
-- [ ] Shared Memory um Latent-Bereiche erweitern: Eingabe `channels_in × frames_in × 4B`,
-      Ausgabe `channels_out × frames_out × 4B`; `frames` aus `block_size` und Ratios abgeleitet
-      (decode: 1 Latent-Frame pro `ratio_in`=2048 Audio-Samples).
-- [ ] Buffergröße dynamisch nach Methoden-Params dimensionieren (nicht mehr fix `num_channels × block_size`).
-- [ ] `infer_block()` → Methoden-Dispatch: `forward`→`model(x)`, `encode`→`model.encode(x)`,
-      `decode`→`model.decode(z)` (bei AFTER optional `from_forward` aus `forward_params` ableiten).
-- [ ] Ratio-Handling v1: Latent-Frame über das Hop-Fenster halten (nearest-hold);
-      v2: Interpolation wie nn_tilde – Detail im Implementierungsschritt verifizieren.
-- [ ] `method <name>`-Message im Worker: Methode wirklich wechseln, Metadaten neu in den Header
-      schreiben (Bestätigung an C++), nicht nur printen.
+#### Task 3.2 – Latent-Buffer & Ratio-Handling (Python) ✅
+- [x] Shared Memory um Latent-Bereiche erweitert: Buffers dimensioniert auf
+      `max(channels_in/out)` über ALLE Methoden + `block_size = max(bufsize, ratios)`
+      (`compute_layout`) – ein Methoden-Wechsel braucht kein Remap.
+- [x] Buffergröße dynamisch nach Methoden-Params dimensioniert (nicht mehr fix `num_channels × block_size`).
+- [x] `infer_method()` → Methoden-Dispatch: `forward`→`model(x)`, `encode`→`model.encode(x)`,
+      `decode`→`model.decode(z)`, `prior`→`model.prior(z)`.
+- [x] Ratio-Handling v1: Latent-Frame über das Hop-Fenster halten (nearest-hold,
+      `repeat_interleave(out_ratio)` + Pad/Trim auf `block_size`); C++ akkumuliert die
+      Eingabe über mehrere DSP-Ticks (`block_accumulator.h`).
+- [x] `method <name>`-Message im Worker: wechselt die Methode wirklich, schreibt die
+      Metadaten neu in den Header (C++ erkennt den Wechsel per perform64 und baut das
+      IO-Layout um), nicht nur printen.
 
-#### Task 3.3 – Dynamische Inlets/Outlets (C++, nativer Max-SDK)
-- [ ] Inlets = `channels_in`, Outlets = `channels_out` der aktiven Methode.
-- [ ] Nach Handshake `dsp_setup(x, n_inlets)` + `outlet_new(x, "signal")`.
-      **Max-Hauptthread-Regel:** Umbau nur auf dem Main-Thread → vom Init-Thread per `defer()`/
-      `schedule` auf den Main-Thread posten (Argumente via `sysmem_newptr`-Struktur, `defer`
-      übernimmt den Free).
-- [ ] Fallback, falls Runtime-Umbau im nativen SDK instabil: Recreate/Reconnect-Ansatz prüfen;
-      Mindestziel: Inlets korrekt sobald Modell geladen (Bypass vorher mit Stille, kein Crash).
-- [ ] Inlet-/Outlet-Labels wie nn_tilde: `{method}_input_labels`/`{method}_output_labels` aus dem
-      Modell lesen, sonst `(signal) latent input i` / `(signal) audio output i`.
-- [ ] `assist` auf dynamische Inlets/Outlets anpassen.
+#### Task 3.3 – Dynamische Inlets/Outlets (C++, nativer Max-SDK) ✅
+- [x] Inlets = `channels_in`, Outlets = `channels_out` der aktiven Methode.
+- [x] Nach Handshake `dsp_resize(x, n_inlets)` + Outlet-Recreate.
+      **Max-Hauptthread-Regel:** Umbau nur auf dem Main-Thread → `t_qelem`/
+      `mab_tilde_apply_io` (qelem_set ist thread-safe, kein sysmem-Ptr nötig).
+- [x] Fallback: fehlender Header / Crash → Bypass mit Stille, kein Crash.
+- [x] Inlet-/Outlet-Labels wie nn_tilde: assist liefert methoden-abhängige Labels
+      (decode/prior: `(signal) latent input i` / `(signal) audio output i`;
+      encode: Audio-Inlet / `(signal) latent output i`). Modell-Labels
+      (`{method}_input_labels`) via Header v2 NICHT übertragen (nur im `mab.info`-Query verfügbar).
+- [x] `assist` auf dynamische Inlets/Outlets angepasst.
 
-#### Task 3.4 – Verifikation
+#### Task 3.4 – Verifikation (in Max, offen)
 - [ ] `[mab~ musicnet.ts decode 2048]` → 16 Latent-Inlets, 1 Audio-Outlet, keine Dropouts.
 - [ ] `forward` → 1 Inlet/1 Outlet wie bisher.
 - [ ] `encode` → 1 Audio-Inlet, 16 Latent-Outlets.
 - [ ] Methodenwechsel zur Laufzeit per `method decode`.
-- [ ] Python-Unit-Test „Metadaten-Extraktion" (analog `test_block_size_extraction.py`).
+- [x] Python-Unit-Tests „Metadaten-Extraktion"/„Method-Dispatch" (`test_method_layout.py`,
+      `test_shared_memory_v2.py`) + C++-Tests (`test_block_accumulator`,
+      `test_shared_memory_header_compatibility`) – alle grün.
 
 ---
 
@@ -819,9 +835,9 @@ void mab_tilde_perform64(t_mab_tilde* x, t_object* dsp64, double** ins, long num
 | Feature | Status | Notes |
 |---------|--------|-------|
 | `anything` message forwarding | ✅ | Implemented - `mab_tilde_anything()` forwards messages via lock-free ring buffer |
-| `method` message | ⚠️ | Nur `post` in C++, kein Forwarding an Python; Worker wechselt die Methode nicht (Phase 3) |
+| `method` message | ✅ | Forwardet an Python; Worker wechselt die Methode, Header v2 wird aktualisiert, IO-Rebuild via qelem (Phase 3) |
 | Multi-channel (`mc.mab~`) | ⚠️ | Nur `num_channels`-Argument + `[num_channels, block_size]`-Layout; **kein** echtes `mc.`-External (Phase 5) |
-| Method-aware inlets/outlets (Latent) | ❌ | `dsp_setup(x, 1)` fixiert; keine `{method}_params`-Metadaten im Header (Phase 3) |
+| Method-aware inlets/outlets (Latent) | ✅ | Header v2 + `mab_tilde_apply_io` (Main-Thread), `block_accumulator`, `infer_method`-Dispatch, dynamische assist-Labels (Phase 3) |
 | Control ring buffer | ✅ | `ControlRingBuffer` integrated in shared memory, C++ enqueues, Python dequeues |
 | Model block size extraction | ✅ | `extract_block_size()` function added, extracts from model graph |
 | Crash monitoring | ✅ | `GetExitCodeProcess()` check in perform64, auto-fallback to bypass on crash |
@@ -830,7 +846,6 @@ void mab_tilde_perform64(t_mab_tilde* x, t_object* dsp64, double** ins, long num
 
 | Phase | Komponente | Analog zu nn_tilde | Kern |
 |-------|-----------|--------------------|------|
-| 3 | Method-aware processing & Latent-Inlets | `update_method()`/`get_method_params` | Header v2, Latent-Buffer, dynamische Inlets/Outlets, `method`-Dispatch |
 | 4 | `mab.info` | `nn.info` | Prozessisolierter Modell-Inspektor (`--query`-Modus), keine torch-Lib im Max-Prozess |
 | 5 | `mc.mab~` | `mc.nn~` | `multichanneloutputs`/`inputchanged`, `channel_map`, `chans`-Attribut |
 | 6 | `mcs.mab~` | `mcs.nn~` | `n_batches` Inlets, Batch-Inferenz `(batch, channels_in, block_size)` |

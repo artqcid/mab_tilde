@@ -1201,7 +1201,7 @@ def main():
     block_size, max_channels_in, max_channels_out = compute_layout(
         method_params, args.bufsize)
     if not method_params:
-        max_channels_in = max_channels_out = num_channels
+        max_channels_in = max_channels_out = args.num_channels
     print(f"[inference_worker] Layout: block_size={block_size}, "
           f"channels_in(max)={max_channels_in}, channels_out(max)={max_channels_out}")
 

@@ -25,7 +25,9 @@ Create a crash‑safe, process‑isolated MaxMSP external that replaces `nn_tild
   [channels_in, ratio_in, channels_out, ratio_out]` aus dem TorchScript-Modell (identisch zu
   nn_tilde). `decode` → `channels_in` Latent-Inlets + `channels_out` Audio-Outlets;
   `encode` → Audio-Inlet + Latent-Outlets. Metadaten kommen über `SharedMemoryHeader` v2 vom
-  Worker (vor `signal_ready()` geschrieben). Status: 🔲 geplant, siehe `doc/implementation_plan.md` Phase 3.
+  Worker (vor `signal_ready()` geschrieben); der IO-Umbau läuft über `mab_tilde_apply_io`
+  auf dem Max-Main-Thread (`t_qelem`). Status: 🟢 implementiert (Phase 3, Task 3.4-Max-Test
+  offen), siehe `doc/implementation_plan.md` Phase 3.
 
 ### `mc.mab~` (Multi‑Channel)
 - Processes Max 8+ multi-channel signals in batch mode (similar to `mc.nn~`) to run multiple tracks in parallel through the model.

@@ -331,8 +331,27 @@ void mab_tilde_free(t_mab_tilde* x) {
 }
 
 void mab_tilde_assist(t_mab_tilde* x, void* b, long m, long a, char* s) {
-    if (m == ASSIST_INLET) sprintf(s, "(signal) Audio Input");
-    else sprintf(s, "(signal) Audio Output");
+    // Phase 3: methoden-abhängige Labels (nn_tilde-Parität). decode/prior:
+    // Latent-Inlets + Audio-Outlets; encode: Audio-Inlet + Latent-Outlets.
+    const char* method = x->active_method[0] ? x->active_method : x->method_name;
+    bool is_latent_in = (strcmp(method, "decode") == 0 ||
+                         strcmp(method, "prior") == 0);
+    bool is_latent_out = (strcmp(method, "encode") == 0);
+    if (m == ASSIST_INLET) {
+        if (is_latent_in)
+            sprintf(s, "(signal) latent input %ld", a + 1);
+        else if (method[0])
+            sprintf(s, "(signal) audio input %ld", a + 1);
+        else
+            sprintf(s, "(signal) Audio Input %ld", a + 1);
+    } else {
+        if (is_latent_out)
+            sprintf(s, "(signal) latent output %ld", a + 1);
+        else if (method[0])
+            sprintf(s, "(signal) audio output %ld", a + 1);
+        else
+            sprintf(s, "(signal) Audio Output %ld", a + 1);
+    }
 }
 
 void mab_tilde_dsp64(t_mab_tilde* x, t_object* dsp64, short* count, double samplerate, long maxvectorsize, long flags) {
@@ -404,8 +423,12 @@ void mab_tilde_perform64(t_mab_tilde* x, t_object* dsp64, double** ins, long num
     // header->method; we must NOT call dsp_resize/outlet_new from the audio
     // thread, so we queue a qelem that fires mab_tilde_apply_io on the main
     // thread. Until then the old layout stays valid (it still matches the
-    // currently wired inlets/outlets).
-    if (!x->method_pending && strcmp(x->header->method, x->active_method) != 0) {
+    // currently wired inlets/outlets). A channel-count change (e.g. [load] of
+    // a different model with the same method name) also triggers a rebuild.
+    if (!x->method_pending &&
+        (strcmp(x->header->method, x->active_method) != 0 ||
+         (long)x->header->channels_in != x->channels_in ||
+         (long)x->header->channels_out != x->channels_out)) {
         x->method_pending = 1;
         qelem_set(x->io_qelem);
     }
@@ -457,6 +480,11 @@ void mab_tilde_apply_io(t_mab_tilde* x) {
     x->channels_out = new_out;
     strncpy(x->active_method, x->header->method, sizeof(x->active_method) - 1);
     x->active_method[sizeof(x->active_method) - 1] = '\0';
+
+    // Block-Geometrie hat sich geändert: Teilblöcke der alten Methode
+    // verwerfen (verhindert versetzte Frames nach einem Methoden-/Modell-Wechsel).
+    x->in_pos = 0;
+    x->out_pos = 0;
 
     // Rebuild inlets (dsp_resize creates/frees the signal proxies)
     dsp_resize((t_pxobject*)x, new_in);

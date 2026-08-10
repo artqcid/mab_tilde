@@ -13,9 +13,10 @@ Sie definiert Architektur, Message-Contract und Build-Regeln des `mab~`-External
 
 - Ziel: crash-sicheres, prozess-isoliertes MaxMSP-External `mab~` / `mc.mab~`
   als Ersatz für `nn_tilde` (TorchScript-Modelle wie RAVE, AFTER unter Windows).
-  Geplant: `mab.info`, `mc.mab~` (echtes `mc.`), `mcs.mab~` sowie methodenabhängige
-  Latent-Inlets (`encode`/`decode`/`forward`) – siehe `doc/implementation_plan.md`
-  Phasen 3–6. Aktueller Stand: Latent-Inlets fehlen (`dsp_setup(x,1)` fixiert).
+  Geplant: `mab.info`, `mc.mab~` (echtes `mc.`), `mcs.mab~` – siehe `doc/implementation_plan.md`
+  Phasen 4–6. Aktueller Stand: Phase 3 fertig (Method-Aware-Processing: Header v2,
+  Latent-Inlets/Outlets via `mab_tilde_apply_io` auf dem Main-Thread, `block_accumulator`,
+  `infer_method`-Dispatch) – nur Max-Verifikation offen (Task 3.4).
 - Isolation: Python-Prozess + Shared Memory (`MabSharedMem_{PID}`),
   lock-free SPSC-Ringbuffer, Magic `0x4D414254` (`'MABT'`).
 - Hauptcode: `source/projects/mab_tilde/mab_tilde.cpp` (C++) und
