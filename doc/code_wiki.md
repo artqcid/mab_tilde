@@ -1,6 +1,6 @@
 # mab~ Code-Wiki
 
-_Automatisch generiert von `index_project_code` (MCP-Server). 41 Dateien, 857 Chunks, 568 Symbole._
+_Automatisch generiert von `index_project_code` (MCP-Server). 41 Dateien, 873 Chunks, 584 Symbole._
 
 Dieses Wiki ist der strukturierte Symbolindex der Codebasis. Coding-Agents
 lesen es einmalig pro Session als stabilen Kontext (prompt-cache-freundlich)
@@ -58,10 +58,10 @@ Symbole:
 - `Zentrale Anleitung` (section, Zeilen 7-11) - ## Zentrale Anleitung
 - `Projekt-Kurzüberblick` (section, Zeilen 12-30) - ## Projekt-Kurzüberblick
 - `Kernregeln (Architektur)` (section, Zeilen 31-59) - ## Kernregeln (Architektur)
-- `Projektwissen per RAG (MCP)` (section, Zeilen 60-71) - ## Projektwissen per RAG (MCP)
-- `Referenz-Code: nn_tilde (Paritäts-Quelle)` (section, Zeilen 72-84) - ## Referenz-Code: nn_tilde (Paritäts-Quelle)
-- `Subagent-Rechte (Autopilot)` (section, Zeilen 85-95) - ## Subagent-Rechte (Autopilot)
-- `Doku-Pflicht` (section, Zeilen 96-100) - ## Doku-Pflicht
+- `Projektwissen per RAG (MCP)` (section, Zeilen 60-75) - ## Projektwissen per RAG (MCP)
+- `Referenz-Code: nn_tilde (Paritäts-Quelle)` (section, Zeilen 76-88) - ## Referenz-Code: nn_tilde (Paritäts-Quelle)
+- `Subagent-Rechte (Autopilot)` (section, Zeilen 89-99) - ## Subagent-Rechte (Autopilot)
+- `Doku-Pflicht` (section, Zeilen 100-104) - ## Doku-Pflicht
 
 ## C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\MCP_README.md
 
@@ -86,18 +86,20 @@ Symbole:
 - `SQLite-RAG-Tools (v3.1) & Code-Wiki` (section, Zeilen 76-84) - ## SQLite-RAG-Tools (v3.1) & Code-Wiki
 - `Strukturelles Chunking (statt Zeilenblöcken)` (section, Zeilen 85-93) - ### Strukturelles Chunking (statt Zeilenblöcken)
 - ``index_project_code(directory_path: str)`` (section, Zeilen 94-112) - ### `index_project_code(directory_path: str)`
-- ``query_code_rag(query: str, top_k: int = 3)`` (section, Zeilen 113-120) - ### `query_code_rag(query: str, top_k: int = 3)`
-- ``query_code_wiki(query: str, max_results: int = 12)`` (section, Zeilen 121-128) - ### `query_code_wiki(query: str, max_results: int = 12)`
-- ``inspect_rave_model(model_path: str)`` (section, Zeilen 129-134) - ### `inspect_rave_model(model_path: str)`
-- `Verpflichtender Workflow für Coding-Agents` (section, Zeilen 135-143) - ### Verpflichtender Workflow für Coding-Agents
-- `RAG-Datenbank & Git` (section, Zeilen 144-149) - ### RAG-Datenbank & Git
-- `Projektstruktur` (section, Zeilen 150-161) - ## Projektstruktur
-- `Shared Memory Handshake-Protokoll` (section, Zeilen 162-165) - ## Shared Memory Handshake-Protokoll
-- `Neue Tools (v2.0)` (section, Zeilen 166-167) - ## Neue Tools (v2.0)
-- ``inspect_model_metadata(model_path)`` (section, Zeilen 168-174) - ### `inspect_model_metadata(model_path)`
-- ``search_max_sdk_docs(query)`` (section, Zeilen 175-180) - ### `search_max_sdk_docs(query)`
-- ``validate_ipc_sync()`` (section, Zeilen 181-187) - ### `validate_ipc_sync()`
-- `Lizenz` (section, Zeilen 188-190) - ## Lizenz
+- ``query_code_rag(query: str, top_k: int = 3, format: str = "text")`` (section, Zeilen 113-127) - ### `query_code_rag(query: str, top_k: int = 3, format: str = "text")`
+- ``get_rag_chunk(chunk_id: str)`` (section, Zeilen 128-134) - ### `get_rag_chunk(chunk_id: str)`
+- ``query_code_wiki(query: str, max_results: int = 12, format: str = "text")`` (section, Zeilen 135-143) - ### `query_code_wiki(query: str, max_results: int = 12, format: str = "text")`
+- ``inspect_rave_model(model_path: str)`` (section, Zeilen 144-149) - ### `inspect_rave_model(model_path: str)`
+- `Verpflichtender Workflow für Coding-Agents` (section, Zeilen 150-158) - ### Verpflichtender Workflow für Coding-Agents
+- `Token-Effizienter RAG-Workflow` (section, Zeilen 159-167) - ### Token-Effizienter RAG-Workflow
+- `RAG-Datenbank & Git` (section, Zeilen 168-173) - ### RAG-Datenbank & Git
+- `Projektstruktur` (section, Zeilen 174-185) - ## Projektstruktur
+- `Shared Memory Handshake-Protokoll` (section, Zeilen 186-189) - ## Shared Memory Handshake-Protokoll
+- `Neue Tools (v2.0)` (section, Zeilen 190-191) - ## Neue Tools (v2.0)
+- ``inspect_model_metadata(model_path)`` (section, Zeilen 192-198) - ### `inspect_model_metadata(model_path)`
+- ``search_max_sdk_docs(query)`` (section, Zeilen 199-204) - ### `search_max_sdk_docs(query)`
+- ``validate_ipc_sync()`` (section, Zeilen 205-211) - ### `validate_ipc_sync()`
+- `Lizenz` (section, Zeilen 212-214) - ## Lizenz
 
 ## C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\WORKSPACE_AGENT_PROMPT.md
 
@@ -134,10 +136,10 @@ Symbole:
 - `Build Troubleshooting:` (section, Zeilen 210-223) - ### Build Troubleshooting:
 - `5. Python Environment Setup` (section, Zeilen 224-243) - ## 5. Python Environment Setup
 - `6. MCP Server & SQLite-RAG (Projektwissen für Cloud-Codierung)` (section, Zeilen 244-249) - ## 6. MCP Server & SQLite-RAG (Projektwissen für Cloud-Codierung)
-- `6.1 RAG-Tools (MCP)` (section, Zeilen 250-267) - ### 6.1 RAG-Tools (MCP)
-- `6.2 Regeln für Coding-Agents` (section, Zeilen 268-284) - ### 6.2 Regeln für Coding-Agents
-- `6.3 RAG-Datenbank & Code-Wiki` (section, Zeilen 285-304) - ### 6.3 RAG-Datenbank & Code-Wiki
-- `7. Required Deliverables` (section, Zeilen 305-330) - ## 7. Required Deliverables
+- `6.1 RAG-Tools (MCP)` (section, Zeilen 250-271) - ### 6.1 RAG-Tools (MCP)
+- `6.2 Regeln für Coding-Agents` (section, Zeilen 272-289) - ### 6.2 Regeln für Coding-Agents
+- `6.3 RAG-Datenbank & Code-Wiki` (section, Zeilen 290-309) - ### 6.3 RAG-Datenbank & Code-Wiki
+- `7. Required Deliverables` (section, Zeilen 310-335) - ## 7. Required Deliverables
 
 ## C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\implementation_plan.md
 
@@ -200,56 +202,70 @@ Symbole:
 - `Task 3.2 – Latent-Buffer & Ratio-Handling (Python) ✅` (section, Zeilen 404-417) - #### Task 3.2 – Latent-Buffer & Ratio-Handling (Python) ✅
 - `Task 3.3 – Dynamische Inlets/Outlets (C++, nativer Max-SDK) ✅` (section, Zeilen 418-429) - #### Task 3.3 – Dynamische Inlets/Outlets (C++, nativer Max-SDK) ✅
 - `Task 3.4 – Verifikation (in Max, offen)` (section, Zeilen 430-440) - #### Task 3.4 – Verifikation (in Max, offen)
-- `Phase 4 – `mab.info` (Modell-Inspektor, analog `nn.info`)` (section, Zeilen 441-448) - ### Phase 4 – `mab.info` (Modell-Inspektor, analog `nn.info`)
-- `Design` (section, Zeilen 449-464) - #### Design
-- `Tasks` (section, Zeilen 465-476) - #### Tasks
-- `Phase 4.5 – Real-Time-Schutz (ASIO-XRun-Prävention) 🟢 FERTIG` (section, Zeilen 477-485) - ### Phase 4.5 – Real-Time-Schutz (ASIO-XRun-Prävention) 🟢 FERTIG
-- `Implementiert` (section, Zeilen 486-499) - #### Implementiert
-- `Pflicht für Phase 5/6` (section, Zeilen 500-506) - #### Pflicht für Phase 5/6
-- `Phase 4.6 – nn_tilde-Paritäts-Delta (Modell-Parameter/Optionen) 🟢 GROSSTEILS FERTIG` (section, Zeilen 507-529) - ### Phase 4.6 – nn_tilde-Paritäts-Delta (Modell-Parameter/Optionen) 🟢 GROSSTEILS FERTIG
-- `Phase 5 – `mc.mab~` (Multichannel, analog `mc.nn~`)` (section, Zeilen 530-539) - ### Phase 5 – `mc.mab~` (Multichannel, analog `mc.nn~`)
-- `Tasks` (section, Zeilen 540-556) - #### Tasks
-- `Phase 6 – `mcs.mab~` (Batched Multichannel, analog `mcs.nn~`)` (section, Zeilen 557-566) - ### Phase 6 – `mcs.mab~` (Batched Multichannel, analog `mcs.nn~`)
-- `Tasks` (section, Zeilen 567-578) - #### Tasks
-- `5. Success Criteria` (section, Zeilen 579-588) - ## 5. Success Criteria
-- `6. Technical Details` (section, Zeilen 589-590) - ## 6. Technical Details
-- `6.1 Shared Memory Header Structure (C++/Python)` (section, Zeilen 591-643) - ### 6.1 Shared Memory Header Structure (C++/Python)
-- `6.2 Audio Callback (dsp64) - Lock-Free Implementation` (section, Zeilen 644-703) - ### 6.2 Audio Callback (dsp64) - Lock-Free Implementation
-- `6.3 Python Initialization Sequence` (section, Zeilen 704-711) - ### 6.3 Python Initialization Sequence
-- `6.4 C++ Background Thread Sequence` (section, Zeilen 712-724) - ### 6.4 C++ Background Thread Sequence
-- `7. Comparison with nn_tilde` (section, Zeilen 725-726) - ## 7. Comparison with nn_tilde
-- `Windows Performance Issues in nn_tilde` (section, Zeilen 727-731) - ### Windows Performance Issues in nn_tilde
-- `How mab_tilde Solves These` (section, Zeilen 732-739) - ### How mab_tilde Solves These
-- `8. Next Milestone: Phase 1.2/1.3 & Phase 2.1/2.2` (section, Zeilen 740-741) - ## 8. Next Milestone: Phase 1.2/1.3 & Phase 2.1/2.2
-- `Goal: Asynchronous Background Initialization & Windows Shared Memory Handshake` (section, Zeilen 742-743) - ### Goal: Asynchronous Background Initialization & Windows Shared Memory Handshake
-- `Phase 1.2 – Asynchronous Initialization (C++)` (section, Zeilen 744-759) - ### Phase 1.2 – Asynchronous Initialization (C++)
-- `Phase 1.3 – Shared Memory Management (C++)` (section, Zeilen 760-769) - ### Phase 1.3 – Shared Memory Management (C++)
-- `Phase 2.1 – Argument Parsing (Python)` (section, Zeilen 770-778) - ### Phase 2.1 – Argument Parsing (Python)
-- `Phase 2.2 – Shared Memory Creation (Handshake Protocol)` (section, Zeilen 779-789) - ### Phase 2.2 – Shared Memory Creation (Handshake Protocol)
-- `Phase 2.3 – Inference Loop (Python)` (section, Zeilen 790-802) - ### Phase 2.3 – Inference Loop (Python)
-- `9. Implementation Order (Recommended)` (section, Zeilen 803-816) - ## 9. Implementation Order (Recommended)
-- `10. Current Implementation Status Summary` (section, Zeilen 817-818) - ## 10. Current Implementation Status Summary
-- `✅ COMPLETE - All Core Phases Implemented` (section, Zeilen 819-832) - ### ✅ COMPLETE - All Core Phases Implemented
-- `⚠️ PARTIALLY COMPLETE - Missing Features` (section, Zeilen 833-844) - ### ⚠️ PARTIALLY COMPLETE - Missing Features
-- `🔲 NICHT GESTARTET - Geplante Phasen (dieses Dokument)` (section, Zeilen 845-852) - ### 🔲 NICHT GESTARTET - Geplante Phasen (dieses Dokument)
-- `✅ COMPLETE - All Unit Tests` (section, Zeilen 853-875) - ### ✅ COMPLETE - All Unit Tests
+- `Phase 4 – `mab.info` (Modell-Inspektor, analog `nn.info`) 🟢 FERTIG` (section, Zeilen 441-449) - ### Phase 4 – `mab.info` (Modell-Inspektor, analog `nn.info`) 🟢 FERTIG
+- `Design (implementiert)` (section, Zeilen 450-464) - #### Design (implementiert)
+- `Tasks` (section, Zeilen 465-481) - #### Tasks
+- `Phase 4.5 – Real-Time-Schutz (ASIO-XRun-Prävention) 🟢 FERTIG` (section, Zeilen 482-490) - ### Phase 4.5 – Real-Time-Schutz (ASIO-XRun-Prävention) 🟢 FERTIG
+- `Implementiert` (section, Zeilen 491-504) - #### Implementiert
+- `Pflicht für Phase 5/6` (section, Zeilen 505-511) - #### Pflicht für Phase 5/6
+- `Phase 4.6 – nn_tilde-Paritäts-Delta (Modell-Parameter/Optionen) 🟢 GROSSTEILS FERTIG` (section, Zeilen 512-534) - ### Phase 4.6 – nn_tilde-Paritäts-Delta (Modell-Parameter/Optionen) 🟢 GROSSTEILS FERTIG
+- `Phase 5 – `mc.mab~` (Multichannel, analog `mc.nn~`)` (section, Zeilen 535-544) - ### Phase 5 – `mc.mab~` (Multichannel, analog `mc.nn~`)
+- `Tasks` (section, Zeilen 545-561) - #### Tasks
+- `Phase 6 – `mcs.mab~` (Batched Multichannel, analog `mcs.nn~`)` (section, Zeilen 562-571) - ### Phase 6 – `mcs.mab~` (Batched Multichannel, analog `mcs.nn~`)
+- `Tasks` (section, Zeilen 572-583) - #### Tasks
+- `5. Success Criteria` (section, Zeilen 584-593) - ## 5. Success Criteria
+- `6. Technical Details` (section, Zeilen 594-595) - ## 6. Technical Details
+- `6.1 Shared Memory Header Structure (C++/Python)` (section, Zeilen 596-648) - ### 6.1 Shared Memory Header Structure (C++/Python)
+- `6.2 Audio Callback (dsp64) - Lock-Free Implementation` (section, Zeilen 649-708) - ### 6.2 Audio Callback (dsp64) - Lock-Free Implementation
+- `6.3 Python Initialization Sequence` (section, Zeilen 709-716) - ### 6.3 Python Initialization Sequence
+- `6.4 C++ Background Thread Sequence` (section, Zeilen 717-729) - ### 6.4 C++ Background Thread Sequence
+- `7. Comparison with nn_tilde` (section, Zeilen 730-731) - ## 7. Comparison with nn_tilde
+- `Windows Performance Issues in nn_tilde` (section, Zeilen 732-736) - ### Windows Performance Issues in nn_tilde
+- `How mab_tilde Solves These` (section, Zeilen 737-744) - ### How mab_tilde Solves These
+- `8. Next Milestone: Phase 1.2/1.3 & Phase 2.1/2.2` (section, Zeilen 745-746) - ## 8. Next Milestone: Phase 1.2/1.3 & Phase 2.1/2.2
+- `Goal: Asynchronous Background Initialization & Windows Shared Memory Handshake` (section, Zeilen 747-748) - ### Goal: Asynchronous Background Initialization & Windows Shared Memory Handshake
+- `Phase 1.2 – Asynchronous Initialization (C++)` (section, Zeilen 749-764) - ### Phase 1.2 – Asynchronous Initialization (C++)
+- `Phase 1.3 – Shared Memory Management (C++)` (section, Zeilen 765-774) - ### Phase 1.3 – Shared Memory Management (C++)
+- `Phase 2.1 – Argument Parsing (Python)` (section, Zeilen 775-783) - ### Phase 2.1 – Argument Parsing (Python)
+- `Phase 2.2 – Shared Memory Creation (Handshake Protocol)` (section, Zeilen 784-794) - ### Phase 2.2 – Shared Memory Creation (Handshake Protocol)
+- `Phase 2.3 – Inference Loop (Python)` (section, Zeilen 795-807) - ### Phase 2.3 – Inference Loop (Python)
+- `9. Implementation Order (Recommended)` (section, Zeilen 808-821) - ## 9. Implementation Order (Recommended)
+- `10. Current Implementation Status Summary` (section, Zeilen 822-823) - ## 10. Current Implementation Status Summary
+- `✅ COMPLETE - All Core Phases Implemented` (section, Zeilen 824-837) - ### ✅ COMPLETE - All Core Phases Implemented
+- `⚠️ PARTIALLY COMPLETE - Missing Features` (section, Zeilen 838-850) - ### ⚠️ PARTIALLY COMPLETE - Missing Features
+- `🔲 NICHT GESTARTET - Geplante Phasen (dieses Dokument)` (section, Zeilen 851-857) - ### 🔲 NICHT GESTARTET - Geplante Phasen (dieses Dokument)
+- `✅ COMPLETE - All Unit Tests` (section, Zeilen 858-882) - ### ✅ COMPLETE - All Unit Tests
+- `11. Audio-Performance-Analyse (Stand: Phase 3 / mab~ v2-Header)` (section, Zeilen 883-884) - ## 11. Audio-Performance-Analyse (Stand: Phase 3 / mab~ v2-Header)
+- `11.1 Latenz-Budget` (section, Zeilen 885-900) - ### 11.1 Latenz-Budget
+- `11.2 Operationen pro DSP-Tick (perform64)` (section, Zeilen 901-913) - ### 11.2 Operationen pro DSP-Tick (perform64)
+- `11.3 Buffering-Modell` (section, Zeilen 914-925) - ### 11.3 Buffering-Modell
+- `11.4 Polling-Overhead (Worker)` (section, Zeilen 926-932) - ### 11.4 Polling-Overhead (Worker)
+- `11.5 Worst-Case-Szenarien` (section, Zeilen 933-943) - ### 11.5 Worst-Case-Szenarien
+- `12. Offene Punkte (konsolidiert)` (section, Zeilen 944-945) - ## 12. Offene Punkte (konsolidiert)
+- `12.1 Max-Runtime-Verifikation (Phase 3.4 + Phase 4)` (section, Zeilen 946-956) - ### 12.1 Max-Runtime-Verifikation (Phase 3.4 + Phase 4)
+- `12.2 Paritäts-Lücken (nn_tilde-Kompatibilität)` (section, Zeilen 957-964) - ### 12.2 Paritäts-Lücken (nn_tilde-Kompatibilität)
+- `12.3 Geplante Phasen` (section, Zeilen 965-973) - ### 12.3 Geplante Phasen
+- `13. Architektonische Verbesserungen (Checkliste)` (section, Zeilen 974-977) - ## 13. Architektonische Verbesserungen (Checkliste)
+- `13.1 Hoch (Audio-Qualität / Stabilität)` (section, Zeilen 978-1004) - ### 13.1 Hoch (Audio-Qualität / Stabilität)
+- `13.2 Mittel (Latenz / Robustheit)` (section, Zeilen 1005-1044) - ### 13.2 Mittel (Latenz / Robustheit)
+- `13.3 Niedrig (Qualität / Wartbarkeit)` (section, Zeilen 1045-1074) - ### 13.3 Niedrig (Qualität / Wartbarkeit)
 
 ## C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\nn_tilde_parity.md
 
 - Sprache: `markdown`
 
 Symbole:
-- `nn_tilde → mab~ Paritäts-Delta (fehlende Modell-Parameter/-Optionen)` (section, Zeilen 1-9) - # nn_tilde → mab~ Paritäts-Delta (fehlende Modell-Parameter/-Optionen)
-- `1. Argumente (positionale Objekt-Argumente)` (section, Zeilen 10-25) - ## 1. Argumente (positionale Objekt-Argumente)
-- `2. Messages` (section, Zeilen 26-45) - ## 2. Messages
-- `3. Attribute (Max-Attribute)` (section, Zeilen 46-56) - ## 3. Attribute (Max-Attribute)
-- `4. Modell-Attribute-Passthrough — KRITISCH` (section, Zeilen 57-68) - ## 4. Modell-Attribute-Passthrough — KRITISCH
-- `5. Buffer~-Handling` (section, Zeilen 69-76) - ## 5. Buffer~-Handling
-- `6. Model-Download (IRCAM Forum API)` (section, Zeilen 77-85) - ## 6. Model-Download (IRCAM Forum API)
-- `7. mc./mcs.` (section, Zeilen 86-92) - ## 7. mc./mcs.
-- `8. Undokumentierte Optionen (implementiert, nicht in Help/Maxref)` (section, Zeilen 93-103) - ## 8. Undokumentierte Optionen (implementiert, nicht in Help/Maxref)
-- `9. Demo-Modell-Attribute (nn_tilde `src/source/*.py`) — Testmodell-Vorlage` (section, Zeilen 104-117) - ## 9. Demo-Modell-Attribute (nn_tilde `src/source/*.py`) — Testmodell-Vorlage
-- `Priorisierung (Empfehlung für mab~)` (section, Zeilen 118-125) - ## Priorisierung (Empfehlung für mab~)
+- `nn_tilde → mab~ Paritäts-Delta (fehlende Modell-Parameter/-Optionen)` (section, Zeilen 1-10) - # nn_tilde → mab~ Paritäts-Delta (fehlende Modell-Parameter/-Optionen)
+- `1. Argumente (positionale Objekt-Argumente)` (section, Zeilen 11-27) - ## 1. Argumente (positionale Objekt-Argumente)
+- `2. Messages` (section, Zeilen 28-47) - ## 2. Messages
+- `3. Attribute (Max-Attribute)` (section, Zeilen 48-58) - ## 3. Attribute (Max-Attribute)
+- `4. Modell-Attribute-Passthrough — KRITISCH` (section, Zeilen 59-71) - ## 4. Modell-Attribute-Passthrough — KRITISCH
+- `5. Buffer~-Handling` (section, Zeilen 72-79) - ## 5. Buffer~-Handling
+- `6. Model-Download (IRCAM Forum API)` (section, Zeilen 80-88) - ## 6. Model-Download (IRCAM Forum API)
+- `7. mc./mcs.` (section, Zeilen 89-95) - ## 7. mc./mcs.
+- `8. Undokumentierte Optionen (implementiert, nicht in Help/Maxref)` (section, Zeilen 96-106) - ## 8. Undokumentierte Optionen (implementiert, nicht in Help/Maxref)
+- `9. Demo-Modell-Attribute (nn_tilde `src/source/*.py`) — Testmodell-Vorlage` (section, Zeilen 107-120) - ## 9. Demo-Modell-Attribute (nn_tilde `src/source/*.py`) — Testmodell-Vorlage
+- `Priorisierung (Empfehlung für mab~)` (section, Zeilen 121-128) - ## Priorisierung (Empfehlung für mab~)
 
 ## C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md
 

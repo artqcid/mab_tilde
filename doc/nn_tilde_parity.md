@@ -6,6 +6,7 @@
 `.../shared/{array,buffer,dict}_tools.h`, `.../shared/max_model_download.h`, `src/shared/model_download.h`,
 `src/source/{attributes,buffers,effects,features,unmix}.py`
 **Stand:** Verifiziert gegen echten Quellcode. `mab~` = `source/projects/mab_tilde/mab_tilde.cpp` + `inference_worker.py`.
+**Aktualisiert:** Dezember 2026 (Phase 4.6 P1–P6 fertig, siehe `doc/implementation_plan.md` §4.6).
 
 ## 1. Argumente (positionale Objekt-Argumente)
 
@@ -21,7 +22,8 @@ nn_tilde (`nn_base.h:419-478`, `mcs.nn_tilde.cpp:171-219`):
 | mcs | Arg3 = `n_batches` | Anzahl Inlets/Outlets (Batch) |
 
 `mab~` aktuell: `model method bufsize gpu num_channels cores` (`mab_tilde.cpp:209-231`).
-**Fehlt:** Void-Modus, Inlet-/Outlet-Override (Arg4/5), `n_batches`-Argument, `buffer size 0`-Semantik.
+**Umgesetzt:** Void-Modus (P5), `buffer size 0`-Semantik (P4).
+**Fehlt:** Inlet-/Outlet-Override (Arg4/5), `n_batches`-Argument (Phase 5/6).
 
 ## 2. Messages
 
@@ -29,26 +31,26 @@ nn_tilde (`nn_base.h:197-387`, `nn.info.cpp`) → `mab~`-Status:
 
 | Message | nn_tilde | mab~ |
 |---|---|---|
-| `method <name>` | validiert via `has_method`, `wait_for_buffer_reset` | ✅ forwarded (ignoriert Folge-Args) |
+| `method <name>` | validiert via `has_method`, `wait_for_buffer_reset` | ✅ forwarded, Worker wechselt Methode + Header-Update |
 | `load <path>` / `reload` | als anything-Sub-Commands | ✅ (`reload`/`load` → Prozess-Neustart) |
-| `dump` | model_path, Dims, Ratios, Methods, Attributes | ⚠️ nur Konsole-Log, nicht an Worker |
+| `dump` | model_path, Dims, Ratios, Methods, Attributes | ✅ Worker-Dump (volle Metadaten, P2) |
 | `print <key> ...` | intern (Buffer-/Download-Progress) | ❌ fehlt |
 | `notify` | Buffer-Notifications (`track_buffers`) | ❌ fehlt |
-| `print_available_models` | alle ladbaren Modelle | ❌ fehlt |
-| `download <card> [name]` | asynchron, IRCAM API, Progress | ❌ fehlt |
-| `delete <card>` | löscht `.ts`-Datei | ❌ fehlt |
-| `get_attributes` / `get_methods` | anything-Sub-Commands | ❌ fehlt |
-| `get <attr>` | `Backend::get_attribute_as_string` | ⚠️ nur Konsole, kein Rückweg |
-| `set <attr> <args…>` | `Backend::set_attribute` → wirkt auf Modell | ❌ blockiert (Whitelist) + nie an Worker |
+| `print_available_models` | alle ladbaren Modelle | ✅ Worker: lokal + Remote (P6) |
+| `download <card> [name]` | asynchron, IRCAM API, Progress | ✅ Worker: `download_model` (P6) |
+| `delete <card>` | löscht `.ts`-Datei | ✅ Worker: `delete_model` (P6) |
+| `get_attributes` / `get_methods` | anything-Sub-Commands | ✅ Worker-Handler (P2) |
+| `get <attr>` | `Backend::get_attribute_as_string` | ✅ Worker: `_read_model_attribute` (P1) |
+| `set <attr> <args…>` | `Backend::set_attribute` → wirkt auf Modell | ✅ Worker: `_apply_model_attribute` + Typ-Koerzierung (P1) |
 
-nn.info vs. mab.info: `get_available_models` (Outlet/Dict), `download`, `delete`, `print` → **fehlen** in mab.info.
+nn.info vs. mab.info: `mab.info` ist implementiert (Phase 4 fertig). `get_available_models` (Outlet/Dict), `download`, `delete`, `print` → **C++-Durchleitung fehlt noch** (Worker hat die Logik, P11 teilweise).
 
 ## 3. Attribute (Max-Attribute)
 
 | Attribut | nn_tilde | mab~ |
 |---|---|---|
 | `enable` (bool) | direkt gelesen; **Auto-Disable** bei DSP-Vector > Buffer | ⚠️ Message, nur `post` |
-| `gpu` (bool) | Setter → `use_gpu()` bei Init (CUDA→MPS→CPU) | ⚠️ nur Logger „requires reload", nie an Worker |
+| `gpu` (bool) | Setter → `use_gpu()` bei Init (CUDA→MPS→CPU) | ✅ Worker `gpu`-Handler lädt Modell auf neuem Device neu (P3) |
 | `track_buffers` (bool, Default false) | Buffer-Tracking via notify | ❌ fehlt |
 | `chans` (nur mc./mcs.) | fixe Out-Kanalzahl | ❌ fehlt |
 | `dict` (nur nn.info) | Dictionary-Binding | ❌ mab.info hat `out_dict`, kein Binding-Attribut |
@@ -61,10 +63,11 @@ nn.info vs. mab.info: `get_available_models` (Outlet/Dict), `download`, `delete`
   `0=bool 1=int 2=float 3=string 4=tensor 5=buffer`; Python-Registrierung via
   `register_attribute` (`module.py:140-175`), get/set-Callbacks werden automatisch generiert.
   **Werte wirken nachweislich aufs Modell.**
-- **mab~:** `set`/`get` (`mab_tilde.cpp:635-672`) sind lokal auf Whitelist begrenzt und werden
-  **nicht** an den Worker gereicht; `anything` forwardet Strings; der Worker speichert Attribute
-  nur in `RuntimeAttributes.attrs` (Dict + Log, `inference_worker.py:757-766, 1003-1010`) und wendet
-  sie **nie** per `setattr` auf das Modell an.
+- **mab~:** `set`/`get` (`mab_tilde.cpp`) forwardet an Worker;
+  `_apply_model_attribute` / `_read_model_attribute` / `_coerce_value` (inference_worker.py:758-874)
+  setzen/lesen Attribute am Modell mit Typ-Koerzierung (bool/int/float/str). Runtime-Attribute werden
+  nach Reload re-applied. **Werte wirken nachweislich aufs Modell (P1 fertig).**
+- **mab~:** kein buffer~-Support (P7 offen).
 
 ## 5. Buffer~-Handling
 
@@ -72,7 +75,7 @@ nn.info vs. mab.info: `get_available_models` (Outlet/Dict), `download`, `delete`
   (`get_buffer_attributes()`) eine `c74::min::buffer_reference`; `set <attr> <buffer~name>` verlinkt
   sie; Tracking nur bei `track_buffers=true`; interne Namen `"<attr>#<idx>"`; `sr` wird mitgegeben.
   Tensor-Attribute akzeptieren Max-`array`-Namen.
-- **mab~:** kein buffer~-Support (0 Treffer für buffer_reference/buffer~ in `source/projects/`).
+- **mab~:** kein buffer~-Support (P7 offen).
 
 ## 6. Model-Download (IRCAM Forum API)
 
@@ -81,7 +84,7 @@ nn.info vs. mab.info: `get_available_models` (Outlet/Dict), `download`, `delete`
   Download-Pfad `<External>/../../models`, Datei `<name>.ts` bzw. `[optional_name].ts`;
   Lock-Datei gegen Doppel-Download, max. 2 Threads, Progress via `print`; Windows-TLS über
   `cacert.pem`.
-- **mab~:** nur im WSAP §2 dokumentiert, **nicht implementiert**.
+- **mab~:** ✅ Worker implementiert: `list_local_models` + `_remote_available_models` + `download_model` + `delete_model` (P6 fertig). C++ `mab.info` leitet `download`/`delete` noch nicht weiter (P11 teilweise).
 
 ## 7. mc./mcs.
 
@@ -117,8 +120,8 @@ im nn_tilde-Code — sie stammen aus den jeweiligen Modellen (RAVE/AFTER/vschaos
 
 ## Priorisierung (Empfehlung für mab~)
 
-1. **Modell-Attribute-Passthrough** (`set`/`get` → Worker → `setattr` auf Modell, Typ-Hash) — Grundlage für alle „verschiedene Modelle"-Parameter
-2. anything-Sub-Commands `get_attributes`/`get_methods`, `dump` an Worker durchreichen
-3. `track_buffers` + buffer~-Support (Phase 5-Vorbereitung)
-4. `print_available_models`/`download`/`delete` (IRCAM API)
+1. ~~**Modell-Attribute-Passthrough**~~ ✅ P1 FERTIG
+2. ~~anything-Sub-Commands `get_attributes`/`get_methods`, `dump` an Worker~~ ✅ P2 FERTIG
+3. **`track_buffers` + buffer~-Support** (Phase 5-Vorbereitung) → P7 OFFEN
+4. ~~`print_available_models`/`download`/`delete` (IRCAM API)~~ ✅ P6 FERTIG (Worker)
 5. `mc.mab~`/`mcs.mab~` (Phase 5/6): `chans`, `channel_map`, `inputchanged`, `n_batches`

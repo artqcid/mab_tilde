@@ -438,39 +438,44 @@ Zielzustand: **16 Latent-Inlets + 1 Audio-Outlet** (bei `encode` umgekehrt).
 
 ---
 
-### Phase 4 – `mab.info` (Modell-Inspektor, analog `nn.info`)
+### Phase 4 – `mab.info` (Modell-Inspektor, analog `nn.info`) 🟢 FERTIG
 
-**Status:** 🔲 NICHT GESTARTET
+**Status:** 🟢 FERTIG – `mab_info.cpp` (374 Zeilen), CMake-Target `mab.info.mxe64`,
+nutzt gemeinsamen `worker_launch`-Infrastruktur.
 
 **Referenz:** nn_tilde `src/frontend/maxmsp/nn.info/nn.info.cpp`.
 **Ziel:** `mab.info` als **prozessisoliertes** Gegenstück zu `nn.info`. Wichtigster Unterschied zu
 nn_tilde: **kein PyTorch im Max-Prozess** – `mab.info` nutzt denselben Python-Worker wie `mab~`.
 
-#### Design
-- Nicht-Signal-External, 1 Inlet (Messages), Outlets:
+#### Design (implementiert)
+- Nicht-Signal-External, 1 Inlet (Messages), 5 Outlets:
   1. `model path` (symbol)
   2. `available methods` (symbol)
   3. `available attributes` (symbol)
   4. `processing parameters` (symbol + ints)
-  5. `dict output` (dictionary)
-  6. `available models for download` (dictionary) – optional (IRCAM-API, evtl. out of scope)
+  5. `dict output` (dictionary via `dictobj_outlet_atoms`)
 - **Query-Modus:** `mab.info` startet den Worker mit `--query <model>`; der Worker lädt das Modell,
-  extrahiert `{method}_params`, `{method}_input_labels`/`_output_labels` und settable attributes,
-  druckt ein JSON-Dict auf stdout und beendet sich (stdout wird wie beim Worker ins Log umgeleitet
-  und von C++ geparst). Alternative für Live-Binding: Metadaten über Shared-Memory-Dict austauschen
-  und auf `get`-Messages antworten.
-- **Messages (nn.info-kompatibel):** `set <model>`, `bang`, `dump`, `path`, `methods`, `attributes`,
-  `parameters <method|attribute>`, `dump_dict`, `dict <name>`.
+  extrahiert Metadaten (Methoden, Params, Attribute), druckt `MAB_INFO_BEGIN...MAB_INFO_END`-Block
+  auf stdout und beendet sich. C++ parst den Block via `worker_parse_info_block`.
+- **Background-Thread + qelem:** Query läuft in eigenem Thread (`mab_info_query_thread`),
+  Ergebnisse werden via `result_qelem` → `mab_info_apply` auf dem Main-Thread ausgegeben.
+- **Messages:** `set <model>`, `bang`/`dump`, `path`, `methods`, `attributes`,
+  `parameters`, `dump_dict`, `dict <name>`.
 
 #### Tasks
-- [ ] Shared Worker-Launch aus mab~ in gemeinsamen Helper refactorn
+- [x] Shared Worker-Launch aus mab~ in gemeinsamen Helper refactorn
       (`worker_launch.cpp`/`.h`: `resolve_worker_dir`, venv-Python, `CreateProcessW`,
       Log-Umleitung) – Wiederverwendung durch `mab~`, `mc.mab~`, `mcs.mab~`, `mab.info`.
-- [ ] `--query`-Modus im `inference_worker.py` (JSON-Dict auf stdout, Exit 0).
-- [ ] C++ `mab.info`: `model.ts`-Argument, Launch + stdout-Parse (blockierend OK, kein Audio).
-- [ ] Outlets 1–5 füllen; `dict`-Binding über Max-Dictionary.
-- [ ] Build + Deploy `mab.info.mxe64` ins Max-9-Package (`externals/`).
-- [ ] Test: `[mab.info musicnet.ts]` → `bang` listet `decode; encode; forward`, 16 Latent, 1 Audio, Attribute.
+- [x] `--query`-Modus im `inference_worker.py` (JSON-Dict auf stdout, Exit 0).
+      Implementiert: `query_model()` (Zeile 651-685), `collect_model_info()` (599-619),
+      `print_info_block()` (622-648).
+- [x] C++ `mab.info`: `model.ts`-Argument, Background-Thread + stdout-Parse.
+      Implementiert: `mab_info.cpp` (374 Zeilen), `mab_info_query_thread` (Zeile 42-113).
+- [x] Outlets 1–5 füllen; `dict`-Binding über Max-Dictionary.
+      Implementiert: `mab_info_apply` (Zeile 152-186), `mab_info_make_dict` (119-146).
+- [x] Build-Target `mab.info.mxe64` in CMakeLists.txt (Zeile 77-101).
+- [ ] Deploy + Max-Verifikation: `[mab.info musicnet.ts]` → `bang` listet `decode; encode; forward`,
+      16 Latent, 1 Audio, Attribute. (Max-Runtime-Test offen)
 
 ---
 
@@ -523,7 +528,7 @@ die Inferenz darf sich nie über alle Kerne verteilen.
 | P8 | **`mc.mab~`** (`multichanneloutputs`/`inputchanged`, `channel_map`, `chans`) | 🔲 OFFEN | → Phase 5 |
 | P9 | **`mcs.mab~`** (`n_batches`, Batch-Inferenz) | 🔲 OFFEN | → Phase 6 |
 | P10 | Argument-Overrides (Arg4/5 Inlet-/Outlet-Anzahl, mcs `n_batches`) | 🔲 OFFEN | → Phase 5/6 |
-| P11 | `mab.info`: `get_available_models`/`download`/`delete`-Messages | 🔲 OFFEN | → Phase-4-Follow-up |
+| P11 | `mab.info`: `get_available_models`/`download`/`delete`-Messages | ⚠️ TEILWEISE | Worker hat die Logik (P6); C++ `mab.info` leitet diese Messages noch nicht an den Worker weiter |
 
 ---
 
@@ -590,7 +595,7 @@ Sinnvoll für AFTER/RAVE mit fixem Latent (mehrere parallele Stimmen).
 
 ### 6.1 Shared Memory Header Structure (C++/Python)
 
-**Version 1 (aktueller Stand, Phase 1–2):**
+**Version 1 (historisch, Phase 1–2, ersetzt durch v2):**
 ```cpp
 // C-compatible struct (no C++ objects, no std::atomic)
 struct SharedMemoryHeader {
@@ -608,7 +613,7 @@ struct SharedMemoryHeader {
 };
 ```
 
-**Version 2 (geplant, Phase 3 – Methoden-Metadaten für Latent-Inlets):**
+**Version 2 (aktueller Stand, Phase 3+, `static_assert(sizeof(...) == 128)`):**
 ```cpp
 struct SharedMemoryHeader {
     uint32_t magic;           // 0x4D414254 ('MABT')
@@ -838,6 +843,7 @@ void mab_tilde_perform64(t_mab_tilde* x, t_object* dsp64, double** ins, long num
 | `method` message | ✅ | Forwardet an Python; Worker wechselt die Methode, Header v2 wird aktualisiert, IO-Rebuild via qelem (Phase 3) |
 | Multi-channel (`mc.mab~`) | ⚠️ | Nur `num_channels`-Argument + `[num_channels, block_size]`-Layout; **kein** echtes `mc.`-External (Phase 5) |
 | Method-aware inlets/outlets (Latent) | ✅ | Header v2 + `mab_tilde_apply_io` (Main-Thread), `block_accumulator`, `infer_method`-Dispatch, dynamische assist-Labels (Phase 3) |
+| `mab.info` Modell-Inspektor | ✅ | `mab_info.cpp` (374 Zeilen), 5 Outlets, Background-Thread + qelem, `--query`-Modus, Max-Dictionary (Phase 4) |
 | Control ring buffer | ✅ | `ControlRingBuffer` integrated in shared memory, C++ enqueues, Python dequeues |
 | Model block size extraction | ✅ | `extract_block_size()` function added, extracts from model graph |
 | Crash monitoring | ✅ | `GetExitCodeProcess()` check in perform64, auto-fallback to bypass on crash |
@@ -846,7 +852,6 @@ void mab_tilde_perform64(t_mab_tilde* x, t_object* dsp64, double** ins, long num
 
 | Phase | Komponente | Analog zu nn_tilde | Kern |
 |-------|-----------|--------------------|------|
-| 4 | `mab.info` | `nn.info` | Prozessisolierter Modell-Inspektor (`--query`-Modus), keine torch-Lib im Max-Prozess |
 | 5 | `mc.mab~` | `mc.nn~` | `multichanneloutputs`/`inputchanged`, `channel_map`, `chans`-Attribut |
 | 6 | `mcs.mab~` | `mcs.nn~` | `n_batches` Inlets, Batch-Inferenz `(batch, channels_in, block_size)` |
 
@@ -868,6 +873,200 @@ void mab_tilde_perform64(t_mab_tilde* x, t_object* dsp64, double** ins, long num
 | `test_anything_handler.cpp` | ✅ | **NEW** - Tests anything message forwarding |
 | `test_crash_monitoring.cpp` | ✅ | **NEW** - Tests crash detection and state transition |
 | `test_block_size_extraction.py` | ✅ | **NEW** - Tests Python block size extraction from model |
+
+---
+
+*End of Implementation Plan & Checklist*
+
+---
+
+## 11. Audio-Performance-Analyse (Stand: Phase 3 / mab~ v2-Header)
+
+### 11.1 Latenz-Budget
+
+Die Gesamt-Latenz hat drei Komponenten:
+
+```
+L_total = L_accumulation + L_inference + L_drain + L_polling
+```
+
+| Modus | ratio_in | block_size | Akkumulation | Poll | Inferenz (CPU) | Inferenz (GPU) | Drain | **Gesamt CPU** | **Gesamt GPU** |
+|-------|----------|------------|-------------|------|---------------|----------------|-------|---------------|----------------|
+| `forward` (ratio=1) | 1 | 512 | 10.7 ms | 0.5 ms | 2–8 ms | 0.5–2 ms | 10.7 ms | **24–30 ms** | **22–24 ms** |
+| `decode` (RAVE) | 2048 | 2048 | 42.7 ms | 0.5 ms | 5–15 ms | 1–3 ms | 42.7 ms | **91–101 ms** | **87–89 ms** |
+| `encode` (RAVE) | 1 | 2048 | 42.7 ms | 0.5 ms | 5–15 ms | 1–3 ms | 42.7 ms | **91–101 ms** | **87–89 ms** |
+
+*(48 kHz, Max vector_size=512, typische RAVE-Modellzeiten)*
+
+### 11.2 Operationen pro DSP-Tick (perform64)
+
+| # | Operation | RT-sicher? | Anmerkung |
+|---|-----------|-----------|-----------|
+| 1 | `GetExitCodeProcess` (Crash-Monitor) | ⚠️ grenzwertig | Win32-Syscall (~0.3 µs), liest nur gecachten Wert — praktisch unbedenklich, aber formal ein Kernel-Eintritt |
+| 2 | `strcmp` auf `header->method` (64 Bytes SHM) | ✅ | Reine Speicher-Leseoperation; theoretisch Torn-Read möglich (Python schreibt parallel), Worst-Case: 1 Tick verspätete Method-Erkennung |
+| 3 | `block_accumulate_write` (double→float, Kopie) | ✅ | Skalare `cvtsd2ss`-Konversion pro Sample; ~4–8 µs für 16ch×512 Samples |
+| 4 | `InterlockedExchange` (Flags) | ✅ | Atomare XCHG-Instruktion |
+| 5 | `block_accumulate_read` (float→double, Kopie) | ✅ | Analog zu write |
+| 6 | Silence-Output (Nullen) | ✅ | Memset-äquivalent |
+| 7 | `UnmapViewOfFile`/`CloseHandle` (nur Crash-Pfad) | ❌ | Kernel-Calls, aber nur 1× bei Worker-Absturz |
+| 8 | `post()` (nur Crash-Pfad) | ❌ | Max-SDK intern: Allokation + Lock; 1× bei Crash |
+
+### 11.3 Buffering-Modell
+
+Aktuell: **Single-Buffer Ping-Pong** (ein Input-, ein Output-Buffer mit `is_input_ready`/
+`is_output_ready`-Flags). Während die Inferenz läuft, können keine neuen Samples akkumuliert
+werden (`is_input_ready == 1` blockiert den Schreibpfad in Zeile 440). Das bedeutet:
+
+- **Samples, die während der Inferenz eintreffen, werden verworfen.**
+- Der Output ist Stille, bis `is_output_ready` gesetzt wird.
+- Bei RAVE-`decode` (ratio 2048) dauert das Akkumulieren 4 DSP-Ticks und das Draining
+  ebenso → keine Lücke, wenn Inferenz < 1 Block-Periode (~42.7 ms). Bei schneller GPU
+  ist das normalerweise erfüllt.
+
+### 11.4 Polling-Overhead (Worker)
+
+- `time.sleep(0.001)` = 1 ms Polling-Intervall (Zeile 1409).
+- **Windows-Caveat:** Ohne `timeBeginPeriod(1)` (von Max normalerweise gesetzt) degradiert
+  die Sleep-Granularität auf ~15.6 ms → spürbare Zusatzlatenz.
+- Idle-CPU-Last: ~0.1–0.5 % eines Kerns (Kontext-Switch-Overhead, negligible).
+
+### 11.5 Worst-Case-Szenarien
+
+| Szenario | Auswirkung | Mitigation |
+|----------|-----------|------------|
+| Inferenz > Block-Periode | Periodische Stille-Lücken (Samples gehen verloren) | Double-Buffering (siehe §12) |
+| Python-GC-Pause (Gen-2, ~50 ms) | 1 Block Stille | `gc.disable()` in Inferenz-Loop |
+| Worker-Crash | Bypass-Modus + Console-Error, Audio läuft weiter | Crash-Monitor in perform64 |
+| ASIO-Buffer-Overflow (Worker belastet Audio-Core) | Dropouts | Phase 4.5: BELOW_NORMAL + Affinität Core 0 excluded |
+
+---
+
+## 12. Offene Punkte (konsolidiert)
+
+### 12.1 Max-Runtime-Verifikation (Phase 3.4 + Phase 4)
+
+| # | Test | Status |
+|---|------|--------|
+| V1 | `[mab~ musicnet.ts decode 2048]` → 16 Latent-Inlets, 1 Audio-Outlet, keine Dropouts | 🔲 OFFEN |
+| V2 | `forward` → 1 Inlet/1 Outlet wie bisher | 🔲 OFFEN |
+| V3 | `encode` → 1 Audio-Inlet, 16 Latent-Outlets | 🔲 OFFEN |
+| V4 | Methodenwechsel zur Laufzeit per `method decode` | 🔲 OFFEN |
+| V5 | `[mab.info musicnet.ts]` → `bang` listet Methoden/Attribute/Params | 🔲 OFFEN |
+| V6 | `mab~ void 4 2` → 4 Inlets, 2 Outlets, kein Worker | 🔲 OFFEN |
+
+### 12.2 Paritäts-Lücken (nn_tilde-Kompatibilität)
+
+| # | Feature | Status | Abhängigkeit |
+|---|---------|--------|-------------|
+| P7 | `track_buffers` + buffer~-Support | 🔲 OFFEN | braucht `buffer_reference` (nativer SDK); Phase-5-Vorbereitung |
+| P10 | Argument-Overrides (Arg4/5 Inlet-/Outlet-Anzahl) | 🔲 OFFEN | Phase 5/6 |
+| P11 | `mab.info`: `download`/`delete`-Messages durchleiten | ⚠️ TEILWEISE | Worker hat Logik, C++ fehlt |
+
+### 12.3 Geplante Phasen
+
+| Phase | Komponente | Analog zu nn_tilde | Status |
+|-------|-----------|-------------------|--------|
+| 5 | `mc.mab~` | `mc.nn~` | 🔲 NICHT GESTARTET |
+| 6 | `mcs.mab~` | `mcs.nn~` | 🔲 NICHT GESTARTET |
+
+---
+
+## 13. Architektonische Verbesserungen (Checkliste)
+
+Basierend auf der Performance-Analyse (§11) und Code-Review. Priorisiert nach Impact/Aufwand.
+
+### 13.1 Hoch (Audio-Qualität / Stabilität)
+
+- [ ] **A1 – Double-Buffering (eliminiert Sample-Verlust während Inferenz)**
+  - **Problem:** Single-Buffer-Ping-Pong blockiert Input-Akkumulation während die Inferenz
+    läuft → Samples werden verworfen, bei langsamer Inferenz entstehen hörbare Lücken.
+  - **Lösung:** Zwei Input-Buffer + Zwei Output-Buffer. Während Python Buffer A verarbeitet,
+    akkumuliert C++ in Buffer B. Beim nächsten Trigger tauschen die Rollen.
+  - **Aufwand:** Mittel. `SharedMemoryHeader` um `active_input_buffer`/`active_output_buffer`
+    Index erweitern. `block_accumulator` muss zwei Sets von Positionen verwalten.
+    Python wechselt nach Inferenz den aktiven Buffer.
+  - **Impact:** Eliminiert Stille-Lücken bei CPU-Inferenz; ermöglicht überlappende I/O.
+
+- [ ] **A2 – `GetExitCodeProcess` aus perform64 entfernen**
+  - **Problem:** Win32-Syscall auf jedem DSP-Tick (~0.3 µs). Formal nicht RT-sicher
+    (Kernel-Transition), praktisch unbedenklich aber unnötig.
+  - **Lösung:** Crash-Monitoring per `qelem`-Timer (z.B. alle 100 ms vom Main-Thread,
+    nicht vom Audio-Thread). `perform64` prüft nur noch `is_ready`/`is_bypass`-Flags.
+  - **Aufwand:** Gering. Neuer `crash_qelem` analog zu `io_qelem`.
+  - **Impact:** Audio-Thread ist danach frei von jedem OS-Call.
+
+- [ ] **A3 – Stale-Test `test_shared_memory_management.cpp` entfernen oder auf v2 updaten**
+  - **Problem:** Test definiert v1-Header (ohne `channels_in/out`, `method[64]`). Ist nicht
+    in CMakeLists.txt → wird nie gebaut. Verwirrt beim Lesen.
+  - **Lösung:** Entfernen (Funktionalität ist in `test_shared_memory_header_compatibility`
+    abgedeckt) oder auf v2-Felder updaten und in CMake aufnehmen.
+  - **Aufwand:** Minimal.
+
+### 13.2 Mittel (Latenz / Robustheit)
+
+- [ ] **A4 – Worker-Polling durch Event-basiertes Warten ersetzen**
+  - **Problem:** `time.sleep(0.001)` kostet durchschnittlich 0.5 ms Polling-Latenz
+    und hängt von der Windows-Timer-Resolution ab (ohne `timeBeginPeriod(1)`: ~15 ms).
+  - **Lösung:** Named Event (`CreateEventW`/`SetEvent`/`WaitForSingleObject`) statt
+    Sleep-Polling. C++ signalisiert `input_ready_event` per `SetEvent` nach
+    `InterlockedExchange(&is_input_ready, 1)`. Python wartet mit
+    `WaitForSingleObject(event, timeout_ms)`.
+  - **Alternative (einfacher):** `timeBeginPeriod(1)` im Worker aufrufen; Sleep bleibt,
+    aber Granularität ist garantiert 1 ms.
+  - **Aufwand:** Mittel (Event) / Gering (timeBeginPeriod).
+  - **Impact:** Latenz-Reduktion um ~0.5 ms (Event) oder -Garantie (timeBeginPeriod).
+
+- [ ] **A5 – Python GC im Inferenz-Loop deaktivieren**
+  - **Problem:** CPython-GC Gen-2 kann 10–50 ms Pause verursachen → 1 Block Stille.
+  - **Lösung:** `gc.disable()` vor dem Hauptloop, `gc.collect()` nur manuell zwischen
+    Inferenzblöcken (z.B. alle 100 Blöcke) oder bei `reload`.
+  - **Aufwand:** Minimal (2 Zeilen).
+  - **Impact:** Eliminiert GC-bedingte Aussetzer.
+
+- [ ] **A6 – SIMD-Vektorisierung für float↔double-Konversion**
+  - **Problem:** `block_accumulate_write`/`_read` konvertieren per Skalar-Cast
+    (`cvtsd2ss`/`cvtss2sd` in Schleife). MSVC auto-vektorisiert nicht zuverlässig
+    wegen `long`-Loop-Counter und Pointer-Aliasing.
+  - **Lösung:** Explizite SSE2-Intrinsics oder `__restrict`-Pointer + `#pragma loop`
+    Hints. Alternative: Konversions-Schleife in separate `convert_d2f`/`convert_f2d`
+    inline-Funktionen mit `size_t` Counter.
+  - **Aufwand:** Gering.
+  - **Impact:** ~2× Speedup für die Kopier-Phase (~4 µs → ~2 µs bei 16ch×512).
+
+- [ ] **A7 – Torn-Read auf `header->method` absichern**
+  - **Problem:** `strcmp` in perform64 (Zeile 429) liest 64 Bytes aus SHM ohne
+    Memory-Barrier. Python könnte gleichzeitig den Methoden-Namen schreiben.
+  - **Lösung:** Sequence-Lock: Python inkrementiert `method_seq` (ungerade=schreibend,
+    gerade=fertig). C++ prüft: ungerade → skip; gerade → lesen + re-check.
+    Oder: `method_id` als `uint32_t` statt String-Vergleich.
+  - **Aufwand:** Gering (uint32_t-Variante) / Mittel (Sequence-Lock).
+  - **Impact:** Formal korrekt; praktisch war der Bug nie beobachtbar.
+
+### 13.3 Niedrig (Qualität / Wartbarkeit)
+
+- [ ] **A8 – Orphan-Tests aufräumen**
+  - `test/test_shared_memory_management.cpp` und `test/test_ext_main.cpp` existieren
+    auf Disk, sind aber nicht in `CMakeLists.txt` → werden nie gebaut.
+  - Entscheidung: löschen oder in CMake aufnehmen + auf aktuelle Structs updaten.
+
+- [ ] **A9 – `nn_tilde_parity.md` aktualisieren**
+  - Tabelle in §2/§4/§6 zeigt viele Features als „fehlt", die mittlerweile implementiert
+    sind (P1–P6: Attribute-Passthrough, gpu-Setter, Void-Modus, Download/Delete).
+  - Abgleich gegen aktuellen Worker-Code + Phase-4.6-Tabelle.
+
+- [ ] **A10 – `implementation_plan.md` Sektionen 8–10 konsolidieren**
+  - Sektionen 8 (Next Milestone), 9 (Implementation Order) und 10 (Status Summary)
+    enthalten historische Redundanzen aus Phase 1–2, die identisch zum Detail-Checklist
+    (§4) sind. Können auf eine kompakte Referenztabelle reduziert werden.
+
+- [ ] **A11 – Max-Helpfile und Maxref-XML erstellen**
+  - Für `mab~` und `mab.info` fehlen Help-Patches und Maxref-Dokumentation.
+  - nn_tilde hat `nn~.maxhelp` + `nn~.maxref.xml` als Vorlage.
+
+- [ ] **A12 – CI/CD: Automatisierte C++-Tests + Python-Tests**
+  - 17 C++-Test-Executables + `test/test_rag_wiki.py` + `test/test_block_size_extraction.py`
+    + `test/test_python_shared_memory.py` existieren, laufen aber nicht automatisch.
+  - GitHub Actions Workflow für Build + Test-Matrix (Debug/Release).
 
 ---
 
