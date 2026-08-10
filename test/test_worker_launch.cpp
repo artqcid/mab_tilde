@@ -121,7 +121,8 @@ int main() {
                 // Core 0 nicht benutzen (dort läuft der Audio-Thread).
                 CHECK(GetPriorityClass(wp.process) == BELOW_NORMAL_PRIORITY_CLASS);
                 DWORD_PTR sysMask = 0, procMask = 0;
-                if (GetProcessAffinityMask(wp.process, &sysMask, &procMask)) {
+                // Parameterreihenfolge: (hProcess, &processMask, &systemMask)
+                if (GetProcessAffinityMask(wp.process, &procMask, &sysMask)) {
                     if (sysMask > 1) {   // >1 Kern -> Maske muss ohne Core 0 sein
                         CHECK((procMask & 1) == 0);
                     }
