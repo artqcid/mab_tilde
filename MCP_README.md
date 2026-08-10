@@ -24,40 +24,19 @@ python mab_mcp_server.py
 
 ## Verfügbare Tools
 
-### `check_max_sdk_headers()`
-Durchsucht das Projekt nach typischen Max/MSP API Headern und prüft die Einbindung.
-
-### `validate_rave_config(model_path: str)`
-Überprüft ein RAVE ONNX/Torch-Modell auf Kompatibilität mit dem C++ Worker.
-
-**Parameter:**
-- `model_path`: Pfad zur ONNX- oder TorchScript-Modelldatei
-
 ### `run_cpp_tests()`
-Führt lokale Tests oder den Build-Prozess für das mab~ External aus.
+Führt den Build-Prozess für das mab~ External über `cmake --build --preset debug`
+aus (siehe `CMakePresets.json`). Erfordert vorher `cmake --preset debug`.
 
-### `check_shared_memory_config()`
-Prüft die Shared Memory-Konfiguration zwischen C++ und Python.
+### `get_project_summary()`
+Dynamische Projektübersicht. Liest aktuelle Dateien (`mab_tilde.cpp`,
+`inference_worker.py`, etc.) und den RAG-Index-Status aus. Ersetzt die früheren
+statischen Tools `get_project_info`, `check_shared_memory_config` und
+`analyze_inference_worker`.
 
-### `analyze_inference_worker()`
-Analysiert den inference_worker.py und gibt Strukturinformationen zurück.
-
-### `get_project_info()`
-Gibt allgemeine Informationen über das mab~ Projekt zurück.
-
-### `inspect_model_metadata(model_path: str)` ⭐ NEU
-Lädt ein ONNX- oder TorchScript-Modell (RAVE) und extrahiert automatisch
-die Tensor-Shapes (Input/Output), die Hop-Size und die Sampling-Rate.
-
-**Parameter:**
-- `model_path`: Pfad zur ONNX- oder TorchScript-Modelldatei
-
-**Returns:**
-- Vollständige Modellmetadaten für die C++ Integration
-
-### `search_max_sdk_docs(query: str)` ⭐ NEU
-Durchsucht lokale Markdown-Notizen oder Header-Dateien des Max SDK
-nach Begriffen wie `t_pxobject`, `dsp_setup`, `class_addmethod` oder `InterlockedExchange`.
+### `search_max_sdk_docs(query: str)`
+Statische Max SDK Dokumentation zu typischen Begriffen
+(`t_pxobject`, `dsp_setup`, `class_addmethod`, `InterlockedExchange`).
 
 **Parameter:**
 - `query`: Suchbegriff für die Dokumentation
@@ -65,13 +44,18 @@ nach Begriffen wie `t_pxobject`, `dsp_setup`, `class_addmethod` oder `Interlocke
 **Returns:**
 - Fundene Informationen und Code-Beispiele
 
-### `validate_ipc_sync()` ⭐ NEU
+### `validate_ipc_sync()`
 Analysiert statisch den C++ Code (`mab_tilde.cpp`) und das Python-Worker-Skript,
 um sicherzustellen, dass die Shared-Memory-Magie (`0x4D414254` / `'MABT'`) und
 die Ringbuffer-Indizes (`head`/`tail`) synchron implementiert sind.
 
 **Returns:**
 - IPC-Synchronisations-Report mit Problemen und Warnungen
+
+### `inspect_rave_model(model_path: str)`
+Leichtgewichtige RAVE/ONNX/TorchScript-Analyse: Dateimetadaten, Ein-/Ausgangs-
+Shapes, Hop-Size-Detektion, verfügbare Methoden (`encode`/`decode`/`forward`)
+und eine Empfehlung für `block_size`/`num_channels` des mab~-Ringbuffers.
 
 ## SQLite-RAG-Tools (v3.1) & Code-Wiki
 
@@ -185,29 +169,17 @@ mab_tilde/
 
 ## Shared Memory Handshake-Protokoll
 
-Siehe `check_shared_memory_config()` Tool für Details.
+Siehe `get_project_summary()` für aktuelle Konstanten und
+`validate_ipc_sync()` für die Synchronisations-Prüfung.
 
-## Neue Tools (v2.0)
+## Modell-Analyse
 
-### `inspect_model_metadata(model_path)`
+### `inspect_rave_model(model_path)`
 Vollständige Modellanalyse für RAVE-Modelle:
 - ONNX Runtime Integration für detaillierte Shape-Analyse
 - Automatische Hop-Size-Erkennung
 - RAVE-Konformitäts-Check
 - C++ Kompatibilitäts-Empfehlungen
-
-### `search_max_sdk_docs(query)`
-Intelligenter Max SDK Dokumentations-Zugriff:
-- Volltextsuche in C++ Header-Dateien
-- Code-Beispiele für typische Max SDK Patterns
-- SPSC-Implementierungshinweise
-
-### `validate_ipc_sync()`
-Statische IPC-Validierung:
-- Magic Number Konsistenz (0x4D414254)
-- Ring Buffer Head/Tail Synchronisation
-- Shared Memory Namenskonventionen
-- Event-basierte Synchronisation
 
 ## Lizenz
 

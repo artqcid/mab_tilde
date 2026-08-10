@@ -850,123 +850,43 @@ _rag = ProjectRAG()
 
 
 @mcp.tool()
-def check_max_sdk_headers() -> str:
-    """
-    Durchsucht das Projekt nach typischen Max/MSP API Headern und prüft die Einbindung.
-    
-    Gibt Informationen über die erwarteten Max/MSP SDK-Strukturen zurück.
-    """
-    return """Max/MSP SDK Strukturen (ext.h, z_dsp.h) werden im C++ Code vorausgesetzt.
-    
-Wichtige Komponenten:
-- t_pxobject: Basis-Struktur für Patcher-Objekte
-- dsp_setup(): DSP-Initialisierung für Signalobjekte
-- object_alloc(): Speicherallokation für Max-Objekte
-- class_new(): Klassenerstellung für neue Externals
-- dsp_add64(): DSP-Performance-Funktion für 64-Bit Audio
-
-Erwartete Header-Dateien (im Max SDK):
-- ext.h: Grundlegende Max SDK Funktionen
-- ext_obex.h: Object-Experience SDK
-- z_dsp.h: DSP-spezifische Hilfsfunktionen
-
-Hinweis: Diese Header sind Teil des Max SDK und müssen nicht im Projekt selbst liegen.
-Sie werden vom Compiler über die Include-Pfade definiert."""
-
-
-@mcp.tool()
-def validate_rave_config(model_path: str) -> str:
-    """
-    Überprüft ein RAVE ONNX/Torch-Modell auf Kompatibilität mit dem C++ Worker.
-    
-    Args:
-        model_path: Pfad zur ONNX- oder TorchScript-Modelldatei
-        
-    Returns:
-        Informationen über Modellkompatibilität
-    """
-    if not os.path.exists(model_path):
-        return f"Fehler: Modelldatei unter {model_path} nicht gefunden."
-    
-    # Prüfe Dateiendung
-    ext = os.path.splitext(model_path)[1].lower()
-    
-    result = f"Modell {model_path} existiert.\n"
-    result += f"Dateityp: {ext}\n\n"
-    
-    # Versuche, das Modell zu laden und Metadaten zu extrahieren
-    try:
-        if ext in ['.onnx']:
-            try:
-                import onnxruntime as ort
-                session = ort.InferenceSession(model_path)
-                result += "ONNX-Modell erfolgreich geladen.\n"
-                
-                # Eingabe- und Ausgangsinformationen
-                for inp in session.get_inputs():
-                    result += f"Eingabe: {inp.name}, Shape: {inp.shape}, Typ: {inp.type}\n"
-                for out in session.get_outputs():
-                    result += f"Ausgabe: {out.name}, Shape: {out.shape}, Typ: {out.type}\n"
-                    
-                result += "\nEmpfehlung für mab~: Prüfe, ob die Hop-Size und Encoder/Decoder-Dimensionen mit dem C++ Ringbuffer übereinstimmen."
-            except ImportError:
-                result += "Hinweis: onnxruntime nicht installiert. Installiere mit: pip install onnxruntime"
-            except Exception as e:
-                result += f"Fehler beim Laden des ONNX-Modells: {str(e)}"
-                
-        elif ext in ['.pt', '.pth', '.ts']:
-            try:
-                import torch
-                model = torch.jit.load(model_path, map_location='cpu')
-                result += "TorchScript-Modell erfolgreich geladen.\n"
-                
-                # Versuche Eingabe-/Ausgangsdimensionen zu extrahieren
-                if hasattr(model, 'graph'):
-                    result += "Modell-Graph verfügbar.\n"
-                
-                result += "\nEmpfehlung für mab~: Prüfe, ob die Eingangs- und Ausgangsdimensionen mit block_size und num_channels im C++ Code übereinstimmen."
-            except ImportError:
-                result += "Hinweis: torch nicht installiert. Installiere mit: pip install torch"
-            except Exception as e:
-                result += f"Fehler beim Laden des Torch-Modells: {str(e)}"
-        else:
-            result += f"Unbekannter Modelltyp: {ext}\n"
-            result += "Unterstützte Formate: .onnx, .pt, .pth, .ts"
-            
-    except Exception as e:
-        result += f"Allgemeiner Fehler: {str(e)}"
-    
-    return result
-
-
-@mcp.tool()
 def run_cpp_tests() -> str:
     """
-    Führt lokale Tests oder den Build-Prozess für das mab~ External aus.
-    
+    Führt den Build-Prozess für das mab~ External über CMake-Presets aus.
+
+    Nutzt `cmake --build --preset debug` (siehe `CMakePresets.json`).
+    Vor dem ersten Build muss `cmake --preset debug` konfiguriert worden sein.
+
     Returns:
         Ergebnis des Build-Prozesses
     """
     try:
-        # Prüfe ob Build-Verzeichnis existiert
+        # Prüfe ob CMakePresets.json existiert
+        if not os.path.exists("CMakePresets.json"):
+            return "Fehler: CMakePresets.json nicht gefunden."
+
+        # Prüfe ob Build-Verzeichnis existiert (wird durch `cmake --preset debug` angelegt)
         if not os.path.exists("build"):
-            return "Fehler: Build-Verzeichnis nicht gefunden. Führe zuerst 'cmake -B build' aus."
-        
-        # Versuche Build zu starten
+            return (
+                "Fehler: Build-Verzeichnis nicht gefunden. "
+                "Führe zuerst 'cmake --preset debug' aus."
+            )
+
+        # Build über Preset
         result = subprocess.run(
-            ["cmake", "--build", "build", "--config", "Debug"],
+            ["cmake", "--build", "--preset", "debug"],
             capture_output=True,
             text=True,
-            timeout=60
+            timeout=300,
         )
-        
+
         if result.returncode == 0:
             return "Build erfolgreich!\n\n" + result.stdout
         else:
-            return "Build-Fehler:\n\n" + result.stderr
-            
+            return "Build-Fehler:\n\n" + (result.stderr or result.stdout)
+
     except subprocess.TimeoutExpired:
-        return "Fehler: Build-Prozess hat einen Timeout erfahren (60s)."
+        return "Fehler: Build-Prozess hat einen Timeout erfahren (300s)."
     except FileNotFoundError:
         return "Fehler: cmake nicht gefunden. Stelle sicher, dass CMake installiert ist."
     except Exception as e:
@@ -974,273 +894,107 @@ def run_cpp_tests() -> str:
 
 
 @mcp.tool()
-def check_shared_memory_config() -> str:
+def get_project_summary() -> str:
     """
-    Prüft die Shared Memory-Konfiguration zwischen C++ und Python.
-    
-    Gibt Informationen über die erwartete Kommunikationsstruktur zurück.
-    """
-    return """Shared Memory Handshake-Protokoll:
+    Liefert eine dynamische Zusammenfassung des mab~ Projekts.
 
-1. Python erstellt Shared Memory mit Header-Struktur:
-   - Magic: 0x4D414254 ('MABT')
-   - Version: 1
-   - block_size: Samples pro Block
-   - num_channels: Anzahl der Kanäle
-   - input_offset: Offset zum Input-Puffer
-   - output_offset: Offset zum Output-Puffer
-   - control_offset: Offset zum Ring-Puffer
+    Kombiniert und ersetzt die früheren statischen Tools
+    `get_project_info`, `check_shared_memory_config` und
+    `analyze_inference_worker`. Liest aktuelle Dateien und den RAG-Index-Status
+    aus, anstatt hartkodierte Strings zurückzugeben.
 
-2. C++ öffnet Shared Memory und mappt View:
-   - Öffnet Event: MabReadyEvent_{PID}
-   - Öffnet Shared Memory: MabSharedMem_{PID}
-   - Mappt View und liest Header
-
-3. Kommunikationsfluss:
-   - C++ (Producer): is_input_ready, head (Ring-Puffer)
-   - Python (Consumer): is_output_ready, tail (Ring-Puffer)
-
-Ring-Puffer-Konfiguration:
-- Größe: 256 Nachrichten
-- Max. Nachricht: 256 Zeichen
-- SPSC (Single-Producer/Single-Consumer) Pattern
-
-Empfohlene Werte:
-- block_size: 512-4096 (abhängig vom Audio-System)
-- num_channels: 1-16 (1 für mab~, bis zu 16 für mc.mab~)"""
-
-
-@mcp.tool()
-def analyze_inference_worker() -> str:
-    """
-    Analysiert den inference_worker.py und gibt Strukturinformationen zurück.
-    """
-    worker_path = "inference_worker.py"
-    
-    if not os.path.exists(worker_path):
-        return f"Fehler: {worker_path} nicht gefunden."
-    
-    result = "inference_worker.py Analyse:\n\n"
-    
-    try:
-        with open(worker_path, 'r', encoding='utf-8') as f:
-            content = f.read()
-            
-        # Zähle wichtige Komponenten
-        result += f"Dateigröße: {len(content)} Bytes\n"
-        result += f"Zeilenanzahl: {len(content.splitlines())}\n\n"
-        
-        # Suche nach Klassen und Funktionen
-        if "SharedMemoryManager" in content:
-            result += "✓ SharedMemoryManager Klasse gefunden\n"
-        if "LockFreeRingBuffer" in content:
-            result += "✓ LockFreeRingBuffer Klasse gefunden\n"
-        if "load_model" in content:
-            result += "✓ load_model Funktion gefunden\n"
-        if "infer_block" in content:
-            result += "✓ infer_block Funktion gefunden\n"
-        if "argparse" in content:
-            result += "✓ Argument Parsing implementiert\n"
-            
-        result += "\nWichtige Konstanten:"
-        result += "\n- CONTROL_RING_SIZE: 256"
-        result += "\n- CONTROL_MSG_SIZE: 256"
-        result += "\n- MAGIC_NUMBER: 0x4D414254 ('MABT')"
-        
-    except Exception as e:
-        result += f"Fehler bei der Analyse: {str(e)}"
-    
-    return result
-
-
-@mcp.tool()
-def get_project_info() -> str:
-    """
-    Gibt allgemeine Informationen über das mab~ Projekt zurück.
-    """
-    info = """mab~ Projektinformationen:
-
-Projektstruktur:
-- source/projects/mab_tilde/mab_tilde.cpp: Haupt-C++ Code
-- inference_worker.py: Python Backend für Inferenz
-- CMakeLists.txt: Build-Konfiguration
-- requirements.txt: Python Abhängigkeiten
-
-Build-System:
-- CMake mit Visual Studio 18 2026 Generator
-- Ziel: x64
-
-Wichtige Konstanten (C++):
-- MAX_CHANNELS: 16
-- MAX_BLOCK_SIZE: 4096
-- CONTROL_RING_SIZE: 256
-- CONTROL_MSG_SIZE: 256
-
-Shared Memory Namen:
-- Event: MabReadyEvent_{PID}
-- Shared Memory: MabSharedMem_{PID}
-
-Nachrichten-Handler (Phase 1.7):
-- enable: Aktiviert/Deaktiviert die Audio-Verarbeitung
-- gpu: Schaltet zwischen CPU/GPU-Modus
-- reload: Lädt das aktuelle Modell neu
-- load: Lädt ein neues Modell
-- dump: Gibt Modellinformationen aus
-- set/get: Attribute lesen/schreiben
-- anything: Leitet unbekannte Nachrichten an Python weiter"""
-    
-    return info
-
-
-@mcp.tool()
-def inspect_model_metadata(model_path: str) -> str:
-    """
-    Lädt ein ONNX- oder TorchScript-Modell (RAVE) und extrahiert automatisch
-    die Tensor-Shapes (Input/Output), die Hop-Size und die Sampling-Rate.
-    
-    Args:
-        model_path: Pfad zur ONNX- oder TorchScript-Modelldatei
-        
     Returns:
-        Vollständige Modellmetadaten für die C++ Integration
+        Markdown-Übersicht mit Projektstatus, IPC-Konstanten und Worker-Infos.
     """
-    if not os.path.exists(model_path):
-        return f"Fehler: Modelldatei unter {model_path} nicht gefunden."
-    
-    ext = os.path.splitext(model_path)[1].lower()
-    result = f"Modell-Analyse: {model_path}\n"
-    result += "=" * 50 + "\n\n"
-    
+    lines = ["mab~ Projekt-Zusammenfassung", "=" * 60]
+
+    # Schlüsseldateien
+    key_files = [
+        "source/projects/mab_tilde/mab_tilde.cpp",
+        "source/projects/mab_tilde/mab_info.cpp",
+        "source/projects/mab_tilde/worker_launch.cpp",
+        "inference_worker.py",
+        "CMakeLists.txt",
+        "mab_mcp_server.py",
+    ]
+    lines.append("\nDateien:")
+    for path in key_files:
+        exists = os.path.exists(path)
+        size = os.path.getsize(path) if exists else 0
+        lines.append(f"  {'[+] ' if exists else '[-] '}{path} ({size:,} Bytes)")
+
+    # RAG-Status
+    lines.append("\nRAG-Index:")
     try:
-        if ext in ['.onnx']:
-            try:
-                import onnxruntime as ort
-                import numpy as np
-                
-                session = ort.InferenceSession(model_path)
-                result += "✓ ONNX-Modell erfolgreich geladen\n\n"
-                
-                # Eingabeinformationen
-                result += "EINGABEN:\n"
-                result += "-" * 30 + "\n"
-                for i, inp in enumerate(session.get_inputs()):
-                    shape_str = str(inp.shape)
-                    # Extrahiere Hop-Size falls möglich
-                    hop_size = None
-                    if hasattr(inp, 'shape') and inp.shape:
-                        for dim in inp.shape:
-                            if isinstance(dim, int) and 256 <= dim <= 8192:
-                                hop_size = dim
-                                break
-                    
-                    result += f"  Name: {inp.name}\n"
-                    result += f"  Shape: {shape_str}\n"
-                    result += f"  Typ: {inp.type}\n"
-                    if hop_size:
-                        result += f"  ⚠️  Mögliche Hop-Size: {hop_size}\n"
-                    result += "\n"
-                
-                # Ausgangsinformationen
-                result += "AUSGÄNGE:\n"
-                result += "-" * 30 + "\n"
-                for i, out in enumerate(session.get_outputs()):
-                    result += f"  Name: {out.name}\n"
-                    result += f"  Shape: {out.shape}\n"
-                    result += f"  Typ: {out.type}\n\n"
-                
-                # RAVE-spezifische Analyse
-                result += "RAVE-KONFORMITÄT:\n"
-                result += "-" * 30 + "\n"
-                
-                # Suche nach typischen RAVE-Dimensionen
-                input_shape = session.get_inputs()[0].shape if session.get_inputs() else []
-                output_shape = session.get_outputs()[0].shape if session.get_outputs() else []
-                
-                # Typische RAVE-Hop-Sizes
-                typical_hops = [256, 512, 1024, 2048, 4096]
-                for dim in input_shape:
-                    if isinstance(dim, int) and dim in typical_hops:
-                        result += f"✓ Erkannte RAVE-Hop-Size: {dim}\n"
-                        result += f"  → Blockgröße für C++ Ringbuffer: {dim}\n"
-                
-                # Sampling-Rate-Hinweis
-                result += "\nSampling-Rate:\n"
-                result += "  RAVE-Modelle speichern keine SR explizit.\n"
-                result += "  Typische Werte: 16000, 22050, 44100, 48000 Hz\n"
-                result += "  → Stelle sicher, dass dein Audio-System diese Rate verwendet.\n"
-                
-                # C++ Kompatibilitäts-Check
-                result += "\nC++ KOMPATIBILITÄT:\n"
-                result += "-" * 30 + "\n"
-                max_block = max([d for d in input_shape if isinstance(d, int) and d > 0], default=512)
-                if max_block <= 4096:
-                    result += f"✓ Blockgröße {max_block} passt in MAX_BLOCK_SIZE (4096)\n"
-                else:
-                    result += f"⚠️ Blockgröße {max_block} überschreitet MAX_BLOCK_SIZE (4096)\n"
-                
-                return result
-                
-            except ImportError:
-                return "Fehler: onnxruntime nicht installiert.\nInstalliere mit: pip install onnxruntime"
-            except Exception as e:
-                return f"Fehler beim Laden des ONNX-Modells: {str(e)}"
-                
-        elif ext in ['.pt', '.pth', '.ts']:
-            try:
-                import torch
-                import numpy as np
-                
-                model = torch.jit.load(model_path, map_location='cpu')
-                result += "✓ TorchScript-Modell erfolgreich geladen\n\n"
-                
-                # Versuche Graph-Informationen zu extrahieren
-                if hasattr(model, 'graph'):
-                    result += "GRAPH-ANALYSE:\n"
-                    result += "-" * 30 + "\n"
-                    
-                    # Eingabe- und Ausgangsdimensionen aus dem Graph
-                    try:
-                        inputs = list(model.graph.inputs())
-                        outputs = list(model.graph.outputs())
-                        
-                        result += "EINGABEN:\n"
-                        for inp in inputs:
-                            if hasattr(inp, 'type') and hasattr(inp.type(), 'sizes'):
-                                sizes = inp.type().sizes()
-                                result += f"  Name: {inp.name()}, Shape: {sizes}\n"
-                        
-                        result += "\nAUSGÄNGE:\n"
-                        for out in outputs:
-                            if hasattr(out, 'type') and hasattr(out.type(), 'sizes'):
-                                sizes = out.type().sizes()
-                                result += f"  Name: {out.name()}, Shape: {sizes}\n"
-                    except Exception:
-                        result += "  (Graph-Analyse nicht verfügbar)\n"
-                
-                # Parameter-Analyse
-                result += "\nPARAMETER-ANALYSE:\n"
-                result += "-" * 30 + "\n"
-                total_params = sum(p.numel() for p in model.parameters())
-                result += f"  Gesamte Parameter: {total_params:,}\n"
-                
-                # RAVE-spezifische Hinweise
-                result += "\nRAVE-HINWEISE:\n"
-                result += "  TorchScript-Modelle von RAVE haben typischerweise:\n"
-                result += "  - Eingabe: (1, num_channels, block_size)\n"
-                result += "  - Ausgabe: (1, num_channels, block_size)\n"
-                result += "  - Hop-Size = block_size / 2 (typisch)\n"
-                
-                return result
-                
-            except ImportError:
-                return "Fehler: torch nicht installiert.\nInstalliere mit: pip install torch"
-            except Exception as e:
-                return f"Fehler beim Laden des Torch-Modells: {str(e)}"
-        else:
-            return f"Unbekannter Modelltyp: {ext}\nUnterstützte Formate: .onnx, .pt, .pth, .ts"
-            
-    except Exception as e:
-        return f"Allgemeiner Fehler: {str(e)}"
+        with closing(_rag._connect()) as conn:
+            n_chunks = conn.execute(
+                "SELECT COUNT(*) AS n FROM code_chunks"
+            ).fetchone()["n"]
+            n_files = conn.execute(
+                "SELECT COUNT(DISTINCT file_path) AS n FROM code_chunks"
+            ).fetchone()["n"]
+            n_syms = conn.execute(
+                "SELECT COUNT(*) AS n FROM code_chunks WHERE symbol_name IS NOT NULL"
+            ).fetchone()["n"]
+        lines.append(
+            f"  [+] Indiziert: {n_chunks} Chunks aus {n_files} Dateien "
+            f"({n_syms} Symbole)"
+        )
+        lines.append(
+            "  Tipp: Nach Code-Aenderungen `index_project_code` erneut ausfuehren."
+        )
+    except sqlite3.Error:
+        lines.append("  [-] Noch nicht indiziert.")
+        lines.append("  Tipp: `index_project_code` auf dem Projektverzeichnis ausfuehren.")
+
+    # IPC-Konstanten aus dem echten C++-Code extrahieren
+    cpp_path = "source/projects/mab_tilde/mab_tilde.cpp"
+    cpp_content = ""
+    if os.path.exists(cpp_path):
+        with open(cpp_path, "r", encoding="utf-8") as f:
+            cpp_content = f.read()
+
+    cpp_constants = {
+        "MAX_CHANNELS": r"MAX_CHANNELS\s+(\d+)",
+        "MAX_BLOCK_SIZE": r"MAX_BLOCK_SIZE\s+(\d+)",
+        "CONTROL_RING_SIZE": r"CONTROL_RING_SIZE\s+(\d+)",
+        "CONTROL_MSG_SIZE": r"CONTROL_MSG_SIZE\s+(\d+)",
+    }
+    lines.append("\nIPC-Konstanten (aus Quellcode extrahiert):")
+    for name, pattern in cpp_constants.items():
+        m = re.search(pattern, cpp_content)
+        lines.append(f"  {name}: {m.group(1) if m else 'nicht gefunden'}")
+
+    if "0x4D414254" in cpp_content:
+        lines.append("  [+] Magic: 0x4D414254 ('MABT')")
+    if "MabSharedMem_" in cpp_content:
+        lines.append("  [+] Shared Memory Name: MabSharedMem_{PID}")
+    if "MabReadyEvent_" in cpp_content:
+        lines.append("  [+] Event Name: MabReadyEvent_{PID}")
+
+    # Python Worker
+    py_path = "inference_worker.py"
+    lines.append("\nPython Worker:")
+    if os.path.exists(py_path):
+        with open(py_path, "r", encoding="utf-8") as f:
+            py_content = f.read()
+        lines.append(f"  Zeilen: {len(py_content.splitlines())}")
+        for symbol in [
+            "SharedMemoryManager",
+            "LockFreeRingBuffer",
+            "load_model",
+            "infer_block",
+        ]:
+            lines.append(f"  {'[+] ' if symbol in py_content else '[-] '}{symbol}")
+    else:
+        lines.append("  [-] inference_worker.py nicht gefunden")
+
+    lines.append("\nNuetzliche RAG-Queries:")
+    lines.append("  - `query_code_rag('shared memory handshake')`")
+    lines.append("  - `query_code_wiki('apply_io')`")
+    lines.append("  - `inspect_rave_model('path/to/model.ts')`")
+
+    return "\n".join(lines)
 
 
 @mcp.tool()

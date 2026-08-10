@@ -13,10 +13,13 @@ Sie definiert Architektur, Message-Contract und Build-Regeln des `mab~`-External
 
 - Ziel: crash-sicheres, prozess-isoliertes MaxMSP-External `mab~` / `mc.mab~`
   als Ersatz für `nn_tilde` (TorchScript-Modelle wie RAVE, AFTER unter Windows).
-  Geplant: `mab.info`, `mc.mab~` (echtes `mc.`), `mcs.mab~` – siehe `doc/implementation_plan.md`
-  Phasen 4–6. Aktueller Stand: Phase 3 fertig (Method-Aware-Processing: Header v2,
-  Latent-Inlets/Outlets via `mab_tilde_apply_io` auf dem Main-Thread, `block_accumulator`,
-  `infer_method`-Dispatch) – nur Max-Verifikation offen (Task 3.4).
+  Geplant: `mc.mab~` (echtes `mc.`), `mcs.mab~` – siehe `doc/implementation_plan.md`
+  Phasen 5–6. Aktueller Stand: **Phase 4.6 fertig** – Phase 3 (Method-Aware-Processing:
+  Header v2, Latent-Inlets/Outlets via `mab_tilde_apply_io`, `block_accumulator`,
+  `infer_method`-Dispatch), Phase 4 (`mab.info`-Modell-Inspektor), Phase 4.5
+  (ASIO-XRun-Prävention: `BELOW_NORMAL_PRIORITY_CLASS` + Core-Affinität),
+  Phase 4.6 (nn_tilde-Paritäts-Delta P1–P6). Offen: Max-Runtime-Verifikation
+  (Tasks 3.4 + V5), Phasen 5+6 (`mc.mab~`, `mcs.mab~`).
 - Isolation: Python-Prozess + Shared Memory (`MabSharedMem_{PID}`),
   lock-free SPSC-Ringbuffer, Magic `0x4D414254` (`'MABT'`).
 - Hauptcode: `source/projects/mab_tilde/mab_tilde.cpp` (C++) und
