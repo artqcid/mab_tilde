@@ -252,13 +252,17 @@ Für Coding mit Cloud-Modellen (z.B. über OpenRouter) dient der lokale MCP-Serv
   (C++, Python, Markdown) rekursiv in die SQLite-FTS5-Datenbank `mab_rag.db`.
   Inkrementell (SHA-256), entfernte Dateien werden aufgeräumt. **Regeneriert
   anschließend automatisch das Code-Wiki** `doc/code_wiki.md`.
-- `query_code_rag(query, top_k)` – FTS5-Volltextsuche mit Trigramm-Tokenizer.
+- `query_code_rag(query, top_k, format="text")` – FTS5-Volltextsuche mit Trigramm-Tokenizer.
   Findet auch Identifikatoren wie `mab_tilde`, `block_size`, `dsp_setup`
-  (Substring-Matching) und liefert Chunks mit Dateipfad + Zeilennummern.
-- `query_code_wiki(query, max_results)` – Struktursuche über den Code-Wiki-
+  (Substring-Matching). Liefert Chunks mit Dateipfad + Zeilennummern + stabiler
+  Chunk-ID `[mab_<id>]`. `format` kann `"text"` (Code-Snippets), `"compact"`
+  (eine Zeile pro Treffer, token-sparsam) oder `"json"` (strukturiert) sein.
+- `query_code_wiki(query, max_results, format="text")` – Struktursuche über den Code-Wiki-
   Symbolindex (Klassen, Funktionen, Methoden, Sections) anhand von
-  Symbolname/Signatur/Docstring. Liefert Typ + Dateipfad + Zeilennummern.
-  Für Implementierungsdetails danach `query_code_rag` verwenden.
+  Symbolname/Signatur/Docstring. Liefert Typ + Dateipfad + Zeilennummern + Chunk-ID.
+  `format`-Optionen wie bei `query_code_rag`.
+- `get_rag_chunk(chunk_id)` – Lädt den vollständigen Inhalt eines einzelnen
+  Chunks anhand seiner `[mab_<id>]`-Referenz (transient, spart Kontext-Tokens).
 - `inspect_rave_model(model_path)` – RAVE/ONNX/TorchScript-Analyse (Hop-Size,
   Ein-/Ausgangs-Shapes, `encode`/`decode`/`forward`).
 
@@ -272,7 +276,8 @@ Weitere Tools: `validate_ipc_sync`, `search_max_sdk_docs`, `inspect_model_metada
    Quelldateien.
 2. **RAG nutzen:** Vor Implementierungen `query_code_rag` aufrufen, um exakte
    Signaturen, Konstanten (`CONTROL_RING_SIZE`, `MAX_BLOCK_SIZE`, `MAGIC_NUMBER`)
-   und Message-Handler zu verifizieren.
+   und Message-Handler zu verifizieren. Bevorzuge dabei `format="compact"` und
+   lade nur relevante Treffer mit `get_rag_chunk("mab_<id>")`.
 3. **Code-Wiki nutzen:** `query_code_wiki` für Strukturfragen („welche Methode
    macht X?“, „wo ist Y definiert?“); für Implementierungsdetails immer
    `query_code_rag` + Verifikation im Quellcode.

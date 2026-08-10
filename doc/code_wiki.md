@@ -1,6 +1,6 @@
 # mab~ Code-Wiki
 
-_Automatisch generiert von `index_project_code` (MCP-Server). 41 Dateien, 848 Chunks, 560 Symbole._
+_Automatisch generiert von `index_project_code` (MCP-Server). 41 Dateien, 857 Chunks, 568 Symbole._
 
 Dieses Wiki ist der strukturierte Symbolindex der Codebasis. Coding-Agents
 lesen es einmalig pro Session als stabilen Kontext (prompt-cache-freundlich)
@@ -340,53 +340,57 @@ Symbole:
 ## C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\mab_mcp_server.py
 
 - Sprache: `python`
-- Abhängigkeiten: from fastmcp import FastMCP, import subprocess, import os, import sys, import re, import ast, import hashlib, import sqlite3, from contextlib import closing
+- Abhängigkeiten: from fastmcp import FastMCP, import subprocess, import os, import sys, import re, import ast, import json, import hashlib, import sqlite3, from contextlib import closing
 
 Symbole:
-- `_emit_chunk` (function, Zeilen 101-111) - def _emit_chunk(lines, start, end, symbol_type, symbol_name, signature, docstring) - Baut einen Chunk-Datensatz aus 0-basiertem Zeilenbereich [start, end].
-- `_module_chunks` (function, Zeilen 114-124) - def _module_chunks(lines, start, end) - Zerlegt einen Bereich ohne benannte Symbole in max. 60-Zeilen-Blöcke.
-- `_py_arglist` (function, Zeilen 127-146) - def _py_arglist(args) - Baut aus einem ast.arguments eine kompakte Parameterliste (mit Defaults).
-- `_py_bases` (function, Zeilen 149-158) - def _py_bases(node)
-- `_chunk_python` (function, Zeilen 161-213) - def _chunk_python(source) - Zerlegt Python-Code über das stdlib-`ast` in Klassen/Funktionen/Methoden.
-- `_cpp_def_kind` (function, Zeilen 221-245) - def _cpp_def_kind(header) - Klassifiziert einen C++-Block-Kopf -> (kind, name).
-- `_cpp_collect_header` (function, Zeilen 248-274) - def _cpp_collect_header(lines, idx, prefix) - Rekonstruiert den vollständigen Block-Kopf (mehrzeilige Signaturen).
-- `_cpp_sub_blocks` (function, Zeilen 277-309) - def _cpp_sub_blocks(lines, start, end, base) - Findet Blöcke auf Tiefe base+1 im Bereich [start, end].
-- `_chunk_cpp_class` (function, Zeilen 312-335) - def _chunk_cpp_class(lines, start, end, base, name) - Zerlegt eine C++-Klasse: Methoden separat, Header/Members als class-Chunk.
-- `_chunk_cpp_region` (function, Zeilen 338-365) - def _chunk_cpp_region(lines, start, end, base) - Zerlegt einen C++-Bereich: Blöcke auf Tiefe base+1 + Modul-Lücken.
-- `_chunk_cpp` (function, Zeilen 368-372) - def _chunk_cpp(source) - Zerlegt C++-Code strukturiert (brace-basiert, ohne tree-sitter).
-- `_chunk_markdown` (function, Zeilen 375-390) - def _chunk_markdown(source) - Zerlegt Markdown nach Überschriften (Sections = Chunks).
-- `ProjectRAG` (class, Zeilen 393-776) - class ProjectRAG - Verwaltet die lokale SQLite-FTS5-Datenbank für den Code-Retrieval.
-- `ProjectRAG.__init__` (method, Zeilen 396-398) - def __init__(self, db_path=RAG_DB_PATH)
-- `ProjectRAG._connect` (method, Zeilen 401-407) - def _connect(self) - Öffnet eine frische Verbindung (thread-sicher für parallele MCP-Aufrufe).
-- `ProjectRAG._init_schema` (method, Zeilen 410-456) - def _init_schema(self) - Legt die Tabellen an; migriert alte Schemas (Zeilen-Chunking -> v2).
-- `ProjectRAG._scan_directory` (method, Zeilen 459-493) - def _scan_directory(self, directory_path) - Sammelt alle indizierbaren Quelldateien unter directory_path.
-- `ProjectRAG._chunk_file` (method, Zeilen 495-501) - def _chunk_file(self, language, content) - Chunkt eine Quelldatei sprachabhängig (strukturell statt Zeilenblöcke).
-- `ProjectRAG.index_directory` (method, Zeilen 504-559) - def index_directory(self, directory_path) - Indiziert (bzw. aktualisiert inkrementell) alle Code-Dateien.
-- `ProjectRAG._find_stale_paths` (method, Zeilen 562-578) - def _find_stale_paths(conn, directory_path, scanned_paths) - Findet indizierte Pfade unter directory_path, die nicht mehr existieren.
-- `ProjectRAG._build_match_expr` (method, Zeilen 582-591) - def _build_match_expr(query) - Baut aus der Suchanfrage einen sicheren FTS5-MATCH-Ausdruck.
-- `ProjectRAG.query` (method, Zeilen 593-629) - def query(self, query, top_k=3) - Hybride Suche: FTS5/bm25-Kandidaten + Re-Ranking nach exakten Treffern.
-- `ProjectRAG.query_wiki` (method, Zeilen 632-652) - def query_wiki(self, query, max_results=12) - Symbol-basierte Suche im Code-Wiki (name/signature/docstring).
-- `ProjectRAG.format_results` (method, Zeilen 656-680) - def format_results(results, query) - Formatiert die Suchergebnisse als lesbaren Markdown-Block für den Chat.
-- `ProjectRAG._file_dependencies` (method, Zeilen 684-707) - def _file_dependencies(conn, file_path, language) - Sammelt Importe/#includes einer Datei aus den Modul-Chunks.
-- `ProjectRAG.generate_wiki` (method, Zeilen 709-776) - def generate_wiki(self, wiki_path=WIKI_PATH) - Generiert das Code-Wiki (stabiler Symbolindex) als Markdown-Datei.
-- `_wiki_anchor` (function, Zeilen 779-782) - def _wiki_anchor(path) - Baut einen GitHub-Stil-Markdown-Anker aus einem Dateipfad.
-- `check_max_sdk_headers` (function, Zeilen 790-811) - def check_max_sdk_headers() - Durchsucht das Projekt nach typischen Max/MSP API Headern und prüft die Einbindung.
-- `validate_rave_config` (function, Zeilen 815-876) - def validate_rave_config(model_path) - Überprüft ein RAVE ONNX/Torch-Modell auf Kompatibilität mit dem C++ Worker.
-- `run_cpp_tests` (function, Zeilen 880-910) - def run_cpp_tests() - Führt lokale Tests oder den Build-Prozess für das mab~ External aus.
-- `check_shared_memory_config` (function, Zeilen 914-947) - def check_shared_memory_config() - Prüft die Shared Memory-Konfiguration zwischen C++ und Python.
-- `analyze_inference_worker` (function, Zeilen 951-990) - def analyze_inference_worker() - Analysiert den inference_worker.py und gibt Strukturinformationen zurück.
-- `get_project_info` (function, Zeilen 994-1029) - def get_project_info() - Gibt allgemeine Informationen über das mab~ Projekt zurück.
-- `inspect_model_metadata` (function, Zeilen 1033-1180) - def inspect_model_metadata(model_path) - Lädt ein ONNX- oder TorchScript-Modell (RAVE) und extrahiert automatisch
-- `search_max_sdk_docs` (function, Zeilen 1184-1292) - def search_max_sdk_docs(query) - Durchsucht lokale Markdown-Notizen oder Header-Dateien des Max SDK
-- `validate_ipc_sync` (function, Zeilen 1296-1456) - def validate_ipc_sync() - Analysiert statisch den C++ Code (mab_tilde.cpp) und das Python-Worker-Skript,
-- `index_project_code` (function, Zeilen 1465-1513) - def index_project_code(directory_path) - Indiziert das Projektverzeichnis in die SQLite-RAG-Datenbank (mab_rag.db).
-- `query_code_rag` (function, Zeilen 1517-1539) - def query_code_rag(query, top_k=3) - Durchsucht die RAG-Datenbank nach Code-Stellen passend zur Suchanfrage.
-- `query_code_wiki` (function, Zeilen 1543-1583) - def query_code_wiki(query, max_results=12) - Durchsucht den Code-Wiki-Symbolindex nach Klassen, Funktionen und Methoden.
-- `_rag_has_data` (function, Zeilen 1586-1593) - def _rag_has_data() - Prüft, ob die RAG-Datenbank bereits Code-Chunks enthält.
-- `inspect_rave_model` (function, Zeilen 1601-1635) - def inspect_rave_model(model_path) - Analysiert ein RAVE/ONNX/TorchScript-Modell auf seine Ein-/Ausgangsstruktur.
-- `_analyze_onnx_rave` (function, Zeilen 1638-1667) - def _analyze_onnx_rave(model_path) - Analysiert ein ONNX-Modell via onnxruntime (falls installiert).
-- `_analyze_ts_rave` (function, Zeilen 1670-1710) - def _analyze_ts_rave(model_path) - Analysiert ein TorchScript-Modell via torch (falls installiert).
-- `_rave_integration_hint` (function, Zeilen 1713-1720) - def _rave_integration_hint() - Empfehlung zur block_size-Abstimmung für den mab~-Ringbuffer.
+- `_emit_chunk` (function, Zeilen 102-112) - def _emit_chunk(lines, start, end, symbol_type, symbol_name, signature, docstring) - Baut einen Chunk-Datensatz aus 0-basiertem Zeilenbereich [start, end].
+- `_module_chunks` (function, Zeilen 115-125) - def _module_chunks(lines, start, end) - Zerlegt einen Bereich ohne benannte Symbole in max. 60-Zeilen-Blöcke.
+- `_py_arglist` (function, Zeilen 128-147) - def _py_arglist(args) - Baut aus einem ast.arguments eine kompakte Parameterliste (mit Defaults).
+- `_py_bases` (function, Zeilen 150-159) - def _py_bases(node)
+- `_chunk_python` (function, Zeilen 162-214) - def _chunk_python(source) - Zerlegt Python-Code über das stdlib-`ast` in Klassen/Funktionen/Methoden.
+- `_cpp_def_kind` (function, Zeilen 222-246) - def _cpp_def_kind(header) - Klassifiziert einen C++-Block-Kopf -> (kind, name).
+- `_cpp_collect_header` (function, Zeilen 249-275) - def _cpp_collect_header(lines, idx, prefix) - Rekonstruiert den vollständigen Block-Kopf (mehrzeilige Signaturen).
+- `_cpp_sub_blocks` (function, Zeilen 278-310) - def _cpp_sub_blocks(lines, start, end, base) - Findet Blöcke auf Tiefe base+1 im Bereich [start, end].
+- `_chunk_cpp_class` (function, Zeilen 313-336) - def _chunk_cpp_class(lines, start, end, base, name) - Zerlegt eine C++-Klasse: Methoden separat, Header/Members als class-Chunk.
+- `_chunk_cpp_region` (function, Zeilen 339-366) - def _chunk_cpp_region(lines, start, end, base) - Zerlegt einen C++-Bereich: Blöcke auf Tiefe base+1 + Modul-Lücken.
+- `_chunk_cpp` (function, Zeilen 369-373) - def _chunk_cpp(source) - Zerlegt C++-Code strukturiert (brace-basiert, ohne tree-sitter).
+- `_chunk_markdown` (function, Zeilen 376-391) - def _chunk_markdown(source) - Zerlegt Markdown nach Überschriften (Sections = Chunks).
+- `ProjectRAG` (class, Zeilen 394-839) - class ProjectRAG - Verwaltet die lokale SQLite-FTS5-Datenbank für den Code-Retrieval.
+- `ProjectRAG.__init__` (method, Zeilen 397-399) - def __init__(self, db_path=RAG_DB_PATH)
+- `ProjectRAG._connect` (method, Zeilen 402-408) - def _connect(self) - Öffnet eine frische Verbindung (thread-sicher für parallele MCP-Aufrufe).
+- `ProjectRAG._init_schema` (method, Zeilen 411-457) - def _init_schema(self) - Legt die Tabellen an; migriert alte Schemas (Zeilen-Chunking -> v2).
+- `ProjectRAG._scan_directory` (method, Zeilen 460-494) - def _scan_directory(self, directory_path) - Sammelt alle indizierbaren Quelldateien unter directory_path.
+- `ProjectRAG._chunk_file` (method, Zeilen 496-502) - def _chunk_file(self, language, content) - Chunkt eine Quelldatei sprachabhängig (strukturell statt Zeilenblöcke).
+- `ProjectRAG.index_directory` (method, Zeilen 505-560) - def index_directory(self, directory_path) - Indiziert (bzw. aktualisiert inkrementell) alle Code-Dateien.
+- `ProjectRAG._find_stale_paths` (method, Zeilen 563-579) - def _find_stale_paths(conn, directory_path, scanned_paths) - Findet indizierte Pfade unter directory_path, die nicht mehr existieren.
+- `ProjectRAG._build_match_expr` (method, Zeilen 583-592) - def _build_match_expr(query) - Baut aus der Suchanfrage einen sicheren FTS5-MATCH-Ausdruck.
+- `ProjectRAG.query` (method, Zeilen 594-630) - def query(self, query, top_k=3) - Hybride Suche: FTS5/bm25-Kandidaten + Re-Ranking nach exakten Treffern.
+- `ProjectRAG.query_wiki` (method, Zeilen 633-653) - def query_wiki(self, query, max_results=12) - Symbol-basierte Suche im Code-Wiki (name/signature/docstring).
+- `ProjectRAG.chunk_ref` (method, Zeilen 657-659) - def chunk_ref(r) - Stabile Kurz-Referenz für einen Chunk: [mab_123].
+- `ProjectRAG.format_results` (method, Zeilen 662-698) - def format_results(results, query, format='text') - Formatiert die Suchergebnisse als lesbaren Markdown-Block für den Chat.
+- `ProjectRAG.format_compact` (method, Zeilen 701-720) - def format_compact(results, query) - Kompakte Ausgabe: eine Zeile pro Treffer (Token-sparsam, #2 Evidence-Aliasing).
+- `ProjectRAG.format_json` (method, Zeilen 723-743) - def format_json(results, query) - Maschinenlesbare JSON-Ausgabe der Treffer (stabile Felder inkl. Chunk-ID).
+- `ProjectRAG._file_dependencies` (method, Zeilen 747-770) - def _file_dependencies(conn, file_path, language) - Sammelt Importe/#includes einer Datei aus den Modul-Chunks.
+- `ProjectRAG.generate_wiki` (method, Zeilen 772-839) - def generate_wiki(self, wiki_path=WIKI_PATH) - Generiert das Code-Wiki (stabiler Symbolindex) als Markdown-Datei.
+- `_wiki_anchor` (function, Zeilen 842-845) - def _wiki_anchor(path) - Baut einen GitHub-Stil-Markdown-Anker aus einem Dateipfad.
+- `check_max_sdk_headers` (function, Zeilen 853-874) - def check_max_sdk_headers() - Durchsucht das Projekt nach typischen Max/MSP API Headern und prüft die Einbindung.
+- `validate_rave_config` (function, Zeilen 878-939) - def validate_rave_config(model_path) - Überprüft ein RAVE ONNX/Torch-Modell auf Kompatibilität mit dem C++ Worker.
+- `run_cpp_tests` (function, Zeilen 943-973) - def run_cpp_tests() - Führt lokale Tests oder den Build-Prozess für das mab~ External aus.
+- `check_shared_memory_config` (function, Zeilen 977-1010) - def check_shared_memory_config() - Prüft die Shared Memory-Konfiguration zwischen C++ und Python.
+- `analyze_inference_worker` (function, Zeilen 1014-1053) - def analyze_inference_worker() - Analysiert den inference_worker.py und gibt Strukturinformationen zurück.
+- `get_project_info` (function, Zeilen 1057-1092) - def get_project_info() - Gibt allgemeine Informationen über das mab~ Projekt zurück.
+- `inspect_model_metadata` (function, Zeilen 1096-1243) - def inspect_model_metadata(model_path) - Lädt ein ONNX- oder TorchScript-Modell (RAVE) und extrahiert automatisch
+- `search_max_sdk_docs` (function, Zeilen 1247-1355) - def search_max_sdk_docs(query) - Durchsucht lokale Markdown-Notizen oder Header-Dateien des Max SDK
+- `validate_ipc_sync` (function, Zeilen 1359-1519) - def validate_ipc_sync() - Analysiert statisch den C++ Code (mab_tilde.cpp) und das Python-Worker-Skript,
+- `index_project_code` (function, Zeilen 1528-1576) - def index_project_code(directory_path) - Indiziert das Projektverzeichnis in die SQLite-RAG-Datenbank (mab_rag.db).
+- `query_code_rag` (function, Zeilen 1580-1605) - def query_code_rag(query, top_k=3, format='text') - Durchsucht die RAG-Datenbank nach Code-Stellen passend zur Suchanfrage.
+- `get_rag_chunk` (function, Zeilen 1609-1657) - def get_rag_chunk(chunk_id) - Holt den vollständigen Inhalt eines einzelnen RAG-Chunks (transient).
+- `query_code_wiki` (function, Zeilen 1661-1707) - def query_code_wiki(query, max_results=12, format='text') - Durchsucht den Code-Wiki-Symbolindex nach Klassen, Funktionen und Methoden.
+- `_rag_has_data` (function, Zeilen 1710-1717) - def _rag_has_data() - Prüft, ob die RAG-Datenbank bereits Code-Chunks enthält.
+- `inspect_rave_model` (function, Zeilen 1725-1759) - def inspect_rave_model(model_path) - Analysiert ein RAVE/ONNX/TorchScript-Modell auf seine Ein-/Ausgangsstruktur.
+- `_analyze_onnx_rave` (function, Zeilen 1762-1791) - def _analyze_onnx_rave(model_path) - Analysiert ein ONNX-Modell via onnxruntime (falls installiert).
+- `_analyze_ts_rave` (function, Zeilen 1794-1834) - def _analyze_ts_rave(model_path) - Analysiert ein TorchScript-Modell via torch (falls installiert).
+- `_rave_integration_hint` (function, Zeilen 1837-1844) - def _rave_integration_hint() - Empfehlung zur block_size-Abstimmung für den mab~-Ringbuffer.
 
 ## C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\block_accumulator.h
 
@@ -803,25 +807,29 @@ Symbole:
 ## C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_rag_wiki.py
 
 - Sprache: `python`
-- Abhängigkeiten: import os, import shutil, import tempfile, import unittest, import mab_mcp_server as mcp
+- Abhängigkeiten: import os, import shutil, import tempfile, import unittest, import json, import mab_mcp_server as mcp
 
 Symbole:
-- `ChunkingTests` (class, Zeilen 79-164) - class ChunkingTests(unittest.TestCase)
-- `ChunkingTests.test_python_ast_chunking` (method, Zeilen 80-96) - def test_python_ast_chunking(self)
-- `ChunkingTests.test_python_chunks_do_not_overspan_functions` (method, Zeilen 98-102) - def test_python_chunks_do_not_overspan_functions(self)
-- `ChunkingTests.test_cpp_structural_chunking` (method, Zeilen 104-116) - def test_cpp_structural_chunking(self)
-- `ChunkingTests.test_cpp_multiline_signature` (method, Zeilen 118-141) - def test_cpp_multiline_signature(self)
-- `ChunkingTests.test_cpp_crlf_normalization` (method, Zeilen 143-151) - def test_cpp_crlf_normalization(self)
-- `ChunkingTests.test_python_signature_keeps_defaults` (method, Zeilen 153-157) - def test_python_signature_keeps_defaults(self)
-- `ChunkingTests.test_markdown_section_chunking` (method, Zeilen 159-164) - def test_markdown_section_chunking(self)
-- `RAGIntegrationTests` (class, Zeilen 167-220) - class RAGIntegrationTests(unittest.TestCase)
-- `RAGIntegrationTests.setUp` (method, Zeilen 168-180) - def setUp(self)
-- `RAGIntegrationTests.tearDown` (method, Zeilen 182-183) - def tearDown(self)
-- `RAGIntegrationTests.test_index_directory` (method, Zeilen 185-187) - def test_index_directory(self)
-- `RAGIntegrationTests.test_hybrid_query_finds_function` (method, Zeilen 189-194) - def test_hybrid_query_finds_function(self)
-- `RAGIntegrationTests.test_hybrid_query_prefers_exact_symbol` (method, Zeilen 196-200) - def test_hybrid_query_prefers_exact_symbol(self)
-- `RAGIntegrationTests.test_query_wiki` (method, Zeilen 202-207) - def test_query_wiki(self)
-- `RAGIntegrationTests.test_wiki_generation` (method, Zeilen 209-220) - def test_wiki_generation(self)
+- `ChunkingTests` (class, Zeilen 80-165) - class ChunkingTests(unittest.TestCase)
+- `ChunkingTests.test_python_ast_chunking` (method, Zeilen 81-97) - def test_python_ast_chunking(self)
+- `ChunkingTests.test_python_chunks_do_not_overspan_functions` (method, Zeilen 99-103) - def test_python_chunks_do_not_overspan_functions(self)
+- `ChunkingTests.test_cpp_structural_chunking` (method, Zeilen 105-117) - def test_cpp_structural_chunking(self)
+- `ChunkingTests.test_cpp_multiline_signature` (method, Zeilen 119-142) - def test_cpp_multiline_signature(self)
+- `ChunkingTests.test_cpp_crlf_normalization` (method, Zeilen 144-152) - def test_cpp_crlf_normalization(self)
+- `ChunkingTests.test_python_signature_keeps_defaults` (method, Zeilen 154-158) - def test_python_signature_keeps_defaults(self)
+- `ChunkingTests.test_markdown_section_chunking` (method, Zeilen 160-165) - def test_markdown_section_chunking(self)
+- `RAGIntegrationTests` (class, Zeilen 168-250) - class RAGIntegrationTests(unittest.TestCase)
+- `RAGIntegrationTests.setUp` (method, Zeilen 169-181) - def setUp(self)
+- `RAGIntegrationTests.tearDown` (method, Zeilen 183-184) - def tearDown(self)
+- `RAGIntegrationTests.test_index_directory` (method, Zeilen 186-188) - def test_index_directory(self)
+- `RAGIntegrationTests.test_hybrid_query_finds_function` (method, Zeilen 190-195) - def test_hybrid_query_finds_function(self)
+- `RAGIntegrationTests.test_hybrid_query_prefers_exact_symbol` (method, Zeilen 197-201) - def test_hybrid_query_prefers_exact_symbol(self)
+- `RAGIntegrationTests.test_query_returns_chunk_ids` (method, Zeilen 203-209) - def test_query_returns_chunk_ids(self)
+- `RAGIntegrationTests.test_format_compact_is_one_line_per_hit` (method, Zeilen 211-216) - def test_format_compact_is_one_line_per_hit(self)
+- `RAGIntegrationTests.test_format_json` (method, Zeilen 218-225) - def test_format_json(self)
+- `RAGIntegrationTests.test_query_wiki_returns_chunk_ids` (method, Zeilen 227-230) - def test_query_wiki_returns_chunk_ids(self)
+- `RAGIntegrationTests.test_query_wiki` (method, Zeilen 232-237) - def test_query_wiki(self)
+- `RAGIntegrationTests.test_wiki_generation` (method, Zeilen 239-250) - def test_wiki_generation(self)
 
 ## C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_shared_memory_header.cpp
 

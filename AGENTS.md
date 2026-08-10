@@ -61,10 +61,14 @@ Sie definiert Architektur, Message-Contract und Build-Regeln des `mab~`-External
 
 - Der MCP-Server `mab_mcp_server.py` läuft automatisch über `.mcp.json`.
 - RAG-Tools: `index_project_code`, `query_code_rag`, `query_code_wiki`,
-  `inspect_rave_model`.
+  `get_rag_chunk`, `inspect_rave_model`.
 - **Code-Wiki `doc/code_wiki.md`:** wird von `index_project_code` automatisch
   regeneriert (Symbolindex mit Pfaden + Zeilennummern, ~550 Symbole). Einmalig
   pro Session als stabilen Kontext lesen (prompt-cache-freundlich).
+- **Token-Effizienz:** Erst mit `query_code_rag(..., format="compact")` /
+  `query_code_wiki(..., format="compact")` suchen (Chunk-ID `[mab_<id>]` pro
+  Treffer), dann nur benötigte Chunks via `get_rag_chunk("mab_<id>")` im Detail
+  laden. Für Parser/Weiterverarbeitung steht `format="json"` bereit.
 - Vor Code-Fragen das RAG abfragen, Antworten aber **immer an den echten
   Quelldateien** verifizieren (Pfade/Zeilennummern der Treffer nutzen).
 - Nach Quellcode-Änderungen ggf. `index_project_code` erneut ausführen.

@@ -10,6 +10,7 @@ import os
 import shutil
 import tempfile
 import unittest
+import json
 
 import mab_mcp_server as mcp
 
@@ -198,6 +199,35 @@ class RAGIntegrationTests(unittest.TestCase):
         results = self.rag.query("handshake", top_k=5)
         names = [r.get("symbol_name") for r in results]
         self.assertTrue(any("handshake" in (n or "") for n in names))
+
+    def test_query_returns_chunk_ids(self):
+        results = self.rag.query("mab_tilde_enable", top_k=3)
+        self.assertTrue(results)
+        for r in results:
+            self.assertIsInstance(r.get("id"), int)
+        self.assertIn("mab_", mcp.ProjectRAG.chunk_ref(results[0]))
+        self.assertIn(str(results[0]["id"]), mcp.ProjectRAG.chunk_ref(results[0]))
+
+    def test_format_compact_is_one_line_per_hit(self):
+        results = self.rag.query("mab_tilde_enable", top_k=3)
+        out = mcp.ProjectRAG.format_results(results, "test", format="compact")
+        self.assertIn("[mab_", out)
+        self.assertNotIn("```", out)
+        self.assertIn("get_rag_chunk", out)
+
+    def test_format_json(self):
+        results = self.rag.query("mab_tilde_enable", top_k=3)
+        out = mcp.ProjectRAG.format_results(results, "test", format="json")
+        payload = json.loads(out)
+        self.assertEqual(payload["query"], "test")
+        self.assertEqual(payload["count"], len(results))
+        self.assertIn("chunk_id", payload["results"][0])
+        self.assertIn("file_path", payload["results"][0])
+
+    def test_query_wiki_returns_chunk_ids(self):
+        rows = self.rag.query_wiki("SharedMemoryManager")
+        self.assertTrue(rows)
+        self.assertIsInstance(rows[0].get("id"), int)
 
     def test_query_wiki(self):
         rows = self.rag.query_wiki("SharedMemoryManager")

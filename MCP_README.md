@@ -110,21 +110,36 @@ Ausgeschlossene Verzeichnisse: `.git`, `build`, `.venv`, `__pycache__`,
 
 **Beispiel:** `index_project_code("C:/pfad/zu/mab_tilde")`
 
-### `query_code_rag(query: str, top_k: int = 3)`
+### `query_code_rag(query: str, top_k: int = 3, format: str = "text")`
 Hybride Suche: FTS5-MATCH mit bm25-Ranking **plus** Re-Ranking über exakte
 Identifier-Treffer (Syntax-Boost). Gibt die relevantesten Chunks als
 formatierten Markdown-Codeblock (Dateipfad + Zeilennummern) zurück – direkt
-als Kontext für den Chat nutzbar.
+als Kontext für den Chat nutzbar. Jeder Treffer trägt eine stabile
+Chunk-Referenz `[mab_<id>]`.
 
-**Beispiel:** `query_code_rag("shared memory handshake is_input_ready")`
+`format` steuert die Kontext-Fülle (Token-Optimierung):
+- `"text"` (Standard): vollständige Code-Snippets.
+- `"compact"`: eine Zeile pro Treffer (ID, Pfad, Zeilen, Symbol, Signatur) –
+  Full-Content nur bei Bedarf via `get_rag_chunk(<id>)` abrufen (spart Token).
+- `"json"`: maschinenlesbares JSON inkl. `chunk_id` je Treffer.
 
-### `query_code_wiki(query: str, max_results: int = 12)`
+**Beispiel:** `query_code_rag("shared memory handshake", format="compact")`
+
+### `get_rag_chunk(chunk_id: str)`
+Holt den **vollständigen Inhalt eines einzelnen Chunks** transient – erst wenn
+er im Reasoning im Detail gebraucht wird (Evidence-Aliasing statt
+Context-Dumping). `chunk_id` im Format `mab_<id>` aus den Suchergebnissen.
+
+**Beispiel:** `get_rag_chunk("mab_534")`
+
+### `query_code_wiki(query: str, max_results: int = 12, format: str = "text")`
 Struktursuche über den Code-Wiki-Symbolindex (Klassen, Funktionen, Methoden,
 Sections) anhand von Symbolname/Signatur/Docstring. Liefert Typ + Dateipfad +
 Zeilennummern – ideal für „welche Methode macht X?“. Für
-Implementierungsdetails danach `query_code_rag` verwenden.
+Implementierungsdetails danach `query_code_rag` verwenden. `format` wie bei
+`query_code_rag` (`"text"`/`"compact"`/`"json"`).
 
-**Beispiel:** `query_code_wiki("apply_io")`
+**Beispiel:** `query_code_wiki("apply_io", format="compact")`
 
 ### `inspect_rave_model(model_path: str)`
 Leichtgewichtige RAVE/ONNX/TorchScript-Analyse: Dateimetadaten, Ein-/Ausgangs-
@@ -140,6 +155,15 @@ Nutzt optional `onnxruntime`/`torch`, funktioniert aber auch ohne.
    Quellcode verifizieren** (Pfad + Zeilennummern).
 4. **Nach Quellcode-Änderungen:** `index_project_code` erneut ausführen, damit
    Datenbank und Code-Wiki aktuell bleiben.
+
+### Token-Effizienter RAG-Workflow
+Für große Suchmengen die Kontext-Fülle reduzieren:
+1. Erste Erkundung mit `format="compact"` (eine Zeile pro Treffer, inkl.
+   Chunk-ID `[mab_<id>]`).
+2. Nur die tatsächlich benötigten Chunks via `get_rag_chunk("mab_<id>")`
+   im Detail laden (transient, statt alle Snippets einzublenden).
+3. Maschinelle Weiterverarbeitung/Parsing: `format="json"` (stabile Felder
+   inkl. `chunk_id`, `file_path`, `line_start`/`line_end`).
 
 ### RAG-Datenbank & Git
 `mab_rag.db` (+ WAL/SHM) ist ein Laufzeit-Artefakt und in `.gitignore`

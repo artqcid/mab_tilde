@@ -14,6 +14,7 @@ import os
 import sys
 import re
 import ast
+import json
 import hashlib
 import sqlite3
 from contextlib import closing
@@ -598,7 +599,7 @@ class ProjectRAG:
         with closing(self._connect()) as conn:
             rows = conn.execute(
                 """
-                SELECT c.file_path, c.language, c.line_start, c.line_end,
+                SELECT c.id, c.file_path, c.language, c.line_start, c.line_end,
                        c.content, c.symbol_type, c.symbol_name, c.signature,
                        c.docstring, bm25(code_fts) AS rank
                 FROM code_fts
@@ -638,7 +639,7 @@ class ProjectRAG:
             like = "%" + query.strip().lower() + "%"
             rows = conn.execute(
                 """
-                SELECT file_path, language, line_start, line_end, symbol_type,
+                SELECT id, file_path, language, line_start, line_end, symbol_type,
                        symbol_name, signature, docstring
                 FROM code_chunks
                 WHERE symbol_name IS NOT NULL
@@ -653,13 +654,29 @@ class ProjectRAG:
 
     # -- Formatierung --------------------------------------------------------
     @staticmethod
-    def format_results(results: list, query: str) -> str:
-        """Formatiert die Suchergebnisse als lesbaren Markdown-Block für den Chat."""
+    def chunk_ref(r) -> str:
+        """Stabile Kurz-Referenz für einen Chunk: [mab_123]."""
+        return f"[mab_{r.get('id') or r.get('chunk_id') or '?'}]"
+
+    @staticmethod
+    def format_results(results: list, query: str, format: str = "text") -> str:
+        """Formatiert die Suchergebnisse als lesbaren Markdown-Block für den Chat.
+
+        `format` steuert die Kontext-Fülle (Token-Optimierung):
+          - "text":    vollständige Markdown-Ausgabe mit Code-Snippets
+          - "compact": eine Zeile pro Treffer (ID, Pfad, Zeilen, Symbol) -
+                       Full-Content nur via `get_rag_chunk(<id>)` abrufen
+          - "json":    maschinenlesbares JSON (strukturierte Treffer inkl. IDs)
+        """
         if not results:
             return (
                 f"Keine Treffer in der RAG-Datenbank für: '{query}'\n"
                 "Tipp: Führe zuerst `index_project_code` auf dem Projektverzeichnis aus."
             )
+        if format == "json":
+            return ProjectRAG.format_json(results, query)
+        if format == "compact":
+            return ProjectRAG.format_compact(results, query)
         lines = [f"RAG-Suchergebnisse für: '{query}'", "=" * 60]
         for i, r in enumerate(results, 1):
             lang = r["language"]
@@ -669,7 +686,8 @@ class ProjectRAG:
             indented = "\n".join("    " + ln for ln in snippet.splitlines())
             lines.append("")
             lines.append(
-                f"[{i}] {r['file_path']} (Zeilen {r['line_start']}-{r['line_end']})"
+                f"[{i}] {r['file_path']} (Zeilen {r['line_start']}-{r['line_end']}) "
+                f"{ProjectRAG.chunk_ref(r)}"
             )
             lines.append(f"    Sprache: {lang}")
             if r.get("symbol_name"):
@@ -678,6 +696,51 @@ class ProjectRAG:
                 lines.append(f"    Signatur: {r['signature']}")
             lines.append(f"    ```{lang}\n{indented}\n    ```")
         return "\n".join(lines)
+
+    @staticmethod
+    def format_compact(results: list, query: str) -> str:
+        """Kompakte Ausgabe: eine Zeile pro Treffer (Token-sparsam, #2 Evidence-Aliasing)."""
+        if not results:
+            return f"Keine Treffer in der RAG-Datenbank für: '{query}'"
+        lines = [f"RAG-Treffer (kompakt) für: '{query}'", "=" * 60]
+        for r in results:
+            sym = ""
+            if r.get("symbol_name"):
+                sym = f"{r['symbol_name']} ({r.get('symbol_type')})"
+            sig = r.get("signature") or ""
+            if sig:
+                sig = " :: " + sig.splitlines()[0][:80]
+            lines.append(
+                f"{ProjectRAG.chunk_ref(r)} {r['file_path']}:"
+                f"{r['line_start']}-{r['line_end']} {sym}{sig}"
+            )
+        lines.append(
+            "Voller Inhalt eines Chunks: `get_rag_chunk` mit seiner ID aufrufen."
+        )
+        return "\n".join(lines)
+
+    @staticmethod
+    def format_json(results: list, query: str) -> str:
+        """Maschinenlesbare JSON-Ausgabe der Treffer (stabile Felder inkl. Chunk-ID)."""
+        payload = {
+            "query": query,
+            "count": len(results),
+            "results": [
+                {
+                    "chunk_id": r.get("id"),
+                    "file_path": r.get("file_path"),
+                    "language": r.get("language"),
+                    "line_start": r.get("line_start"),
+                    "line_end": r.get("line_end"),
+                    "symbol_name": r.get("symbol_name"),
+                    "symbol_type": r.get("symbol_type"),
+                    "signature": r.get("signature"),
+                    "content": r.get("content"),
+                }
+                for r in results
+            ],
+        }
+        return json.dumps(payload, ensure_ascii=False, indent=2)
 
     # -- Wiki-Generierung ----------------------------------------------------
     @staticmethod
@@ -1514,21 +1577,24 @@ def index_project_code(directory_path: str) -> str:
 
 
 @mcp.tool()
-def query_code_rag(query: str, top_k: int = 3) -> str:
+def query_code_rag(query: str, top_k: int = 3, format: str = "text") -> str:
     """Durchsucht die RAG-Datenbank nach Code-Stellen passend zur Suchanfrage.
 
     Hybride Suche: SQLite FTS5 mit Trigramm-Tokenizer (bm25, lexikalisch -
     matcht auch Identifikator-Substrings wie `mab_tilde`, `block_size`,
     `dsp_setup`) plus Re-Ranking nach exakten Identifier-Treffern (Syntax-
-    Boost). Treffer werden mit Symbol-Metadaten, Dateipfad und Zeilennummern
-    als formatierte Code-Snippets zurückgegeben.
+    Boost). Treffer tragen stabile Chunk-Referenzen ([mab_<id>]), die für
+    `get_rag_chunk` genutzt werden können.
 
     Args:
         query: Suchanfrage, z.B. "shared memory handshake" oder "enable handler".
         top_k: Anzahl der zurückzugebenden Treffer (Standard: 3).
+        format: Ausgabeformat - "text" (Code-Snippets, Standard), "compact"
+            (eine Zeile pro Treffer, token-sparsam) oder "json"
+            (maschinenlesbar, inkl. chunk_id).
 
     Returns:
-        Die relevantesten Code-Chunks inkl. Dateipfad und Zeilennummern.
+        Die relevantesten Code-Chunks inkl. Dateipfad, Zeilennummern und Chunk-ID.
     """
     if not _rag_has_data():
         return (
@@ -1536,11 +1602,63 @@ def query_code_rag(query: str, top_k: int = 3) -> str:
             "Führe zuerst `index_project_code` auf dem Projektverzeichnis aus."
         )
     results = _rag.query(query, top_k=top_k)
-    return _rag.format_results(results, query)
+    return _rag.format_results(results, query, format=format)
 
 
 @mcp.tool()
-def query_code_wiki(query: str, max_results: int = 12) -> str:
+def get_rag_chunk(chunk_id: str) -> str:
+    """Holt den vollständigen Inhalt eines einzelnen RAG-Chunks (transient).
+
+    Ergänzung zu `query_code_rag`/`query_code_wiki`: Im kompakten Modus
+    liefern die Tools nur Kurz-Referenzen ([mab_<id>]). Diese Funktion gibt
+    den vollständigen Code bzw. Text eines Chunks zurück - erst dann, wenn er
+    im Reasoning tatsächlich im Detail benötigt wird (Evidence-Aliasing,
+    vermeidet unnötiges Context-Dumping).
+
+    Args:
+        chunk_id: Chunk-Referenz im Format "mab_<id>" (aus den Suchergebnissen).
+
+    Returns:
+        Voller Chunk-Inhalt mit Metadaten und Referenz auf `query_code_wiki`
+        für verwandte Symbole im selben Verzeichnis.
+    """
+    if not chunk_id or not chunk_id.startswith("mab_"):
+        return (
+            f"Ungültige Chunk-ID: '{chunk_id}'. Erwartet wird das Format "
+            "'mab_<id>' aus `query_code_rag`/`query_code_wiki`."
+        )
+    try:
+        cid = int(chunk_id[len("mab_"):])
+    except ValueError:
+        return f"Ungültige Chunk-ID: '{chunk_id}' (id ist keine Zahl)."
+    with closing(_rag._connect()) as conn:
+        row = conn.execute(
+            """
+            SELECT id, file_path, language, line_start, line_end, content,
+                   symbol_type, symbol_name, signature, docstring
+            FROM code_chunks WHERE id = ?
+            """,
+            (cid,),
+        ).fetchone()
+    if not row:
+        return f"Kein Chunk mit ID '{chunk_id}' in der RAG-Datenbank."
+    r = dict(row)
+    header = (
+        f"Chunk {ProjectRAG.chunk_ref(r)}: {r['file_path']} "
+        f"(Zeilen {r['line_start']}-{r['line_end']})"
+    )
+    if r.get("symbol_name"):
+        header += f"\n  Symbol: {r['symbol_name']} ({r.get('symbol_type')})"
+    if r.get("signature"):
+        header += f"\n  Signatur: {r['signature']}"
+    body = r["content"]
+    if len(body) > 8000:
+        body = body[:8000] + "\n... (Chunk auf 8000 Zeichen gekürzt)"
+    return header + "\n```" + (r["language"] or "") + "\n" + body + "\n```"
+
+
+@mcp.tool()
+def query_code_wiki(query: str, max_results: int = 12, format: str = "text") -> str:
     """Durchsucht den Code-Wiki-Symbolindex nach Klassen, Funktionen und Methoden.
 
     Sucht über symbol_name, Signatur und Docstring der strukturierten Chunks
@@ -1552,6 +1670,8 @@ def query_code_wiki(query: str, max_results: int = 12) -> str:
     Args:
         query: Suchbegriff, z.B. "apply_io", "SharedMemoryManager" oder "handshake".
         max_results: Maximale Anzahl an Symbolen (Standard: 12).
+        format: Ausgabeformat - "text" (Standard), "compact" (eine Zeile pro
+            Symbol) oder "json" (maschinenlesbar, inkl. chunk_id).
 
     Returns:
         Gefundene Symbole mit Dateipfad, Zeilennummern, Signatur und Docstring.
@@ -1568,6 +1688,10 @@ def query_code_wiki(query: str, max_results: int = 12) -> str:
             "Tipp: `query_code_wiki` sucht nach Symbolnamen/Signaturen. Für "
             "Volltext im Implementierungscode `query_code_rag` verwenden."
         )
+    if format == "json":
+        return ProjectRAG.format_json(rows, query)
+    if format == "compact":
+        return ProjectRAG.format_compact(rows, query)
     lines = [f"Code-Wiki-Symbole für: '{query}'", "=" * 60]
     for i, r in enumerate(rows, 1):
         sig = r.get("signature") or ""
