@@ -486,6 +486,17 @@ void mab_tilde_apply_io(t_mab_tilde* x) {
     x->in_pos = 0;
     x->out_pos = 0;
 
+    // dynlet-Transaction: erst die Box holen (via "#B" im Obex) und die
+    // In-/Outlet-Änderungen zwischen dynlet_begin/dynlet_end klammern.
+    // Ohne diese Transaction aktualisiert Max die Box erst beim nächsten
+    // Patcher-Redraw (z.B. beim Verschieben des Objekts) - dieselbe Technik
+    // nutzen die eingebauten [plot~] / [live.gain~] bei dynamischen Channels.
+    t_object* box = NULL;
+    object_obex_lookup(x, gensym("#B"), &box);
+    if (box) {
+        object_method(box, gensym("dynlet_begin"));
+    }
+
     // Rebuild inlets (dsp_resize creates/frees the signal proxies)
     dsp_resize((t_pxobject*)x, new_in);
 
@@ -495,6 +506,10 @@ void mab_tilde_apply_io(t_mab_tilde* x) {
     }
     for (long i = 0; i < new_out; i++) {
         outlet_new((t_object*)x, "signal");
+    }
+
+    if (box) {
+        object_method(box, gensym("dynlet_end"));
     }
 
     x->method_pending = 0;
