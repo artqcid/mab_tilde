@@ -115,6 +115,47 @@ class ChunkingTests(unittest.TestCase):
         self.assertIn("#include <windows.h>", module_texts)
         self.assertIn("CONTROL_RING_SIZE", module_texts)
 
+    def test_cpp_multiline_signature(self):
+        src = '''// Kommentarzeile
+inline bool foo(float* buf, long channels,
+                long block_size,
+                long& pos) {
+    return true;
+}
+
+inline bool bar(long n)
+{
+    return false;
+}
+'''
+        chunks = mcp._chunk_cpp(src)
+        by_name = {c["symbol_name"]: c for c in chunks if c["symbol_name"]}
+        self.assertIn("foo", by_name)
+        self.assertEqual(by_name["foo"]["symbol_type"], "function")
+        self.assertEqual(by_name["foo"]["line_start"], 2)
+        self.assertEqual(by_name["foo"]["line_end"], 6)
+        self.assertIn("inline bool foo", by_name["foo"]["signature"])
+        self.assertIn("bar", by_name)
+        self.assertEqual(by_name["bar"]["line_start"], 8)
+        self.assertEqual(by_name["bar"]["line_end"], 11)
+        self.assertIn("inline bool bar", by_name["bar"]["signature"])
+
+    def test_cpp_crlf_normalization(self):
+        crlf = CPP_SRC.replace("\n", "\r\n")
+        chunks = mcp._chunk_cpp(crlf)
+        by_name = {c["symbol_name"]: c for c in chunks if c["symbol_name"]}
+        self.assertIn("mab_tilde_enable", by_name)
+        self.assertEqual(by_name["mab_tilde_enable"]["symbol_type"], "function")
+        self.assertEqual(by_name["mab_tilde_enable"]["line_start"], 12)
+        self.assertEqual(by_name["mab_tilde_enable"]["line_end"], 14)
+        self.assertIn("mab_tilde_enable", by_name["mab_tilde_enable"]["signature"])
+
+    def test_python_signature_keeps_defaults(self):
+        src = "def foo(a, b=1, c='x', *args, d, **kw):\n    return a\n"
+        chunks = mcp._chunk_python(src)
+        foo = next(c for c in chunks if c["symbol_name"] == "foo")
+        self.assertEqual(foo["signature"], "def foo(a, b=1, c='x', *args, d, **kw)")
+
     def test_markdown_section_chunking(self):
         chunks = mcp._chunk_markdown(MD_SRC)
         by_name = {c["symbol_name"]: c for c in chunks if c["symbol_name"]}

@@ -58,7 +58,8 @@ WIKI_PATH = os.path.join(
 
 # Schema-Version: bump bei strukturellen Änderungen -> erzwingt Rebuild der DB.
 # v1 = Zeilen-Chunking, v2 = strukturelles Chunking + Symbol-Metadaten.
-RAG_SCHEMA_VERSION = 2
+# v3 = C++-Header-Rekonstruktion (mehrzeilige Signaturen) + LF-Normalisierung.
+RAG_SCHEMA_VERSION = 3
 
 # Zu indizierende Sprachen und ihre Dateiendungen.
 # `.md` ist inkludiert, damit auch die zentrale Anleitung
@@ -124,8 +125,19 @@ def _module_chunks(lines, start, end) -> list:
 
 
 def _py_arglist(args) -> str:
-    """Baut aus einem ast.arguments eine kompakte Parameterliste."""
-    parts = [a.arg for a in args.args]
+    """Baut aus einem ast.arguments eine kompakte Parameterliste (mit Defaults)."""
+    parts = []
+    npos = len(args.args)
+    ndef = len(args.defaults)
+    for i, a in enumerate(args.args):
+        s = a.arg
+        d = i - (npos - ndef)
+        if d >= 0 and d < ndef and args.defaults[d] is not None:
+            try:
+                s += "=" + ast.unparse(args.defaults[d])
+            except Exception:
+                pass
+        parts.append(s)
     if args.vararg:
         parts.append("*" + args.vararg.arg)
     parts.extend(a.arg for a in args.kwonlyargs)
@@ -153,6 +165,7 @@ def _chunk_python(source: str) -> list:
     Signatur und Docstring. Zeilen außerhalb von Definitionen (Imports,
     Konstanten) werden als `module`-Chunks gesammelt.
     """
+    source = source.replace("\r\n", "\n").replace("\r", "\n")
     lines = source.split("\n")
     try:
         tree = ast.parse(source)
@@ -232,6 +245,35 @@ def _cpp_def_kind(header: str):
     return ("block", None)
 
 
+def _cpp_collect_header(lines, idx, prefix):
+    """Rekonstruiert den vollständigen Block-Kopf (mehrzeilige Signaturen).
+
+    Steht das `{` mitten in einer mehrzeiligen Signatur (z.B.
+    ``inline bool foo(int a,\n                 long b) {``) oder auf einer
+    eigenen Zeile (``long b)\n{``), läuft der Scanner rückwärts über die
+    Fortsetzungszeilen und sammelt den ganzen Kopf. Abbruch an Grenzen:
+    Leerzeile, Kommentar, Preprocessor-`#`, oder Zeile, die mit `;`/`{`/`}`
+    endet (davor beginnt immer eine neue Anweisung).
+
+    Returns:
+        (header, start_idx): Kopf-Text und Index seiner ersten Zeile.
+    """
+    header = prefix.strip()
+    start = idx
+    j = idx - 1
+    while j >= 0:
+        stripped = lines[j].strip()
+        if not stripped or stripped.startswith(("//", "*", "/*", "*/", "#")):
+            break
+        prev = lines[j].lstrip().rstrip()
+        if prev and prev[-1] in "{};":
+            break
+        header = stripped + " " + header
+        start = j
+        j -= 1
+    return header, start
+
+
 def _cpp_sub_blocks(lines, start, end, base) -> list:
     """Findet Blöcke auf Tiefe base+1 im Bereich [start, end].
 
@@ -248,12 +290,17 @@ def _cpp_sub_blocks(lines, start, end, base) -> list:
             brace = line.index("{")
             prefix = line[:brace].strip()
             if prefix:
-                pending = (idx, prefix)
+                header, hstart = _cpp_collect_header(lines, idx, prefix)
+                pending = (hstart, header)
             else:
                 j = idx - 1
                 while j >= start and not lines[j].strip():
                     j -= 1
-                pending = (idx, lines[j].strip() if j >= start else prefix)
+                if j >= start:
+                    header, hstart = _cpp_collect_header(lines, idx, lines[j].strip())
+                    pending = (hstart, header)
+                else:
+                    pending = (idx, prefix)
         depth += line.count("{") - line.count("}")
         if pending is not None and depth == base:
             if pending[0] < idx:  # echte Blöcke, keine Einzeiler
@@ -320,12 +367,14 @@ def _chunk_cpp_region(lines, start, end, base) -> list:
 
 def _chunk_cpp(source: str) -> list:
     """Zerlegt C++-Code strukturiert (brace-basiert, ohne tree-sitter)."""
+    source = source.replace("\r\n", "\n").replace("\r", "\n")
     lines = source.split("\n")
     return _chunk_cpp_region(lines, 0, len(lines) - 1, 0)
 
 
 def _chunk_markdown(source: str) -> list:
     """Zerlegt Markdown nach Überschriften (Sections = Chunks)."""
+    source = source.replace("\r\n", "\n").replace("\r", "\n")
     lines = source.split("\n")
     headings = [i for i, ln in enumerate(lines) if re.match(r"^#{1,6}\s", ln)]
     chunks = []
@@ -431,10 +480,14 @@ class ProjectRAG:
                     content = content_bytes.decode("utf-8")
                 except UnicodeDecodeError:
                     content = content_bytes.decode("utf-8", errors="replace")
+                # Zeilenenden normalisieren: CRLF/CR -> LF. Sonst bleiben `\r`-
+                # Reste an Zeilenenden und brechen den C++-Header-Scanner
+                # (Grenz-Checks auf `;`/`{`/`}`) sowie Tokenizer.
+                content = content.replace("\r\n", "\n").replace("\r", "\n")
                 files.append({
                     "path": os.path.normpath(abs_path),
                     "language": lang,
-                    "sha": hashlib.sha256(content_bytes).hexdigest(),
+                    "sha": hashlib.sha256(content.encode("utf-8")).hexdigest(),
                     "content": content,
                 })
         return files
