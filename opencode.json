@@ -11,6 +11,17 @@
         "websearch": "allow",
         "external_directory": "allow"
       }
+    },
+    "Build_Openrouter": {
+      "model": "openrouter/deepseek-v4-flash",
+      "permission": {
+        "edit": "allow",
+        "bash": "allow",
+        "task": "allow",
+        "webfetch": "allow",
+        "websearch": "allow",
+        "external_directory": "allow"
+      }
     }
   }
 }
