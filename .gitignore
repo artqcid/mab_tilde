@@ -25,6 +25,9 @@ dist/
 *.swo
 *~
 
+# Continue-Plugin (nur leeres Template, projektspezifisch)
+.continue/
+
 # OS
 .DS_Store
 Thumbs.db
@@ -36,3 +39,8 @@ Thumbs.db
 
 # Logs
 *.log
+
+# SQLite-RAG-Datenbank (Laufzeit-Artefakt, wird von index_project_code erzeugt)
+mab_rag.db
+mab_rag.db-wal
+mab_rag.db-shm

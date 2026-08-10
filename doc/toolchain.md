@@ -15,7 +15,7 @@ Das `mab_tilde` Projekt verwendet ein **reines natives Max SDK Build-System** oh
 
 | Tool | Version | Zweck |
 |------|---------|-------|
-| **Visual Studio** | 18 (2026) Community | C++ Compiler (MSVC 19.51.36252.0) |
+| **Visual Studio** | 18 (2026) Community | C++ Compiler (MSVC 19.51) |
 | **CMake** | 3.19+ | Build-System-Generator |
 | **Windows SDK** | 10.0.26100.0 | Windows API Headers |
 | **Python** | 3.9+ | PyTorch Inference Backend |

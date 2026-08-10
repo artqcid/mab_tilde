@@ -4,5 +4,34 @@
 			"path": "."
 		}
 	],
-	"settings": {}
+	"settings": {
+		"C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+		"C_Cpp.default.intelliSenseMode": "windows-msvc-x64",
+		"C_Cpp.default.cppStandard": "c++17",
+		"C_Cpp.default.cStandard": "c17",
+		"cmake.configureOnOpen": true,
+		"cmake.buildDirectory": "${workspaceFolder}/build",
+		"cmake.generator": "Visual Studio 18 2026",
+		"cmake.toolchain": "",
+		"files.associations": {
+			"*.cpp": "cpp",
+			"*.h": "cpp",
+			"*.py": "python",
+			"*.mxe64": "cpp",
+			"*.mxf": "cpp"
+		},
+		"python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
+		"python.terminal.activateEnvironment": true,
+		"search.exclude": {
+			"**/build": true,
+			"**/Debug": true,
+			"**/Release": true,
+			"**/.venv": true,
+			"**/__pycache__": true
+		},
+		"files.exclude": {
+			"**/build": true,
+			"**/.venv": true
+		}
+	}
 }
