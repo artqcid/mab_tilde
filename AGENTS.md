@@ -4,17 +4,18 @@ Auto-loaded by opencode/Continue. Read `WORKSPACE_AGENT_PROMPT.md` for full proj
 
 ## Status
 
-- **Current:** Offline-Tests T1–T7 ✅ (329 Python-Tests + 19 C++-Tests, 18 Modelle, CPU+GPU, kein Crash). Phase 6 implementiert (mcs.mab~ Batched Multichannel). Offen: Max-Runtime-Test 6.4, Max-Runtime-V1–V6.
+- **Current:** Offline-Tests T1–T7 ✅ (23 TorchScript-Modelle, 19 C++-Tests, CPU+GPU, kein Crash). Phase 6 implementiert (mcs.mab~ Batched Multichannel). Bug 1+2 gefixt. Offen: Max-Runtime-Test 6.4, Max-Runtime-V1–V6, FR2+FR3.
   - Phase 3: Method-aware processing (Header v2, latent inlets/outlets, `block_accumulator`, `infer_method` dispatch).
   - Phase 4: `mab.info` model inspector.
   - Phase 4.5: ASIO XRun prevention (`BELOW_NORMAL_PRIORITY_CLASS` + core affinity).
   - Phase 4.6: nn_tilde parity P1–P6.
   - Phase 5: mc.mab~ Multichannel — Header v3 (`channel_map`), 1-in-1-out MC-IO, `Z_MC_INLETS`-Flag, `chans`-Attribut, Max-verifiziert (5.8 ✅).
   - Phase 6: mcs.mab~ Batched Multichannel — `mcs_batches`-Inlets/-Outlets, batch-major SHM `[B×ci×bs]` (C++ `b*ci+c`), batched `infer_method` `(B,ci,bs)`, Arg-Order `[model method n_batches bufsize gpu cores]` (6.4 Max-Test offen).
+  - Bug 1: NaN/Inf-Guard + safety_clip in `infer_method()` (crashte Max bei RAVE-Modellen). ✅
+  - Bug 2: Deploy-Skript + venv-Junction + MAB_PROJECT_DIR (Worker startete nicht, GPU nicht verfügbar). ✅
+  - FR1: `timeBeginPeriod(1)` + `SetThreadPriority(LOWEST)` (ASIO XRun-Prävention). ✅
   - CUDA: torch 2.12.0.dev+cu128 installiert (Python 3.14 Nightly), RTX 3060 6 GB.
-  - Test-Fixes: ein Test pro Modell (dynamische `setattr()`), `torch.cuda.empty_cache()`, RAM-Guard, Thread-Limit, afterv2 ausgeschlossen.
   - Test-Suite: T1–T7 fertig (Modell-Laden, mab.info, Inferenz-Dispatch, Audio-Qualität, Edge-Cases, ctest-Integration, Benchmark-Report).
-- **Open:** See `doc/checklist.md` – Max-Runtime-Test 6.4, Max-Runtime-Verifikation (V1–V6), P7/P10/P11.
 
 ## Workflow (verpflichtend)
 
