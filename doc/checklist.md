@@ -59,7 +59,17 @@ _Einlese-Reihenfolge: checklist.md → code_wiki.md → query_code_wiki → quer
 
 ## Bugs (offen)
 
-(keine)
+- [x] **Bug 3 – GPU-Argument beim Konstruktor ignoriert** ✅ **FIXED** (2026-08-12)
+  - **Symptom:** `mab~ nasa 2048 1` laedt nicht auf GPU. Der User muss erst `gpu 1` als Message senden.
+  - **Ursache:** Die Argument-Reihenfolge `[model method bufsize gpu]` macht `method` zum Pflichtargument. Bei `mab~ nasa 2048 1` wird `2048` als `method_name` und `1` als `buffer_size` geparst — `gpu` bleibt 0.
+  - **Fix:** Auto-Detection in `mab_tilde_new`/`mc_mab_tilde_new`/`mcs_mab_tilde_new`: wenn `argv[1]` ein Symbol ist → `[model method bufsize ...]`; wenn es eine Zahl ist → `[model bufsize ...]` (method entfaellt, defaultet auf `forward`).
+  - **Dateien:** `mab_tilde.cpp:380-400` (mab_tilde_new), `mab_tilde.cpp:1231-1256` (mc_mab_tilde_new), `mab_tilde.cpp:1564-1599` (mcs_mab_tilde_new)
+
+- [x] **Bug 4 – forward-Methode crashed Max (nasa, GPU)** ✅ **FIXED** (2026-08-12)
+  - **Symptom:** `mab~ nasa encode 2048 1` funktioniert, `mab~ nasa forward 2048 1` crashed Max bei Signal-Eingang. Worker-Prozess bleibt mit Modell auf GPU aktiv.
+  - **Ursache:** `infer_method()` im Main-Loop (`inference_worker.py:1785`) wird ohne try/except aufgerufen. Ein CUDA-Error / Shape-Mismatch / GPU-OOM in `model.forward()` bringt den Worker zum Absturz, wodurch die C++-Seite korrupte/unfertige SHM-Daten liest → Max crasht. Sekundaer: kein Cleanup des Worker-Prozesses bei Max-Absturz.
+  - **Fix:** try/except um `infer_method()` + Output-Zeroing auf Fehler. Der Worker loggt den Traceback, setzt den Output-Block auf Null und laeuft weiter.
+  - **Dateien:** `inference_worker.py:1784-1800`
 
 ---
 

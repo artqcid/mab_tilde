@@ -377,17 +377,29 @@ void* mab_tilde_new(t_symbol* s, long argc, t_atom* argv) {
                 strncpy(x->model_path, resolved, sizeof(x->model_path) - 1);
         }
     }
+    // B3 fix: auto-detect if user skipped the optional method argument.
+    // If argv[1] is a number, the user wrote e.g. [mab~ model bufsize gpu]
+    // instead of [mab~ model method bufsize gpu]. Shift numeric args by -1.
+    bool has_method = false;
     if (argc >= 2 && !void_mode) {
+        if (argv[1].a_type != A_LONG && argv[1].a_type != A_FLOAT) {
+            has_method = true;
+        }
+    }
+
+    if (has_method) {
         t_symbol* method_sym = atom_getsym(argv + 1);
         if (method_sym && method_sym->s_name) {
             strncpy(x->method_name, method_sym->s_name, sizeof(x->method_name) - 1);
         }
     }
-    if (argc >= 3 && !void_mode) x->buffer_size = atom_getlong(argv + 2);
-    if (argc >= 4 && !void_mode) x->gpu = atom_getlong(argv + 3);
-    if (argc >= 5 && !void_mode) x->num_channels = atom_getlong(argv + 4);
-    if (argc >= 6 && !void_mode) {
-        x->cores = atom_getlong(argv + 5);
+
+    long off = has_method ? 2 : 1;
+    if (argc > off && !void_mode)     x->buffer_size = atom_getlong(argv + off);
+    if (argc > off+1 && !void_mode)   x->gpu = atom_getlong(argv + off+1);
+    if (argc > off+2 && !void_mode)   x->num_channels = atom_getlong(argv + off+2);
+    if (argc > off+3 && !void_mode) {
+        x->cores = atom_getlong(argv + off+3);
         if (x->cores < 1) x->cores = 1;
         if (x->cores > 64) x->cores = 64;
     }
@@ -1216,17 +1228,27 @@ void* mc_mab_tilde_new(t_symbol* s, long argc, t_atom* argv) {
                 strncpy(x->model_path, resolved, sizeof(x->model_path) - 1);
         }
     }
+    // B3 fix: auto-detect if user skipped the optional method argument.
+    bool has_method = false;
     if (argc >= 2 && !void_mode) {
+        if (argv[1].a_type != A_LONG && argv[1].a_type != A_FLOAT) {
+            has_method = true;
+        }
+    }
+
+    if (has_method) {
         t_symbol* method_sym = atom_getsym(argv + 1);
         if (method_sym && method_sym->s_name) {
             strncpy(x->method_name, method_sym->s_name, sizeof(x->method_name) - 1);
         }
     }
-    if (argc >= 3 && !void_mode) x->buffer_size = atom_getlong(argv + 2);
-    if (argc >= 4 && !void_mode) x->gpu = atom_getlong(argv + 3);
-    if (argc >= 5 && !void_mode) x->num_channels = atom_getlong(argv + 4);
-    if (argc >= 6 && !void_mode) {
-        x->cores = atom_getlong(argv + 5);
+
+    long off = has_method ? 2 : 1;
+    if (argc > off && !void_mode)     x->buffer_size = atom_getlong(argv + off);
+    if (argc > off+1 && !void_mode)   x->gpu = atom_getlong(argv + off+1);
+    if (argc > off+2 && !void_mode)   x->num_channels = atom_getlong(argv + off+2);
+    if (argc > off+3 && !void_mode) {
+        x->cores = atom_getlong(argv + off+3);
         if (x->cores < 1) x->cores = 1;
         if (x->cores > 64) x->cores = 64;
     }
@@ -1509,6 +1531,7 @@ void* mcs_mab_tilde_new(t_symbol* s, long argc, t_atom* argv) {
     // Parse arguments. mcs.mab~ uses its own order (nn_tilde-Parität P9):
     //   [mcs.mab~ model method n_batches bufsize gpu cores]
     //   [mcs.mab~ void n_batches bufsize]
+    // B3 fix: method is optional; auto-detect if user skipped it.
     long void_mode = 0;
     if (argc >= 1) {
         t_symbol* first = atom_getsym(argv);
@@ -1548,22 +1571,32 @@ void* mcs_mab_tilde_new(t_symbol* s, long argc, t_atom* argv) {
                 strncpy(x->model_path, resolved, sizeof(x->model_path) - 1);
         }
     }
+    // B3 fix: auto-detect if user skipped the optional method argument.
+    bool has_method = false;
     if (argc >= 2) {
+        if (argv[1].a_type != A_LONG && argv[1].a_type != A_FLOAT) {
+            has_method = true;
+        }
+    }
+
+    if (has_method) {
         t_symbol* method_sym = atom_getsym(argv + 1);
         if (method_sym && method_sym->s_name) {
             strncpy(x->method_name, method_sym->s_name, sizeof(x->method_name) - 1);
         }
     }
-    if (argc >= 3) {
-        long nb = atom_getlong(argv + 2);
+
+    long off = has_method ? 2 : 1;
+    if (argc > off) {
+        long nb = atom_getlong(argv + off);
         if (nb < 1) nb = 1;
         if (nb > MAX_CHANNELS) nb = MAX_CHANNELS;
         x->mcs_batches = nb;
     }
-    if (argc >= 4) x->buffer_size = atom_getlong(argv + 3);
-    if (argc >= 5) x->gpu = atom_getlong(argv + 4);
-    if (argc >= 6) {
-        x->cores = atom_getlong(argv + 5);
+    if (argc > off+1) x->buffer_size = atom_getlong(argv + off+1);
+    if (argc > off+2) x->gpu = atom_getlong(argv + off+2);
+    if (argc > off+3) {
+        x->cores = atom_getlong(argv + off+3);
         if (x->cores < 1) x->cores = 1;
         if (x->cores > 64) x->cores = 64;
     }

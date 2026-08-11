@@ -1781,19 +1781,29 @@ def main():
                         setattr(shm, key, True)
                 elif connected == expected and getattr(shm, "mc_warned", False) is True:
                     setattr(shm, "mc_warned", False)
-                input_block = shm.get_numpy_input(in_idx, ci)
-                output_block = infer_method(
-                    model, device, active_method, method_params, input_block,
-                    streaming_context=streaming_ctx, safety_clip=True)
-                out_view = shm.get_numpy_output(out_idx, co)
-                # Phase 6: batched inference returns (B, co, bs); strip the
-                # leading singleton batch dim when writing into the classic
-                # 2-D buffer view (defensive, single-batch mcs).
-                if output_block.ndim == 3 and output_block.shape[0] == 1 \
-                        and out_view.ndim == 2:
-                    out_view[:, :] = output_block[0]
-                else:
-                    out_view[:, :] = output_block
+                try:
+                    input_block = shm.get_numpy_input(in_idx, ci)
+                    output_block = infer_method(
+                        model, device, active_method, method_params, input_block,
+                        streaming_context=streaming_ctx, safety_clip=True)
+                    out_view = shm.get_numpy_output(out_idx, co)
+                    # Phase 6: batched inference returns (B, co, bs); strip the
+                    # leading singleton batch dim when writing into the classic
+                    # 2-D buffer view (defensive, single-batch mcs).
+                    if output_block.ndim == 3 and output_block.shape[0] == 1 \
+                            and out_view.ndim == 2:
+                        out_view[:, :] = output_block[0]
+                    else:
+                        out_view[:, :] = output_block
+                except Exception:
+                    # Bug 4: a GPU/driver error, CUDA OOM or unexpected model
+                    # output must NOT crash the worker.  Zero the output block
+                    # so the C++ side gets silence instead of stale/corrupt data.
+                    out_view = shm.get_numpy_output(out_idx, co)
+                    out_view.fill(0.0)
+                    traceback.print_exc()
+                    print("[inference_worker] Inference error — output zeroed, "
+                          "continuing.", flush=True)
 
                 # Signal output is ready
                 shm._p_header.is_output_ready = True
