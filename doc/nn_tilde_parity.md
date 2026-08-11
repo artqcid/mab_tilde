@@ -10,7 +10,7 @@ Erledigte Features (P1-P6) siehe §4 History. Status-Tracking: `doc/checklist.md
 | # | Punkt | Status | Implementierung |
 |---|-------|--------|-----------------|
 | P7 | **`track_buffers` + buffer~-Support** | ⚠️ TEILWEISE | Vorbereitung: `buffer_manager.h` + Feld in `t_mab_tilde` ✅; buffer_reference-Anbindung → offen (nach Phase 5) |
-| P8 | **`mc.mab~`** (Multichannel) | ✅ IMPLEMENTIERT | Phase 5: Doppelkompilierung, channel_map (Header v3), `multichanneloutputs`/`inputchanged`, 1-in-1-out MC-IO, `chans`. Nur Max-Runtime-Verifikation offen (checklist 5.8) |
+| P8 | **`mc.mab~`** (Multichannel) | ✅ FERTIG (Max-verifiziert) | Phase 5: Doppelkompilierung, channel_map (Header v3), `multichanneloutputs`/`inputchanged`, 1-in-1-out MC-IO, `Z_MC_INLETS`, `chans` — Max-Runtime-Test bestanden (checklist 5.8) |
 | P9 | **`mcs.mab~`** (Batched MC) | 🔲 OFFEN | Phase 6: `n_batches`, Batch-Shape-Labels |
 | P10 | **Argument-Overrides** (Inlet/Outlet, `n_batches`) | 📋 DOKUMENTIERT | §3: nn_tilde-Codestellen referenziert; Umsetzung → Phase 6 (checklist.md) |
 | P11 | **`mab.info`: download/delete/print** | ✅ FERTIG | Worker CLI-Flags + C++ Message-Handler (`mab_info.cpp`) |

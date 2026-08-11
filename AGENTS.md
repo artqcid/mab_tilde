@@ -4,12 +4,13 @@ Auto-loaded by opencode/Continue. Read `WORKSPACE_AGENT_PROMPT.md` for full proj
 
 ## Status
 
-- **Current:** Phase 5 open.
+- **Current:** Phase 5 abgeschlossen (mc.mab~ Multichannel, verifiziert in Max 5.8). Naechster offener Task: Phase 6 (mcs.mab~) oder Max-Runtime-V1–V6.
   - Phase 3: Method-aware processing (Header v2, latent inlets/outlets, `block_accumulator`, `infer_method` dispatch).
   - Phase 4: `mab.info` model inspector.
   - Phase 4.5: ASIO XRun prevention (`BELOW_NORMAL_PRIORITY_CLASS` + core affinity).
   - Phase 4.6: nn_tilde parity P1–P6.
-- **Open:** See `doc/checklist.md` – Max runtime verification (V1–V6), P7/P10/P11, Phases 5+6.
+  - Phase 5: mc.mab~ Multichannel — Header v3 (`channel_map`), 1-in-1-out MC-IO, `Z_MC_INLETS`-Flag, `chans`-Attribut, Max-verifiziert (5.8 ✅).
+- **Open:** See `doc/checklist.md` – Max runtime verification (V1–V6), P7/P10/P11, Phase 6 (mcs.mab~).
 
 ## Workflow (verpflichtend)
 

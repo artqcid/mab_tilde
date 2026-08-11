@@ -23,8 +23,9 @@ attribute setting, method-aware IO (`encode`/`decode`/`forward`).
 | 4 | `mab.info` (process-isolated model inspector) | ✅ |
 | 4.5 | ASIO XRun prevention (`BELOW_NORMAL_PRIORITY_CLASS` + core affinity) | ✅ |
 | 4.6 | nn_tilde parity P1–P6 (attribute passthrough, gpu setter, void mode, download/delete) | ✅ |
+| 5 | `mc.mab~` Multichannel (Header v3 `channel_map`, 1-in-1-out MC-IO, `Z_MC_INLETS`, `chans`) | ✅ (Max-verifiziert) |
 
-**Open phases:** 5 (`mc.mab~`), 6 (`mcs.mab~`). See `doc/checklist.md`.
+**Open phases:** 6 (`mcs.mab~`). See `doc/checklist.md`.
 
 ## 3. Architecture Decisions
 
