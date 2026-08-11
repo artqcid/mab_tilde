@@ -4,13 +4,17 @@ Auto-loaded by opencode/Continue. Read `WORKSPACE_AGENT_PROMPT.md` for full proj
 
 ## Status
 
-- **Current:** Phase 5 abgeschlossen (mc.mab~ Multichannel, verifiziert in Max 5.8). Naechster offener Task: Phase 6 (mcs.mab~) oder Max-Runtime-V1–V6.
+- **Current:** Offline-Tests T1–T7 ✅ (329 Python-Tests + 19 C++-Tests, 18 Modelle, CPU+GPU, kein Crash). Phase 6 implementiert (mcs.mab~ Batched Multichannel). Offen: Max-Runtime-Test 6.4, Max-Runtime-V1–V6.
   - Phase 3: Method-aware processing (Header v2, latent inlets/outlets, `block_accumulator`, `infer_method` dispatch).
   - Phase 4: `mab.info` model inspector.
   - Phase 4.5: ASIO XRun prevention (`BELOW_NORMAL_PRIORITY_CLASS` + core affinity).
   - Phase 4.6: nn_tilde parity P1–P6.
   - Phase 5: mc.mab~ Multichannel — Header v3 (`channel_map`), 1-in-1-out MC-IO, `Z_MC_INLETS`-Flag, `chans`-Attribut, Max-verifiziert (5.8 ✅).
-- **Open:** See `doc/checklist.md` – Max runtime verification (V1–V6), P7/P10/P11, Phase 6 (mcs.mab~).
+  - Phase 6: mcs.mab~ Batched Multichannel — `mcs_batches`-Inlets/-Outlets, batch-major SHM `[B×ci×bs]` (C++ `b*ci+c`), batched `infer_method` `(B,ci,bs)`, Arg-Order `[model method n_batches bufsize gpu cores]` (6.4 Max-Test offen).
+  - CUDA: torch 2.12.0.dev+cu128 installiert (Python 3.14 Nightly), RTX 3060 6 GB.
+  - Test-Fixes: ein Test pro Modell (dynamische `setattr()`), `torch.cuda.empty_cache()`, RAM-Guard, Thread-Limit, afterv2 ausgeschlossen.
+  - Test-Suite: T1–T7 fertig (Modell-Laden, mab.info, Inferenz-Dispatch, Audio-Qualität, Edge-Cases, ctest-Integration, Benchmark-Report).
+- **Open:** See `doc/checklist.md` – Max-Runtime-Test 6.4, Max-Runtime-Verifikation (V1–V6), P7/P10/P11.
 
 ## Workflow (verpflichtend)
 
@@ -39,7 +43,7 @@ Auto-loaded by opencode/Continue. Read `WORKSPACE_AGENT_PROMPT.md` for full proj
 - Main code: `source/projects/mab_tilde/mab_tilde.cpp`, `inference_worker.py`.
 - Checklist: `doc/checklist.md` (offene Tasks).
 - Build: `cmake --preset debug && cmake --build --preset debug` → `build/Debug/mab~.mxe64`.
-- MCP: `mab_mcp_server.py`; tools: `index_project_code`, `query_code_rag`, `query_code_wiki`, `get_rag_chunk`, `inspect_rave_model`.
+- MCP: `mab_mcp_server.py`; registriert in `opencode.json` unter `mcp.mab-rave-assistant` (NICHT `.mcp.json` – das ist nur für VS Code); tools: `index_project_code`, `query_code_rag`, `query_code_wiki`, `get_rag_chunk`, `inspect_rave_model` (im Chat mit Server-Präfix `mab-rave-assistant_*`).
 - Manuelles Wissen: `doc/projektwissen.md` (~200 Z., direkt lesen).
 - Auto-generiertes Wissen: `code_wiki.md` (NUR via MCP abfragen, NIE direkt lesen).
 - Reference: `C:\Users\marku\Documents\GitHub\thirdParty\nn_tilde`.

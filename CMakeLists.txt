@@ -103,6 +103,36 @@ if(MSVC)
     )
 endif()
 
+# mcs.mab~ -- Batched-Multichannel-Variante von mab~ (Phase 6).
+# Wird aus derselben mab_tilde.cpp kompiliert wie mab~/mc.mab~, aber mit
+# MCS_MAB_TILDE_MODULE, sodass ext_main nur die mcs.mab~-Klasse registriert.
+add_library(mcs_mab_tilde MODULE
+    source/projects/mab_tilde/mab_tilde.cpp
+    source/projects/mab_tilde/worker_launch.cpp
+    source/projects/mab_tilde/max_path_resolve.cpp
+)
+target_include_directories(mcs_mab_tilde PRIVATE
+    ${MAX_SDK_DIR}/max-includes
+    ${MAX_SDK_DIR}/msp-includes
+)
+target_link_libraries(mcs_mab_tilde PRIVATE
+    ${MAX_SDK_DIR}/max-includes/x64/MaxAPI.lib
+    ${MAX_SDK_DIR}/msp-includes/x64/MaxAudio.lib
+)
+if(MSVC)
+    target_compile_definitions(mcs_mab_tilde PRIVATE
+        WIN32_LEAN_AND_MEAN
+        NOMINMAX
+        _CRT_SECURE_NO_WARNINGS
+        MCS_MAB_TILDE_MODULE
+    )
+    set_target_properties(mcs_mab_tilde PROPERTIES
+        PREFIX ""
+        OUTPUT_NAME "mcs.mab~"
+        SUFFIX ".mxe64"
+    )
+endif()
+
 # mab.info -- prozessisolierter Modell-Inspektor (Phase 4)
 add_library(mab_info MODULE
     source/projects/mab_tilde/mab_info.cpp
@@ -205,6 +235,11 @@ target_compile_definitions(test_block_accumulator PRIVATE WIN32_LEAN_AND_MEAN NO
 add_executable(test_mc_mab_tilde test/test_mc_mab_tilde.cpp)
 target_compile_definitions(test_mc_mab_tilde PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX)
 
+# Test: mcs.mab~ (Phase 6) batched multichannel logic (n_batches IO, batch-major
+# SHM rows, multichanneloutputs/inputchanged)
+add_executable(test_mcs_mab_tilde test/test_mcs_mab_tilde.cpp)
+target_compile_definitions(test_mcs_mab_tilde PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX)
+
 # Test: Worker Launch (project-dir resolution, MAB_INFO parsing, e2e --query)
 add_executable(test_worker_launch
     test/test_worker_launch.cpp
@@ -214,3 +249,72 @@ target_include_directories(test_worker_launch PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/source/projects/mab_tilde
 )
 target_compile_definitions(test_worker_launch PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX)
+
+# ============================================================================
+# CTest-Integration (T6)
+# ============================================================================
+
+enable_testing()
+
+set(MAB_TEST_EXES
+    test_shared_memory_header
+    test_init_worker_thread_comprehensive
+    test_init_worker_thread
+    test_mab_tilde_new
+    test_mab_tilde_free
+    test_mab_tilde_dsp64
+    test_mab_tilde_perform64
+    test_mab_tilde_assist
+    test_init_worker
+    test_shared_memory_header_compatibility
+    test_message_handlers
+    test_handshake_integration
+    test_multichannel_layout
+    test_anything_handler
+    test_crash_monitoring
+    test_block_accumulator
+    test_mc_mab_tilde
+    test_mcs_mab_tilde
+    test_worker_launch
+)
+
+foreach(t ${MAB_TEST_EXES})
+    add_test(NAME ${t} COMMAND ${t})
+    set_tests_properties(${t} PROPERTIES TIMEOUT 180)
+endforeach()
+
+# Python-Tests via VENV-Python (Fallback: python im PATH)
+if(DEFINED ENV{MAB_VENV_PYTHON})
+    set(MAB_PYTHON "$ENV{MAB_VENV_PYTHON}")
+elseif(WIN32 AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.venv/Scripts/python.exe")
+    set(MAB_PYTHON "${CMAKE_CURRENT_SOURCE_DIR}/.venv/Scripts/python.exe")
+elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.venv/bin/python")
+    set(MAB_PYTHON "${CMAKE_CURRENT_SOURCE_DIR}/.venv/bin/python")
+else()
+    set(MAB_PYTHON "python")
+endif()
+message(STATUS "MAB_PYTHON = ${MAB_PYTHON}")
+
+set(MAB_PYTHON_TESTS
+    test_method_layout
+    test_query_mode
+    test_attribute_passthrough
+    test_python_shared_memory
+    test_block_size_extraction
+    test_shared_memory_v2
+    test_model_loading
+    test_mab_info_models
+    test_infer_all_models
+    test_audio_quality
+    test_model_edge_cases
+)
+
+foreach(t ${MAB_PYTHON_TESTS})
+    add_test(NAME ${t}
+        COMMAND "${CMAKE_COMMAND}" -E env PYTHONPATH="${CMAKE_CURRENT_SOURCE_DIR}"
+        "${MAB_PYTHON}" -m pytest "${CMAKE_CURRENT_SOURCE_DIR}/test/${t}.py"
+        -v -p no:warnings
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+    )
+    set_tests_properties(${t} PROPERTIES TIMEOUT 900)
+endforeach()

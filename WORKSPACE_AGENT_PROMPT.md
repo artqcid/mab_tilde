@@ -31,7 +31,7 @@
 5. **No OS locks in audio thread.** `perform64` uses only atomics / `Interlocked*`.
 6. **Shared memory handshake.** Python creates SHM, loads model, writes Header v2, then signals ready. C++ attaches after signal.
 7. **Memory layout.** Contiguous `[num_channels, block_size]` float arrays in SHM.
-8. **RT priority.** Worker runs `BELOW_NORMAL_PRIORITY_CLASS` with affinity excluding core 0 (`worker_launch.cpp`). `cores` arg defaults to 1; sets `torch.set_num_threads`, `OMP/MKL/OPENBLAS_NUM_THREADS`. CPU-only; ignored in GPU mode.
+8. **RT priority.** Worker runs `BELOW_NORMAL_PRIORITY_CLASS` with affinity excluding core 0 (`worker_launch.cpp`). `cores` arg defaults to 2; sets `torch.set_num_threads`, `OMP/MKL/OPENBLAS_NUM_THREADS`. CPU-only; ignored in GPU mode.
 
 ## 4. Build
 
@@ -73,7 +73,7 @@ pip install -r requirements.txt
 
 ## 6. MCP / RAG
 
-Local MCP server `mab_mcp_server.py` started via `.mcp.json`.
+Local MCP server `mab_mcp_server.py` is registered in `opencode.json` under `mcp.mab-rave-assistant` (venv python, `cwd` = project root). `.mcp.json` exists only for VS Code and is ignored by opencode. After config changes: restart opencode, then `opencode mcp list` → `mab-rave-assistant ✓ connected`. MCP tools appear as `mab-rave-assistant_*` (e.g. `mab-rave-assistant_query_code_wiki`).
 
 **Tools:** `index_project_code`, `query_code_rag`, `query_code_wiki`, `get_rag_chunk`, `inspect_rave_model`.
 

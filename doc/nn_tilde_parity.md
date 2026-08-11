@@ -11,7 +11,7 @@ Erledigte Features (P1-P6) siehe §4 History. Status-Tracking: `doc/checklist.md
 |---|-------|--------|-----------------|
 | P7 | **`track_buffers` + buffer~-Support** | ⚠️ TEILWEISE | Vorbereitung: `buffer_manager.h` + Feld in `t_mab_tilde` ✅; buffer_reference-Anbindung → offen (nach Phase 5) |
 | P8 | **`mc.mab~`** (Multichannel) | ✅ FERTIG (Max-verifiziert) | Phase 5: Doppelkompilierung, channel_map (Header v3), `multichanneloutputs`/`inputchanged`, 1-in-1-out MC-IO, `Z_MC_INLETS`, `chans` — Max-Runtime-Test bestanden (checklist 5.8) |
-| P9 | **`mcs.mab~`** (Batched MC) | 🔲 OFFEN | Phase 6: `n_batches`, Batch-Shape-Labels |
+| P9 | **`mcs.mab~`** (Batched MC) | ✅ IMPLEMENTIERT (Max-Test offen) | Phase 6: `n_batches`-Inlets/-Outlets, batch-major SHM `[B×ci×bs]`, batched `infer_method`, `multichanneloutputs`/`inputchanged` pro Batch — Unit-Tests + Build grün, Max-Runtime-Test ausstehend (checklist 6.4) |
 | P10 | **Argument-Overrides** (Inlet/Outlet, `n_batches`) | 📋 DOKUMENTIERT | §3: nn_tilde-Codestellen referenziert; Umsetzung → Phase 6 (checklist.md) |
 | P11 | **`mab.info`: download/delete/print** | ✅ FERTIG | Worker CLI-Flags + C++ Message-Handler (`mab_info.cpp`) |
 
@@ -66,7 +66,7 @@ track_buffers (bool, Default false) aktiviert Buffer-Tracking.
 
 ### mab~-Umsetzung (Phase 5/6)
 - **P8 ✅:** `mc.mab~` in `ext_main` registriert (Doppelkompilierung via `MC_MAB_TILDE_MODULE`); Shared-Struct mit mab~; `channel_map` in Header v3; `multichanneloutputs`/`inputchanged`/`chans`; MC-IO immer 1-in-1-out mit Kanalzahl über das MC-System (abweichend von nn_tilde's m_model_in Inlets — bewusste Design-Entscheidung, siehe projektwissen.md Phase 5)
-- **P9:** `mcs.mab~` — Batch-Dim in SHM + `infer_method`
+- **P9 ✅ (Max-Test offen):** `mcs.mab~` — Dreifach-Kompilierung via `MCS_MAB_TILDE_MODULE`; `mcs_batches` Inlets/Outlets; batch-major SHM-Layout `[n_batches × channels_in × block_size]` (C++ Zeile `b*ci+c`, Python `view(n_batches, ci, bs)`); `infer_method` mit Batched-Forward `(B,ci,bs)`; Arg-Reihenfolge `[model, method, n_batches, bufsize, gpu, cores]`
 - **P10:** Arg-Overrides für Inlet/Outlet-Anzahl + `n_batches`
 
 ### P10 – Argument-Overrides: konkrete nn_tilde-Codestellen

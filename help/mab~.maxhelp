@@ -43,7 +43,7 @@
       {
         "box": {
           "maxclass": "newobj",
-          "text": "mab~ model.ts forward 512 0 1 1",
+          "text": "mab~ model.ts forward 512 0 1 2",
           "id": "obj-mab",
           "numinlets": 1,
           "numoutlets": 1,

@@ -27,10 +27,9 @@ _Einlese-Reihenfolge: checklist.md → code_wiki.md → query_code_wiki → quer
 - [ ] **P10 – Argument-Overrides** (Arg4/5 Inlet-/Outlet-Anzahl, mcs `n_batches`)
   - Dokumentation ✅: `doc/nn_tilde_parity.md` §3 (nn_tilde: `nn_base.h:419-478`, `mcs.nn_tilde.cpp:189-259`)
   - Teilweise ✅: `t_mab_tilde` Feld `n_batches` + `channel_map` existiert (`mab_tilde.cpp:124-125`), Void-Mode-Clamping (`mab_tilde.cpp:339-348`, `mc_mab_tilde_new:1136-1145`)
-  - Offen: `mab_tilde.cpp:310-333` – Arg-Parsing: `argv[3]=gpu`, `argv[4]=num_channels`, `argv[5]=cores` → muss mit nn_tilde-Reihenfolge (args[3]=inlets, args[4]=outlets) abgeglichen werden
-  - Offen: `mab_tilde.cpp:256`/`1082` – `dsp_setup`/`outlet_new`: Inlet/Outlet-Count aus Overrides
-  - Offen: `inference_worker.py:1209-1260` – argparse: positionale Args um `n_batches`/Overrides erweitern
-  - Abhängig von Phase 5 (mc.mab~) / Phase 6 (mcs.mab~, `n_batches`)
+  - ✅ Phase 6: mcs `n_batches`-Arg implementiert (`mcs_mab_tilde_new`: `argv[2]=n_batches`), argparse um `n_batches` erweitert (`inference_worker.py:1219-1221`)
+  - Offen: `mab_tilde.cpp:310-333` – Arg-Parsing mab~/mc.mab~: `argv[3]=gpu`, `argv[4]=num_channels`, `argv[5]=cores` → muss mit nn_tilde-Reihenfolge (args[3]=inlets, args[4]=outlets) abgeglichen werden
+  - Offen: `mab_tilde.cpp:256`/`1082` – `dsp_setup`/`outlet_new`: Inlet/Outlet-Count aus Overrides (nur mab~/mc.mab~)
 - [ ] **P11 – mab.info: download/delete-Messages** durchleiten
   - ✅ FERTIG: C++ Message-Handler `mab_info_download`/`mab_info_delete`/`mab_info_print` (`mab_info.cpp`), Worker-CLI-Flags `--download/--delete/--list` (`inference_worker.py`), Ergebnis auf Outlet 1, `object_error` bei Netzwerkfehlern
   - Offen: Max-Runtime-Verifikation (V5-Erweiterung)
@@ -81,12 +80,39 @@ _Einlese-Reihenfolge: checklist.md → code_wiki.md → query_code_wiki → quer
 
 ## Phase 6 – mcs.mab~ (Batched Multichannel)
 
-- [ ] **6.1** `n_batches` Inlets + Outlets, gemeinsame Kernlogik wie mc.mab~
-  - `mab_tilde.cpp` + neues `mcs_mab_tilde.cpp` oder Template
-- [ ] **6.2** `multichanneloutputs`/`inputchanged` mit Batch-Map
-- [ ] **6.3** Shared Memory: `(n_batches × channels_in × block_size)`, Python: `view(n_batches, ci, bs)`
-  - `inference_worker.py` (Inferenz-Loop Batch-Dim)
-- [ ] **6.4** Verifikation: `[mcs.mab~ musicnet.ts encode 4 2048]` → 4 in, je 16 latent-out
+### ✅ Implementiert (2026-08-11)
+
+- [x] **6.0** Analyse + Design-Entscheidungen festgelegt (noch kein Code):
+  - Referenz `mcs.nn_tilde.cpp` (494 Z.) studiert: `n_batches`-Multichannel-Inlets/-Outlets, `channel_map` der Größe `n_batches` (Default alle 1), `get_batches()` = max(channel_map), Arg-Reihenfolge `[model, method, n_batches, bufsize]`, `multichanneloutputs` → `m_out_channels` pro Outlet-Index, `inputchanged` → `channel_map[index]` + Warnung bei Mismatch
+  - **Doppelkompilierung wie Phase 5:** `MCS_MAB_TILDE_MODULE` in `mab_tilde.cpp` → `mcs.mab~.mxe64` (konsistent mit `MC_MAB_TILDE_MODULE`), kein separates Template nötig
+  - **SHM-Layout (6.3):** batch-major `[n_batches × channels_in × block_size]` – C++ schreibt Zeile `b*ci + c`, Python `view(n_batches, ci, bs)`; weicht bewusst von nn_tildes interleaved `c*B + b` ab (checklist-Vorgabe)
+  - **Header:** v3-`channel_map[16]` wird wiederverwendet (max. 16 Batches), 192-Byte-static_assert bleibt unverändert – kein Header-Bump nötig
+  - **CMake:** `mc_mab_tilde`-Target (CMakeLists.txt:79-104) als Muster für `mcs_mab_tilde`-Target
+  - Python-`infer_method` (inference_worker.py:793-838) muss für Batch-Dim erweitert werden (Batched-Forward `[n_batches, ci, bs]` statt `[1, ci, bs]`)
+  - Unit-Test-Muster: `test/test_mc_mab_tilde.cpp` (logik-reine Spiegel ohne Max-SDK-Link)
+
+- [x] **6.1** `n_batches` Inlets + Outlets, gemeinsame Kernlogik wie mc.mab~ — **FERTIG**:
+  - `t_mab_tilde` um `is_mcs` + `mcs_batches` erweitert (neben `is_mc`/`channel_map`/`n_batches`); `mab_tilde_prefix()`-Helper für korrekte post-Prefixe
+  - `ext_main` dreifach-kompiliert: `MCS_MAB_TILDE_MODULE` → registriert nur `mcs.mab~`-Klasse
+  - `mcs_mab_tilde_new/dsp64/perf64` implementiert; Arg-Reihenfolge `[model method n_batches bufsize gpu cores]` (nn_tilde-Parität P9)
+  - `mab_tilde_apply_io`: mcs → `mcs_batches` Inlets UND Outlets (Multichannel); `mab_tilde_rebuild_io` erzeugt `"multichannelsignal"`-Outlets (is_mc=1)
+  - `init_worker`-argbuf um `n_batches` erweitert (mab~/mc.mab~ senden 1)
+
+- [x] **6.2** `multichanneloutputs`/`inputchanged` mit Batch-Map — **FERTIG**:
+  - `mcs_multichanneloutputs`: `chans` (n_batches) gewinnt, sonst `channels_out` – pro Outlet-Index (wie mc.mab~)
+  - `mcs_inputchanged`: `channel_map[index]` + Header-Publish + Warnung bei `count != channels_in` (nn_tilde-Parität P9)
+  - `mc_mab_tilde_chans` prefix-neutral gemacht (wird von mc + mcs geteilt)
+
+- [x] **6.3** Shared Memory batch-major + Python — **FERTIG**:
+  - C++-perf64: flat `ins[]` → SHM-Zeilen `b*ci+c` (Null-Zero-Padding fehlender Kanäle), Drain `b*co+c` → Batch-Outlets bei `b*per_outlet+c`; überzählige Outlets gesilenced
+  - `inference_worker.py`: `SharedMemoryManager(n_batches=...)`, Buffer `n_batches × ci × block_size`, `get_numpy_input/output` liefern 3D-Views `(B, ci, bs)`; `infer_method` batch-fähig (`(B,ci,bs)` → batched Forward → `(B,co,bs)`, 2D bleibt unverändert); argparse um `n_batches` erweitert; Wiring-Validierung gegen `ci * n_batches`; Passthrough per Batch
+  - Header v3 unverändert (192 Bytes, `channel_map[16]` = Batch-Map, max. 16 Batches)
+
+- [x] **6.4** Verifikation (Build + Unit-Tests) — **FERTIG**:
+  - Unit-Test `test/test_mcs_mab_tilde.cpp` (8 Fälle: IO `n_batches`-in/out, Batch-Wiring batch-major, Partial-Batch-Zero-Padding, Output-Wiring + chans-Silencing, multichanneloutputs, inputchanged)
+  - Python-Tests: `TestInferMethodBatched` (5 Fälle: forward/encode/decode/prior batched + Trim)
+  - Build: `mcs.mab~.mxe64` (812 544 B) neben `mab~`/`mc.mab~`; alle 19 C++-Tests + alle 124 Python-Tests grün
+  - **Offen: Max-Runtime-Test** `[mcs.mab~ musicnet.ts encode 4 2048]` → 4 in, je 16 latent-out (wie Phase 5.8, benötigt Max mit dem Modell)
 
 ## RAG/MCP-Verbesserungen
 
@@ -107,6 +133,12 @@ _Einlese-Reihenfolge: checklist.md → code_wiki.md → query_code_wiki → quer
 - [x] **R8b** `max_steps`: plan=120, build=60, DEV=60, explore=24, general=12
 - [x] **R8c** Plan-Agent permissions: bash+task+external_directory entfernt
 - [x] **R8d** `AGENTS.md` (38 Z.) + `WORKSPACE_AGENT_PROMPT.md` (100 Z.) – kompakt genug ✅
+- [x] **R14** MCP-Registrierung in `opencode.json` (statt `.mcp.json`): opencode lädt `.mcp.json` (Claude-Code-/VS-Code-Format) NICHT — `opencode mcp list` zeigte nur die 3 globalen Server
+  - Fix: `mcp.mab-rave-assistant` in `opencode.json` (type=local, venv-python absolut, cwd=Projektroot, `PYTHONUNBUFFERED=1`)
+  - Verifiziert: `opencode mcp list` → `mab-rave-assistant ✓ connected` (4 Server)
+  - MCP-Tools erscheinen mit Server-Präfix `mab-rave-assistant_*`
+  - Docs aktualisiert: `MCP_README.md`, `doc/projektwissen.md`, `WORKSPACE_AGENT_PROMPT.md`, `AGENTS.md`
+  - Neustart von opencode erforderlich, damit die Tools in der laufenden Session verfügbar werden
 
 ### Offen (niedrige bis mittlere Priorität)
 
@@ -139,4 +171,77 @@ _Einlese-Reihenfolge: checklist.md → code_wiki.md → query_code_wiki → quer
 ---
 
 _History: Diese Sektion konsolidiert den vollständigen Inhalt von `doc/rag_improvements.md` (gelöscht nach Übertragung). Siehe `doc/rag_improvements.md` (gelöscht) für den ursprünglichen Analyse- und Implementierungsplan._
+
+
+## Offline-Tests (ohne Max Runtime) – siehe doc/test_strategy.md
+
+### ✅ Abgeschlossen
+
+- [x] **T0** Teststrategie-Dokument `doc/test_strategy.md` erstellt (Architect, 2026-08-11):
+  - Analyse aller 20 Dateien (19 TorchScript-Modelle + 1 ONNX ausgeschlossen) in `D:\AI-Models\ts models`
+  - 6 Test-Kategorien (A–F) definiert
+  - Implementierungshinweise (subTest, GPU, Benchmark, CMake)
+  - Geschätzter Aufwand: ~14-19 h
+
+- [x] **T1 – Modell-Lade-Tests** `test/test_model_loading.py` (2026-08-11):
+  - 18 TorchScript-Modelle auf CPU laden → `load_model()` + `eval()` (ONNX ausgeschlossen, `afterv2.audio.instr.ts` entfernt wegen RAM >10 GB)
+  - 18 TorchScript-Modelle auf GPU laden (`skipIf(not torch.cuda.is_available())`, torch 2.12.0.dev+cu128 installiert)
+  - `get_method_params()` + `compute_layout()` für jedes Modell
+  - Dynamische Test-Generierung via `setattr()`: ein Test pro Modell (kein kumulativer Speicherdruck)
+  - `torch.cuda.empty_cache()` nach jedem GPU-Test
+  - Siehe `doc/test_strategy.md` §3 Kategorie B + §4.2
+
+- [x] **T2 – mab.info-Integrationstests** `test/test_mab_info_models.py` (2026-08-11):
+  - `query_model()` für jedes der 18 TorchScript-Modelle (ONNX ausgeschlossen)
+  - stdout parsen → `MAB_INFO_BEGIN`/`MAB_INFO_END`, Modell-Typ, Methoden-Liste, Parameter
+  - MABJSON-Block auf gültiges JSON validieren
+  - Dynamische Test-Generierung via `setattr()`: ein Test pro Modell
+  - CLI-End-to-End-Subprozess-Test gegen musicnet.ts
+  - `query_model()` macht `del model` + `gc.collect()` vor `sys.exit(0)`
+  - Siehe `doc/test_strategy.md` §3 Kategorie C
+
+- [x] **T3 – Methoden-Dispatch-Integration** `test/test_infer_all_models.py` (2026-08-11):
+  - `infer_method()` mit Zufalls-Input für jede Methode jedes Modells (18 Modelle)
+  - Output-Shapes prüfen, NaN/Inf-Check
+  - Dynamische Test-Generierung via `setattr()`: ein Test pro Modell mit `subTest()` pro Methode
+  - Determinismus-Test nur für stateless Modelle (skip bei `encode`/`decode`, stateful RAVE)
+  - `torch.set_num_threads(4)` gegen CPU-Überlastung/Thermal-Crash
+  - RAM-Guard `_check_ram()`: skip wenn <2 GB frei
+  - Debug-Logging via `logging.DEBUG` + Fortschritts-`print()` mit `flush()`
+  - `afterv2.audio.instr.ts` entfernt (RAM-Verbrauch >10 GB beim Inferieren)
+  - Siehe `doc/test_strategy.md` §3 Kategorie D
+
+- [x] **T4 – Audio-Qualitätstests** `test/test_audio_quality.py` (2026-08-11, 49 Tests):
+  - Forward-Passthrough: nur echte Audio-Effekt-Methoden (`effects.ts` thru/invert/add/polynomial/saturate) — RAVE-`forward` ist KEIN Passthrough (Autoencoder-Bottleneck, verifiziert: corr~0)
+  - encode→decode Roundtrip: Streaming-Stabilität statt Rekonstruktion (nn_tilde-Semantik: decode liest nur letzten Latent-Frame → rekonstruktive Qualität nicht erwartbar)
+  - Silence-Throughput: kein DC-Offset (Schwelle 0.2 — Voice-Modelle haben kleine DC-Reste)
+  - Performance-Benchmark (ms pro Block, CPU, grosszuegiger Timeout)
+  - `_test_signal()` = harmonisches Sinus-Signal (Zufallsrausch → NaN bei Voice-Modellen)
+  - Siehe `doc/test_strategy.md` §3 Kategorie E
+
+- [x] **T5 – Edge-Case-Tests** `test/test_model_edge_cases.py` (2026-08-11, 9 Tests):
+  - Load/Unload-Cycles (10× musicnet.ts) — kein Leak/Crash
+  - 2 Modelle nacheinander aktiv (musicnet+nasa, State-Isolation)
+  - MAX_BLOCK_SIZE-Grenze (bufsize=4096)
+  - Sehr kleine Blocks (bufsize=64, block_size bleibt >= 2048 wegen ratio)
+  - Block-Grenzen (bufsize=0, bufsize=8192)
+  - Unbekannte Methode → graceful exception
+  - RAVE-Attribute set/get (demo_attributes.ts, RuntimeAttributes)
+  - Null-Tensor-Input (kein Segfault)
+  - Siehe `doc/test_strategy.md` §3 Kategorie F
+
+- [x] **T6 – CMake-Test-Integration** `CMakeLists.txt` (2026-08-11):
+  - `enable_testing()` + `add_test()` für alle 19 C++-Test-EXEs (TIMEOUT 180)
+  - `add_test()` für 11 Python-Testdateien via `MAB_PYTHON` (venv-Auflösung, TIMEOUT 900)
+  - `testPresets.debug` in `CMakePresets.json`
+  - Verifiziert: `ctest --preset debug` → 19/19 C++ grün, Python-Tests registriert
+
+- [x] **T7 – Benchmark-Report** `test/benchmark_models.py` (2026-08-11):
+  - Performance-Datenblatt für alle 18 TorchScript-Modelle (ONNX: "nicht unterstützt", AFTER-v2: ausgelassen)
+  - CPU vs GPU-Latenzen (RTX 3060) + GPU/CPU-Ratio
+  - Markdown-Tabelle auf stdout (UTF-8)
+  - GPU-Kompatibilitätsfehler (demo_mc/features) werden als "GPU-Fehler" vermerkt
+  - Ergebnisse werden via `--report doc/benchmark_reports.md` als fortlaufend
+    nummerierter **Testrun NNN – Datum** in `doc/benchmark_reports.md` eingetragen
+    (neueste Messung oben, `--note` für Kontext)
 

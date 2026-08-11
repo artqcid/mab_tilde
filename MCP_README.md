@@ -16,6 +16,33 @@ pip install -r requirements.txt
 python mab_mcp_server.py
 ```
 
+### Über opencode (empfohlen)
+
+Die MCP-Registrierung für opencode erfolgt im Projekt-`opencode.json` unter
+dem Key `mcp` (natives opencode-Format, `type: "local"`, `command` als Array):
+
+```json
+"mcp": {
+  "mab-rave-assistant": {
+    "type": "local",
+    "command": [
+      "C:/Users/marku/Documents/GitHub/artqcid/ai-projects/mab_tilde/.venv/Scripts/python.exe",
+      "-u",
+      "mab_mcp_server.py"
+    ],
+    "cwd": "C:/Users/marku/Documents/GitHub/artqcid/ai-projects/mab_tilde",
+    "environment": { "PYTHONUNBUFFERED": "1" },
+    "enabled": true
+  }
+}
+```
+
+**Wichtig:** opencode lädt `.mcp.json` (VS-Code-/Claude-Code-Format) NICHT.
+Nach einer Änderung an `opencode.json` muss opencode neu gestartet werden
+(Config wird nur beim Start geladen). Status prüfen: `opencode mcp list`
+→ `mab-rave-assistant ✓ connected`. Die MCP-Tools erscheinen bei allen
+Agents mit Server-Präfix (`mab-rave-assistant_query_code_wiki`, ...).
+
 ### Über VS Code MCP Integration
 
 1. Öffnen Sie die Einstellungen in VS Code
@@ -149,7 +176,8 @@ mab_tilde/
 ├── mab_mcp_server.py                         # MCP Server
 ├── requirements.txt                          # Python Abhängigkeiten
 ├── CMakeLists.txt                            # Build-Konfiguration
-└── .mcp.json                                 # MCP Konfiguration
+├── .mcp.json                                 # MCP-Konfiguration für VS Code (Claude-Code-Format)
+└── opencode.json                             # opencode-Konfiguration: Agenten + MCP-Registrierung (`mab-rave-assistant`)
 ```
 
 ## Lizenz

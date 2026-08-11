@@ -171,6 +171,65 @@ class TestInferMethodSemantics(unittest.TestCase):
         self.assertEqual(out.shape, (1, 2048))
 
 
+class TestInferMethodBatched(unittest.TestCase):
+    """Phase 6 (mcs.mab~): 3-D input (n_batches, ci, block) is fed through the
+    model in ONE batched forward pass and returns (n_batches, co, block)."""
+
+    def setUp(self):
+        self.model = FakeScriptedModel()
+        self.device = torch.device('cpu')
+
+    def test_forward_batched_keeps_batch_dim(self):
+        inp = np.random.randn(4, 1, 2048).astype(np.float32)
+        out = infer_method(self.model, self.device, 'forward',
+                           MUSICNET_PARAMS, inp)
+        self.assertEqual(out.shape, (4, 1, 2048))
+        name, x = self.model.calls[0]
+        self.assertEqual(name, 'forward')
+        self.assertEqual(x.shape, (4, 1, 2048))
+        np.testing.assert_array_almost_equal(out, inp)
+
+    def test_encode_batched(self):
+        inp = np.random.randn(4, 1, 2048).astype(np.float32)
+        out = infer_method(self.model, self.device, 'encode',
+                           MUSICNET_PARAMS, inp)
+        self.assertEqual(out.shape, (4, 16, 2048))
+        name, x = self.model.calls[0]
+        self.assertEqual(name, 'encode')
+        self.assertEqual(x.shape, (4, 1, 2048))
+
+    def test_decode_batched_takes_last_sample_per_channel(self):
+        inp = np.random.randn(4, 16, 2048).astype(np.float32)
+        out = infer_method(self.model, self.device, 'decode',
+                           MUSICNET_PARAMS, inp)
+        self.assertEqual(out.shape, (4, 1, 2048))
+        name, z = self.model.calls[0]
+        self.assertEqual(name, 'decode')
+        self.assertEqual(z.shape, (4, 16, 1))
+        # last sample of each (batch, channel) must be passed to the model
+        np.testing.assert_array_almost_equal(z[:, :, 0].numpy(), inp[:, :, -1])
+
+    def test_prior_batched(self):
+        inp = np.random.randn(4, 1, 2048).astype(np.float32)
+        out = infer_method(self.model, self.device, 'prior',
+                           MUSICNET_PARAMS, inp)
+        self.assertEqual(out.shape, (4, 16, 2048))
+        name, z = self.model.calls[0]
+        self.assertEqual(name, 'prior')
+        self.assertEqual(z.shape, (4, 1, 1))
+        np.testing.assert_array_almost_equal(z[:, 0, 0].numpy(), inp[:, 0, -1])
+
+    def test_batched_output_trims_extra_samples(self):
+        class LongOutput(FakeScriptedModel):
+            def decode(self, z):
+                self.calls.append(("decode", z.clone()))
+                return torch.zeros(z.size(0), 1, 4096)
+        model = LongOutput()
+        inp = np.random.randn(4, 16, 2048).astype(np.float32)
+        out = infer_method(model, self.device, 'decode', MUSICNET_PARAMS, inp)
+        self.assertEqual(out.shape, (4, 1, 2048))
+
+
 MODEL_PATH = r"D:\AI-Models\ts models\musicnet.ts"
 
 

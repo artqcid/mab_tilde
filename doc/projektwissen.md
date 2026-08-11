@@ -34,7 +34,7 @@ typedef struct _mab_tilde {
     char method_name[64];       // Aktive Methode ("forward"/"encode"/"decode"/"prior")
     long buffer_size;           // Block-Größe (Default 512)
     long gpu;                   // 1 = CUDA, 0 = CPU
-    long cores;                 // PyTorch-Inferenz-Threads (1 = Single-Core)
+    long cores;                 // PyTorch-Inferenz-Threads (Default 2, Clamp 1..64)
     
     // Runtime-Zustand
     long num_channels;          // Legacy: Output-Kanäle
@@ -57,11 +57,17 @@ typedef struct _mab_tilde {
     t_clock* crash_clock;       // periodischer Crash-Check (100ms, Main-Thread, A2)
     
     // Phase 5: mc.mab~ (Multichannel) support fields
-    long is_mc;                 // 1 = mc.mab~ mode, 0 = mab~ mode
-    long channel_map[16];       // per-inlet channel count (MC mode)
-    long n_batches;             // fixed output channels from `chans` attribute (0 = auto)
+    long is_mc;                // 1 = mc.mab~ mode, 0 = mab~ mode
+    long channel_map[16];      // per-inlet channel count (MC mode, max 16 inlets)
+    long n_batches;            // fixed output channels from `chans` attribute (0 = auto)
+
+    // Phase 6: mcs.mab~ (Batched Multichannel) support fields
+    long is_mcs;               // 1 = mcs.mab~ mode, 0 = mab~/mc.mab~ mode
+    long mcs_batches;          // number of batch inlets/outlets (mcs.mab~, 1..16)
 } t_mab_tilde;
 ```
+
+**Prefix-Helper:** `mab_tilde_prefix(x)` → `"mcs.mab~"` / `"mc.mab~"` / `"mab~"` je nach `is_mcs`/`is_mc` (für alle `post()`-Aufrufe).
 
 **Lebenszyklus:**
 1. `mab_tilde_new` → allokiert, setzt bypass=1, startet `init_worker_thread` (detached)
@@ -222,11 +228,12 @@ ControlRingBuffer.dequeue() → Nachricht parsen → Aktion ausführen
 | `mab_tilde` | MODULE | `mab~.mxe64` | mab_tilde.cpp, worker_launch.cpp, max_path_resolve.cpp |
 | `mab_tilde_lib` | STATIC | (nur für Tests) | Gleiche Quellen |
 | `mc_mab_tilde` | MODULE | `mc.mab~.mxe64` | mab_tilde.cpp (mit `MC_MAB_TILDE_MODULE`), worker_launch.cpp, max_path_resolve.cpp |
+| `mcs_mab_tilde` | MODULE | `mcs.mab~.mxe64` | mab_tilde.cpp (mit `MCS_MAB_TILDE_MODULE`), worker_launch.cpp, max_path_resolve.cpp |
 | `mab_info` | MODULE | `mab.info.mxe64` | mab_info.cpp, worker_launch.cpp, max_path_resolve.cpp |
 | `test_worker_launch` | EXE | build/Debug/test_worker_launch.exe | test_worker_launch.cpp + worker_launch.cpp |
-| 16 weitere Tests | EXE | build/Debug/test_*.exe | Jeweils test/test_*.cpp |
+| 18 weitere Tests | EXE | build/Debug/test_*.exe | Jeweils test/test_*.cpp |
 
-**Phase 5 – Doppelkompilierung:** `mc.mab~.mxe64` wird aus der **gleichen** `mab_tilde.cpp` kompiliert wie `mab~.mxe64`, aber mit `target_compile_definitions(... PRIVATE MC_MAB_TILDE_MODULE)`. Der `#ifdef`-Block in `ext_main` registriert dann nur die `mc.mab~`-Klasse.
+**Phase 5/6 – Mehrfachkompilierung:** `mc.mab~.mxe64` und `mcs.mab~.mxe64` werden aus der **gleichen** `mab_tilde.cpp` kompiliert wie `mab~.mxe64`, aber mit `target_compile_definitions(... PRIVATE MC_MAB_TILDE_MODULE)` bzw. `MCS_MAB_TILDE_MODULE`. Der `#if defined(MCS_MAB_TILDE_MODULE) / #elif defined(MC_MAB_TILDE_MODULE) / #else`-Block in `ext_main` registriert dann nur die jeweilige Klasse.
 
 **Build-Befehle:**
 ```powershell
@@ -238,6 +245,7 @@ cmake --build --preset debug  # Kompilieren (Output: build/Debug/mab~.mxe64)
 ```powershell
 Copy-Item build\Debug\mab~.mxe64 "$env:USERPROFILE\Documents\Max 9\Packages\mab_tilde\externals\"
 Copy-Item build\Debug\mc.mab~.mxe64 "$env:USERPROFILE\Documents\Max 9\Packages\mab_tilde\externals\"
+Copy-Item build\Debug\mcs.mab~.mxe64 "$env:USERPROFILE\Documents\Max 9\Packages\mab_tilde\externals\"
 Copy-Item build\Debug\mab.info.mxe64 "$env:USERPROFILE\Documents\Max 9\Packages\mab_tilde\externals\"
 Copy-Item inference_worker.py "$env:USERPROFILE\Documents\Max 9\Packages\mab_tilde\support\"
 ```
@@ -256,13 +264,13 @@ Copy-Item inference_worker.py "$env:USERPROFILE\Documents\Max 9\Packages\mab_til
 | `buffer_manager.h` | P7-Vorbereitung: BufferRef/BufferManager-Platzhalter (buffer_reference → Phase 5) | C++ |
 | `inference_worker.py` | Python-Backend: SHM, Modell-Load, Inferenz-Loop, Attribute | Python |
 | `mab_mcp_server.py` | MCP-Server: RAG-DB, Code-Chunking, Wiki-Generierung, Modell-Inspektion | Python |
-| `CMakeLists.txt` | Build: 3 Libraries + 17 Tests, Native Max SDK (kein min-devkit) | CMake |
+| `CMakeLists.txt` | Build: 4 Libraries + 19 Tests, Native Max SDK (kein min-devkit) | CMake |
 | `CMakePresets.json` | CMake-Presets: debug/release, VS 18 2026 x64 | JSON |
 | `requirements.txt` | Python-Deps: torch, numpy, mcp, fastmcp, onnxruntime | Text |
 | `setup_env.bat` | Windows: venv erstellen + pip install | Batch |
 | `.ragignore` | Pfade, die `index_project_code` ausschließt (min-api, build, .venv) | Text |
-| `.mcp.json` | MCP-Konfiguration für VS Code / OpenCode | JSON |
-| `opencode.json` | OpenCode Agent-Konfiguration (Modelle, Permissions, Compaction) | JSON |
+| `.mcp.json` | MCP-Konfiguration für VS Code (Claude-Code-Format; opencode ignoriert diese Datei) | JSON |
+| `opencode.json` | opencode-Konfiguration: Agents, Modelle, Permissions, Compaction + MCP-Registrierung (`mab-rave-assistant`, Key `mcp`) | JSON |
 
 ---
 
@@ -366,3 +374,214 @@ zurücksetzt).
 - `n_batches`/`is_mc` nur auf Main-Thread geschrieben, von Audio-Thread gelesen
 - `header->channel_map` wird von Main-Thread (dsp64/inputchanged/apply_io) geschrieben,
   vom Python-Worker gelesen → uint32-Zuweisungen, kein Lock nötig
+
+---
+
+## Phase 6 – mcs.mab~ (Batched Multichannel)
+
+### Design
+
+`mcs.mab~` erweitert `mc.mab~` um `mcs_batches` parallele Batch-Inlets/-Outlets
+(nn_tilde-Parität P9) und wird aus derselben `mab_tilde.cpp` kompiliert
+(`MCS_MAB_TILDE_MODULE` → nur `mcs.mab~`-Klasse registriert).
+
+**Arg-Reihenfolge (mcs, abweichend von mab~/mc.mab~):**
+```
+[mcs.mab~ model method n_batches bufsize gpu cores]   # Modell-Modus
+[mcs.mab~ void n_batches bufsize]                      # Void-Modus
+```
+`n_batches` (Feld `mcs_batches`) = Anzahl Batch-Inlets/-Outlets (1..16, Default 1).
+Feld `n_batches` bleibt wie in Phase 5 der `chans`-Override (fixe Out-Kanalzahl
+pro Batch-Outlet, 0 = auto aus `channels_out`).
+
+**IO-Architektur:** `mcs_batches` Multichannel-Inlets + `mcs_batches`
+Multichannel-Outlets (jeweils `"multichannelsignal"`). Jedes Batch-Inlet trägt
+`channel_map[b]` Kanäle (Modell-Layout `channels_in` pro Batch), jedes
+Batch-Outlet liefert `chans` oder `channels_out` Kanäle. Max liefert die
+verbundenen Kanäle **flach** in perform64: Inlet 0 zuerst, dann Inlet 1, ...
+
+**SHM-Layout (6.3) – batch-major:**
+```
+Input : [n_batches × channels_in × block_size]  Zeile = b*ci + c
+Output: [n_batches × channels_out × block_size] Zeile = b*co + c
+```
+- C++-perf64: `ins[]`-Flat-Array → Zeilen `b*ci+c` (fehlende Kanäle → Zero-Padding
+  via `block_accumulate_write`); Drain Zeilen `b*co+c` → Outlets bei
+  `b*per_outlet+c` (per_outlet = `chans` oder `co`); überzählige Outlet-Kanäle
+  (per_outlet > co) werden explizit gesilenced
+- Python: `get_numpy_input/output` liefern für `n_batches > 1` 3D-Views
+  `(n_batches, ci, bs)` / `(n_batches, co, bs)`; `infer_method` macht einen
+  einzigen Batched-Forward `(B, ci, bs) → (B, co, bs)` (2D-Input bleibt
+  unverändert `(ci, bs) → (co, bs)`)
+- Header v3 unverändert: `channel_map[16]` = Batch-Map (max. 16 Batches),
+  192-Byte-static_assert bleibt
+
+**Worker-Args:** `init_worker`-argbuf: `model method bufsize gpu n_batches
+shm_name instance_id num_channels cores` (mab~/mc.mab~ senden `n_batches=1`).
+
+### mcs-Funktionsübersicht (mab_tilde.cpp)
+
+| Funktion | Zweck |
+|----------|-------|
+| `mcs_mab_tilde_new` (ab ~1390) | Konstruktor (is_mcs=1, is_mc=1, `mcs_batches`-Parsing, Void-Modus) |
+| `mcs_mab_tilde_dsp64` | Liest `count[i]` pro Batch-Inlet → `channel_map`, publiziert in Header; fasst `channels_in` NICHT an |
+| `mcs_mab_tilde_perform64` | Batch-Wiring `b*ci+c` (Input) / `b*co+c` (Output), Zero-Padding + Outlet-Silencing |
+| `mcs_multichanneloutputs` | `chans` (n_batches) oder `channels_out` pro Outlet-Index |
+| `mcs_inputchanged` | Aktualisiert `channel_map[index]`, publiziert in Header, Warnung bei `count != channels_in` |
+| `mab_tilde_apply_io` | mcs: `io_in = io_out = mcs_batches` (Multichannel) |
+| `mc_mab_tilde_chans` | Geteilter `chans`-Setter (prefix-neutral, mc + mcs) |
+
+### Threading-Regeln (Phase 6)
+
+- `mcs_batches`/`is_mcs` nur auf Main-Thread geschrieben, von Audio-Thread gelesen
+- `channel_map`-Zugriffe wie Phase 5 (long-Zuweisungen, kein Lock)
+- `wired`-Arrays im perform64: `const double* wired[256]` (max. 16 Batches × 16 Kanäle) – Stack, kein Heap
+
+---
+
+## Testing – Offline-Tests (ohne Max Runtime)
+
+_Ergänzung 2026-08-11 durch Architect. Siehe `doc/test_strategy.md` für die
+vollständige Teststrategie. Diese Sektion fasst testrelevante Wissensbausteine
+aus Codeanalyse + Web-Recherche zusammen, die Dev-Agents für die
+Implementierung von T1–T7 benötigen._
+
+### Modell-Inventar & Status (19 TorchScript, 1 ONNX ausgeschlossen)
+
+| Modell | Methoden (via inspect) | Latent | Block | RAVE-Typ (vermutet) |
+|--------|------------------------|--------|-------|---------------------|
+| `musicnet.ts` | encode, decode, forward | 16 | 2048 | v2 (Standard) |
+| `vintage.ts` | encode, decode, forward | ? | ? | v2 |
+| `voice-multi-b2048-r48000-z11.ts` | encode, decode, forward | 11 | 2048 | v2 |
+| `afterv2.audio.instr.ts` | decode | ? | 2048 | v2 (decode-only) |
+| `voice_hifitts_b2048_r48000_z16.ts` | unbekannt (z=16) | 16 | 2048 | v2 voice |
+| `voice_jvs_b2048_r44100_z16.ts` | unbekannt (z=16) | 16 | 2048 | v2 voice |
+| `voice_vctk_b2048_r44100_z22.ts` | unbekannt (z=22) | 22 | 2048 | v2 voice |
+| `voice_vocalset_b2048_r48000_z16.ts` | unbekannt (z=16) | 16 | 2048 | v2 voice |
+| `water_pondbrain_b2048_r48000_z16.ts` | unbekannt (z=16) | 16 | 2048 | v2 |
+| `nasa.ts` | unbekannt | ? | ? | v2 |
+| `wheel.ts` | unbekannt | ? | ? | v2 |
+| `thirdModelTest3000Epoche.ts` | unbekannt | ? | ? | train/experiment |
+| `modell_30min_27915e19b0.ts` | unbekannt | ? | ? | train/experiment |
+| `features.ts` | unbekannt (hop=256) | ? | 256 | nn~ scripting example |
+| `effects.ts` | unbekannt | – | ? | nn~ scripting example |
+| `demo_attributes.ts` | forward | – | ? | Test: RAVE-Attribute |
+| `demo_buffers.ts` | unbekannt | – | ? | Test: buffer~-Support |
+| `demo_mc.ts` | unbekannt | – | ? | Test: Multichannel |
+| `wavetable.ts` | forward | – | ? | Test/experiment |
+| `darbouka_onnx.ts` | **AUSGESCHLOSSEN** (ONNX) | – | – | benötigt onnxruntime |
+
+**RAVE-Trainings-Kontexte (aus acids-ircam/rave README):**
+- `--streaming`-Flag beim Export → essentiell für Echtzeit (ohne: Clicking-Artefakte)
+- `--prior`-Flag beim Export → bindet einen trainierten Prior ins .ts-Modell ein
+- Memory-Anforderungen: v1 ≥8GB, v2 ≥16GB, v3 ≥32GB GPU RAM
+- Dateinamens-Konvention: `<name>_b<block>_r<sr>_z<latent>.ts`
+
+### nn_tilde-Parität: Testrelevante Messages & Attribute
+
+Aus `nn_tilde` README + `nn_base.h` — diese Messages und Attribute müssen auch
+in mab~ funktionieren und sind daher Teil der Testabdeckung:
+
+| Message | mab~-Äquivalent | Test-Kategorie |
+|---------|----------------|----------------|
+| `enable 0/1` | `mab_tilde_enable` (inference_worker:1442-1446) | T5 (Edge-Case) |
+| `reload` | Control-Message `reload` (inference_worker:1466-1478) | T5 |
+| `dump` | Control-Message `dump` (inference_worker:1494-1496) | T5 |
+| `load <path>` | Control-Message `load` (inference_worker:1479-1493) | T5 |
+| `method <name>` | Control-Message `method` (inference_worker:1545-1557) | T5 |
+| `set <attr> <val>` | Control-Message `set` (inference_worker:1497-1502) | T5 |
+| `get <attr>` | Control-Message `get` (inference_worker:1503-1506) | T5 |
+| `get_attributes` | Control-Message (inference_worker:1507-1510) | T5 |
+| `get_methods` | Control-Message (inference_worker:1511-1516) | T5 |
+| `print_available_models` | Control-Message (inference_worker:1517-1530) | T5 |
+| `download <card>` | Control-Message (inference_worker:1532-1538) | T5 |
+| `delete <card>` | Control-Message (inference_worker:1539-1543) | T5 |
+| `gpu 0/1` | Control-Message (inference_worker:1447-1465) | T1/T5 |
+
+### Python-Funktionen für Testing (inference_worker.py)
+
+Reihenfolge wie sie in Tests aufgerufen werden:
+
+```
+load_model(path, use_gpu) → (model, device)
+    ├── torch.jit.load(resolve_model_path(path), map_location=device)
+    └── model.eval()
+
+get_method_params(model) → {method: (ci, ri, co, ro)}
+    └── model.<method>_params → Tensor[4] → tuple
+
+compute_layout(method_params, bufsize) → (block_size, max_in, max_out)
+    └── max(input_ratio × output_ratio, bufsize) über alle Methoden
+
+infer_method(model, device, method, params, input_block) → numpy array
+    ├── 2D input (ci, bs) → forward/encode/decode/prior → 2D output
+    └── 3D input (B, ci, bs) → batched forward → 3D output (Phase 6)
+
+detect_model_type(model) → "RAVE" | "AFTER" | "MusicNet" | "TorchScript" | "unknown"
+    └── model._c._type().name() → String-Matching
+
+detect_model_attributes(model) → {name: value}  (skalare ≤32 Elemente)
+    └── KNOWN_ATTRIBUTE_PATTERNS: sr, sample_rate, latent_size, ...
+
+collect_model_info(model, path) → dict
+    ├── method_params, compute_layout, detect_model_type, detect_model_attributes
+    └── model_type, methods[], params{}, layout{}, attributes{}, labels{}
+
+query_model(path) → stdout → sys.exit(0)
+    └── load → collect_model_info → print_info_block → MAB_INFO_BEGIN/END
+```
+
+### RAVE-Methoden-Parameter-Konvention
+
+Jedes RAVE/AFTER-Modell exportiert `{method}_params` als Tensor `[ci, ri, co, ro]`:
+
+| Methode | ci (in) | ri (ratio) | co (out) | ro (ratio) | Semantik |
+|---------|---------|------------|----------|------------|----------|
+| `forward` | 1 | 1 | 1 | 1 | Audio → Encode → Decode → Audio |
+| `encode` | 1 | 1 | latent | block | Audio → Latent |
+| `decode` | latent | block | 1 | 1 | Latent → Audio |
+| `prior` | 1 | block | latent | block | Conditioning → Latent-Sample |
+
+**Kritisches Detail (infer_method, inference_worker:822-885):**
+`decode` und `prior` nehmen NUR das letzte Sample pro Kanal:
+```python
+# decode: input (ci, bs) → z = input[:, -1:] → model(z) → output
+# prior:  input (ci, bs) → z = input[:, -1:] → model(z) → output
+```
+Das bedeutet: bei einem Block von 2048 Samples wird nur Sample 2048 verwendet.
+Die restlichen 2047 Samples werden ignoriert. Der Output wird auf die
+angeforderte block_size getrimmt.
+
+### Test-Ausführung (Lokal, ohne Max)
+
+```powershell
+# Alle Python-Tests:
+.venv\Scripts\python -m pytest test/ -v
+
+# Nur Modell-Lade-Tests:
+.venv\Scripts\python -m pytest test/test_model_loading.py -v
+
+# Nur mab.info-Tests:
+.venv\Scripts\python -m pytest test/test_mab_info_models.py -v
+
+# Nur Dispatch-Tests:
+.venv\Scripts\python -m pytest test/test_infer_all_models.py -v
+
+# GPU-Tests (nur mit CUDA):
+.venv\Scripts\python -m pytest test/ -v -k "gpu"
+
+# C++-Tests bauen + ausführen:
+cmake --build --preset debug
+Get-ChildItem build\Debug\test_*.exe | ForEach-Object { & $_ }
+```
+
+### Externe Referenzen
+
+| Quelle | URL | Relevanz |
+|--------|-----|----------|
+| RAVE GitHub | https://github.com/acids-ircam/rave | Modell-Architektur, --streaming-Export, Configuration-Typen |
+| nn_tilde GitHub | https://github.com/acids-ircam/nn_tilde | Paritäts-Referenz: Messages, Attribute, MC/mcs-IO |
+| RAVE Pretrained Models | https://acids-ircam.github.io/rave_models_download | Referenz-Modelle für Kompatibilitätstests |
+| nn~ Scripting Examples | https://github.com/acids-ircam/nn_tilde/tree/master/scripting | effects.py/features.py/unmix.py → Modell-Typen ohne RAVE-Methoden |
+| PyTorch JIT Docs | https://pytorch.org/docs/stable/jit.html | `torch.jit.load()`, `ScriptModule`, `_c.get_methods()` |
+

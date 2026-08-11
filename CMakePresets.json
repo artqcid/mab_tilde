@@ -22,5 +22,16 @@
       "configurePreset": "debug",
       "configuration": "Release"
     }
+  ],
+  "testPresets": [
+    {
+      "name": "debug",
+      "displayName": "Test Debug",
+      "configurePreset": "debug",
+      "configuration": "Debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
   ]
 }

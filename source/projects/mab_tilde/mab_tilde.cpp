@@ -67,6 +67,7 @@ static_assert(sizeof(SharedMemoryHeader) == 192,
 
 static t_class* mab_tilde_class = nullptr;
 static t_class* mc_mab_tilde_class = nullptr;
+static t_class* mcs_mab_tilde_class = nullptr;
 
 typedef struct _mab_tilde {
     t_pxobject ob;
@@ -91,7 +92,7 @@ typedef struct _mab_tilde {
     char method_name[64];
     long buffer_size;
     long gpu;
-    long cores;            // PyTorch-Inferenz-Threads (1 = kein All-Core-Spread)
+    long cores;            // PyTorch-Inferenz-Threads (Default 2, Clamp 1..64)
     
     // Runtime state
     long num_channels;
@@ -125,7 +126,18 @@ typedef struct _mab_tilde {
     long is_mc;                // 1 = mc.mab~ mode, 0 = mab~ mode
     long channel_map[16];      // per-inlet channel count (MC mode, max 16 inlets)
     long n_batches;            // fixed output channels from `chans` attribute (0 = auto)
+
+    // Phase 6: mcs.mab~ (Batched Multichannel) support fields
+    long is_mcs;               // 1 = mcs.mab~ mode, 0 = mab~/mc.mab~ mode
+    long mcs_batches;          // number of batch inlets/outlets (mcs.mab~, 1..16)
 } t_mab_tilde;
+
+// Phase 6: shared prefix helper so all variants post the correct class name.
+static const char* mab_tilde_prefix(t_mab_tilde* x) {
+    if (x->is_mcs) return "mcs.mab~";
+    if (x->is_mc) return "mc.mab~";
+    return "mab~";
+}
 
 // ============================================================================
 // ALL Max SDK methods must be declared in extern "C" block
@@ -169,6 +181,13 @@ extern "C" {
     long mc_inputchanged(t_mab_tilde* x, long index, long count);
     void mc_mab_tilde_chans(t_mab_tilde* x, long n);
 
+    // Phase 6: mcs.mab~ (Batched Multichannel)
+    void* mcs_mab_tilde_new(t_symbol* s, long argc, t_atom* argv);
+    void mcs_mab_tilde_dsp64(t_mab_tilde* x, t_object* dsp64, short* count, double samplerate, long maxvectorsize, long flags);
+    void mcs_mab_tilde_perform64(t_mab_tilde* x, t_object* dsp64, double** ins, long numins, double** outs, long numouts, long sampleframes, long flags, void* userparam);
+    long mcs_multichanneloutputs(t_mab_tilde* x, long index, long count);
+    long mcs_inputchanged(t_mab_tilde* x, long index, long count);
+
     // Shared helper for MC and mono IO rebuild
     void mab_tilde_rebuild_io(t_mab_tilde* x, long new_in, long new_out);
 
@@ -176,11 +195,49 @@ extern "C" {
 }
 
 // ============================================================================
-// Phase 5 ext_main: compiled twice via CMake target_compile_definitions.
-// mab~.mxe64: MC_MAB_TILDE_MODULE is NOT defined → registers mab~ class only.
-// mc.mab~.mxe64: MC_MAB_TILDE_MODULE IS defined → registers mc.mab~ class only.
+// Phase 5/6 ext_main: compiled three times via CMake target_compile_definitions.
+// mab~.mxe64:     no define            → registers mab~ class only.
+// mc.mab~.mxe64:  MC_MAB_TILDE_MODULE  → registers mc.mab~ class only.
+// mcs.mab~.mxe64: MCS_MAB_TILDE_MODULE → registers mcs.mab~ class only.
 // ============================================================================
-#ifdef MC_MAB_TILDE_MODULE
+#if defined(MCS_MAB_TILDE_MODULE)
+void ext_main(void* r) {
+    t_class* mcs_class = class_new("mcs.mab~",
+                                   (method)mcs_mab_tilde_new,
+                                   (method)mab_tilde_free,
+                                   (long)sizeof(t_mab_tilde),
+                                   0L,
+                                   A_GIMME,
+                                   0);
+
+    class_addmethod(mcs_class, (method)mcs_mab_tilde_dsp64, "dsp64", A_CANT, 0);
+    class_addmethod(mcs_class, (method)mab_tilde_assist, "assist", A_CANT, 0);
+
+    // MC-specific callbacks (nn_tilde-Parität P9: mcs = wie mc + n_batches)
+    class_addmethod(mcs_class, (method)mcs_multichanneloutputs, "multichanneloutputs", A_CANT, 0);
+    class_addmethod(mcs_class, (method)mcs_inputchanged, "inputchanged", A_CANT, 0);
+
+    // chans attribute: fixed per-batch output channel count (nn_tilde-Parität P8/P9)
+    class_addmethod(mcs_class, (method)mc_mab_tilde_chans, "chans", A_LONG, 0);
+
+    // Shared message handlers (same as mab~ / mc.mab~)
+    class_addmethod(mcs_class, (method)mab_tilde_enable, "enable", A_LONG, 0);
+    class_addmethod(mcs_class, (method)mab_tilde_gpu, "gpu", A_LONG, 0);
+    class_addmethod(mcs_class, (method)mab_tilde_reload, "reload", A_SYM, 0);
+    class_addmethod(mcs_class, (method)mab_tilde_dump, "dump", 0);
+    class_addmethod(mcs_class, (method)mab_tilde_set, "set", A_GIMME, 0);
+    class_addmethod(mcs_class, (method)mab_tilde_get, "get", A_SYM, 0);
+    class_addmethod(mcs_class, (method)mab_tilde_method, "method", A_GIMME, 0);
+    class_addmethod(mcs_class, (method)mab_tilde_load, "load", A_SYM, 0);
+    class_addmethod(mcs_class, (method)mab_tilde_anything, "anything", A_GIMME, 0);
+
+    class_dspinit(mcs_class);
+    class_register(CLASS_BOX, mcs_class);
+    mcs_mab_tilde_class = mcs_class;
+
+    post("mcs.mab~: Batched multichannel external loaded successfully.");
+}
+#elif defined(MC_MAB_TILDE_MODULE)
 void ext_main(void* r) {
     t_class* mc_class = class_new("mc.mab~",
                                   (method)mc_mab_tilde_new,
@@ -275,7 +332,7 @@ void* mab_tilde_new(t_symbol* s, long argc, t_atom* argv) {
     x->method_name[0] = '\0';
     x->buffer_size = 512;
     x->gpu = 0;
-    x->cores = 1;
+    x->cores = 2;   // Default: 2 PyTorch-Inferenz-Threads (Clamping 1..64)
     x->control_size = 0;
     memset(x->control_buffer, 0, sizeof(x->control_buffer));
 
@@ -661,11 +718,12 @@ void mab_tilde_apply_io(t_mab_tilde* x) {
     x->in_pos = 0;
     x->out_pos = 0;
 
-    // Phase 5: mc.mab~ hat IMMER genau 1 Multichannel-Inlet + 1 Multichannel-
-    // Outlet. Die Kanalzahl wird über das MC-System transportiert (channel_map
+    // Phase 5/6: mc.mab~ hat IMMER genau 1 Multichannel-Inlet + 1 Multichannel-
+    // Outlet; mcs.mab~ hat `mcs_batches` Multichannel-Inlets/-Outlets (eines pro
+    // Batch). Die Kanalzahl wird über das MC-System transportiert (channel_map
     // / multichanneloutputs), nicht über die Inlet-Anzahl.
-    long io_in = x->is_mc ? 1 : model_in;
-    long io_out = x->is_mc ? 1 : model_out;
+    long io_in = x->is_mcs ? x->mcs_batches : (x->is_mc ? 1 : model_in);
+    long io_out = x->is_mcs ? x->mcs_batches : (x->is_mc ? 1 : model_out);
     if (x->is_mc) {
         // Stale per-inlet counts der alten Methode verwerfen; dsp64 publiziert
         // die echten Werte nach dem Rebuild.
@@ -678,7 +736,7 @@ void mab_tilde_apply_io(t_mab_tilde* x) {
     mab_tilde_rebuild_io(x, io_in, io_out);
 
     x->method_pending = 0;
-    const char* prefix = x->is_mc ? "mc.mab~" : "mab~";
+    const char* prefix = mab_tilde_prefix(x);
     post("%s: IO layout: %ld inlets, %ld outlets, method=%s (model %ld in / %ld out)",
          prefix, io_in, io_out, x->active_method, model_in, model_out);
 }
@@ -713,14 +771,18 @@ extern "C" void init_worker(t_mab_tilde* x) {
                         (int)sizeof(shm_name_utf8), NULL, NULL);
 
     char argbuf[2048];
-    snprintf(argbuf, sizeof(argbuf), "\"%s\" \"%s\" %ld %d \"%s\" %u %ld %ld",
+    // Phase 6: n_batches (nach gpu) wird für mcs.mab~ übergeben; mab~/mc.mab~
+    // senden immer 1 (Python-argparse: model method bufsize gpu n_batches
+    // shm_name instance_id num_channels cores).
+    snprintf(argbuf, sizeof(argbuf), "\"%s\" \"%s\" %ld %d %ld \"%s\" %u %ld %ld",
              x->model_path, x->method_name, x->buffer_size,
-             (int)x->gpu, shm_name_utf8, instance_id, x->num_channels,
+             (int)x->gpu, x->is_mcs ? x->mcs_batches : 1,
+             shm_name_utf8, instance_id, x->num_channels,
              x->cores);
 
     WorkerProcess wp;
     worker_launch(argbuf, false, &wp);
-    const char* prefix = x->is_mc ? "mc.mab~" : "mab~";
+    const char* prefix = mab_tilde_prefix(x);
     if (!wp.process) {
         post("%s: Failed to launch Python process. Running in bypass.", prefix);
         InterlockedExchange(&x->is_bypass, 1);
@@ -1115,7 +1177,7 @@ void* mc_mab_tilde_new(t_symbol* s, long argc, t_atom* argv) {
     x->method_name[0] = '\0';
     x->buffer_size = 512;
     x->gpu = 0;
-    x->cores = 1;
+    x->cores = 2;   // Default: 2 PyTorch-Inferenz-Threads (mc.mab~)
     x->control_size = 0;
     memset(x->control_buffer, 0, sizeof(x->control_buffer));
 
@@ -1364,11 +1426,352 @@ long mc_inputchanged(t_mab_tilde* x, long index, long count) {
     return 1;
 }
 
-// chans <n>: set a fixed number of output channels (nn_tilde-Parität P8).
-// When set to 0, output channels are auto-detected from the model layout.
+// chans <n>: set a fixed number of output channels per (mc/mcs) outlet
+// (nn_tilde-Parität P8/P9). When set to 0, output channels are auto-detected
+// from the model layout. Shared by mc.mab~ and mcs.mab~.
 void mc_mab_tilde_chans(t_mab_tilde* x, long n) {
     if (n < 0) n = 0;
     if (n > MAX_CHANNELS * 16) n = MAX_CHANNELS * 16;
     x->n_batches = n;
-    post("mc.mab~: chans set to %ld", n);
+    post("%s: chans set to %ld", mab_tilde_prefix(x), n);
+}
+
+// ============================================================================
+// Phase 6: mcs.mab~ (Batched Multichannel) Implementation
+// ============================================================================
+//
+// mcs.mab~ erweitert mc.mab~ um `mcs_batches` parallele Batch-Inlets/-Outlets
+// (nn_tilde-Parität P9): Jedes Batch-Inlet ist ein Multichannel-Inlet mit
+// `channel_map[b]` Kanälen (Modell-Layout: `channels_in` pro Batch), jedes
+// Batch-Outlet liefert `channels_out` (oder `chans`) Kanäle.
+//
+// Shared-Memory-Layout (6.3): batch-major [n_batches x channels x block_size].
+// C++ schreibt Zeile `b*ci + c` (Batch b, Kanal c), Python viewed
+// `(n_batches, ci, block_size)`. Abweichend von nn_tildes interleaved
+// `c*B + b` - bewusste Design-Entscheidung (checklist.md 6.0).
+
+// mcs.mab~ constructor. Shares the same t_mab_tilde struct and worker with
+// mab~/mc.mab~; sets is_mcs=1 (and is_mc=1 for MC outlets / Z_MC_INLETS).
+void* mcs_mab_tilde_new(t_symbol* s, long argc, t_atom* argv) {
+    t_mab_tilde* x = (t_mab_tilde*)object_alloc(mcs_mab_tilde_class);
+    if (!x) return nullptr;
+
+    // Phase 6: mcs.mab~ hat `mcs_batches` Multichannel-Inlets/-Outlets.
+    // Start mit 1 Inlet/Outlet; apply_io baut nach Worker-Connect um.
+    dsp_setup((t_pxobject*)x, 1);
+    // Z_MC_INLETS = Kanalzahl eingehender MC-Signale zählen (wie mc.mab~).
+    x->ob.z_misc |= Z_NO_INPLACE | Z_MC_INLETS;
+    outlet_new(x, "multichannelsignal");
+
+    // Initialize variables (same as mab~/mc.mab~)
+    x->is_ready = 0;
+    x->is_bypass = 1;
+    x->num_channels = 1;
+
+    x->init_thread = nullptr;
+    x->python_process = nullptr;
+    x->ready_event = nullptr;
+    x->input_ready_event = nullptr;
+    x->hMapFile = nullptr;
+    x->header = nullptr;
+    x->p_input = nullptr;
+    x->p_output = nullptr;
+    x->p_control = nullptr;
+
+    x->model_path[0] = '\0';
+    x->method_name[0] = '\0';
+    x->buffer_size = 512;
+    x->gpu = 0;
+    x->cores = 2;   // Default: 2 PyTorch-Inferenz-Threads (mcs.mab~)
+    x->control_size = 0;
+    memset(x->control_buffer, 0, sizeof(x->control_buffer));
+
+    buffer_manager_init(&x->buffer_mgr);
+
+    // Phase 3: method-aware IO state
+    x->active_method[0] = '\0';
+    x->active_method_id = 0;
+    x->channels_in = 1;
+    x->channels_out = 1;
+    x->in_pos = 0;
+    x->out_pos = 0;
+    x->method_pending = 0;
+    x->io_qelem = qelem_new(x, (method)mab_tilde_apply_io);
+    x->crash_clock = clock_new(x, (method)mab_tilde_check_crash);
+
+    // Phase 6: mcs fields (mcs.mab~ mode: is_mcs=1, is_mc=1)
+    x->is_mcs = 1;
+    x->is_mc = 1;
+    x->mcs_batches = 1;  // 1 = single batch (mc-like behaviour)
+    x->n_batches = 0;    // `chans` per-outlet channel count (0 = auto)
+    for (long i = 0; i < 16; i++) x->channel_map[i] = 0;
+
+    // Parse arguments. mcs.mab~ uses its own order (nn_tilde-Parität P9):
+    //   [mcs.mab~ model method n_batches bufsize gpu cores]
+    //   [mcs.mab~ void n_batches bufsize]
+    long void_mode = 0;
+    if (argc >= 1) {
+        t_symbol* first = atom_getsym(argv);
+        if (first && first->s_name && strcmp(first->s_name, "void") == 0)
+            void_mode = 1;
+    }
+
+    if (void_mode) {
+        // mcs.mab~ void <n_batches> <bufsize>
+        long nb = (argc >= 2) ? atom_getlong(argv + 1) : 1;
+        if (argc >= 3) x->buffer_size = atom_getlong(argv + 2);
+        if (nb < 1) nb = 1;
+        if (nb > MAX_CHANNELS) nb = MAX_CHANNELS;
+        x->mcs_batches = nb;
+        x->channels_in = 1;
+        x->channels_out = 1;
+        x->num_channels = 1;
+        // In void mode each batch inlet/outlet is multichannel with 1 channel
+        for (long i = 0; i < nb; i++) x->channel_map[i] = 1;
+        strncpy(x->active_method, "forward", sizeof(x->active_method) - 1);
+        x->active_method[sizeof(x->active_method) - 1] = '\0';
+        x->active_method_id = 0;
+
+        // Direct IO setup (main thread, no qelem needed)
+        mab_tilde_rebuild_io(x, nb, nb);
+        post("mcs.mab~: void mode: %ld batch inlets/outlets, buffer_size=%ld",
+             nb, x->buffer_size);
+        return x;
+    }
+
+    if (argc >= 1) {
+        t_symbol* model_sym = atom_getsym(argv);
+        if (model_sym && model_sym->s_name) {
+            strncpy(x->model_path, model_sym->s_name, sizeof(x->model_path) - 1);
+            char resolved[MAX_PATH];
+            if (mab_resolve_model_path(x->model_path, resolved, sizeof(resolved)))
+                strncpy(x->model_path, resolved, sizeof(x->model_path) - 1);
+        }
+    }
+    if (argc >= 2) {
+        t_symbol* method_sym = atom_getsym(argv + 1);
+        if (method_sym && method_sym->s_name) {
+            strncpy(x->method_name, method_sym->s_name, sizeof(x->method_name) - 1);
+        }
+    }
+    if (argc >= 3) {
+        long nb = atom_getlong(argv + 2);
+        if (nb < 1) nb = 1;
+        if (nb > MAX_CHANNELS) nb = MAX_CHANNELS;
+        x->mcs_batches = nb;
+    }
+    if (argc >= 4) x->buffer_size = atom_getlong(argv + 3);
+    if (argc >= 5) x->gpu = atom_getlong(argv + 4);
+    if (argc >= 6) {
+        x->cores = atom_getlong(argv + 5);
+        if (x->cores < 1) x->cores = 1;
+        if (x->cores > 64) x->cores = 64;
+    }
+
+    // If a model path was provided, start the worker immediately.
+    if (x->model_path[0] != '\0') {
+        x->init_thread = new std::thread(init_worker_thread, x);
+    } else {
+        post("mcs.mab~: Created in 'no model' state. Use [load <model>] to start.");
+    }
+
+    return x;
+}
+
+// mcs.mab~: dsp64 callback. Reads the channel count per batch inlet from the
+// Max DSP chain and publishes the map to the worker. `count[i]` = channels
+// connected to batch inlet i. x->channels_in (model layout) stays untouched.
+void mcs_mab_tilde_dsp64(t_mab_tilde* x, t_object* dsp64, short* count, double samplerate, long maxvectorsize, long flags) {
+    long n_inlets = x->mcs_batches;
+    if (n_inlets < 1) n_inlets = 1;
+    if (n_inlets > MAX_CHANNELS) n_inlets = MAX_CHANNELS;
+
+    long total_in = 0;
+    for (long i = 0; i < n_inlets; i++) {
+        long ch = (count && i < n_inlets) ? (long)count[i] : 1;
+        if (ch < 1) ch = 1;
+        if (ch > MAX_CHANNELS) ch = MAX_CHANNELS;
+        x->channel_map[i] = ch;
+        total_in += ch;
+    }
+    // Stale entries beyond the current batch count are cleared.
+    for (long i = n_inlets; i < MAX_CHANNELS; i++) x->channel_map[i] = 0;
+
+    if (x->header) {
+        for (long i = 0; i < MAX_CHANNELS; i++) {
+            x->header->channel_map[i] = (uint32_t)x->channel_map[i];
+        }
+    }
+
+    if (total_in != x->channels_in * n_inlets) {
+        post("mcs.mab~: DSP: %ld batch inlet(s), %ld channel(s) connected "
+             "(model expects %ld per batch). Unconnected channels are silenced.",
+             n_inlets, total_in, x->channels_in);
+    }
+
+    object_method(dsp64, gensym("dsp_add64"), x, mcs_mab_tilde_perform64, 0, NULL);
+}
+
+// mcs.mab~: MC-aware batched perform function. Wires the flat per-inlet
+// channel arrays from Max into the batch-major shared-memory rows `b*ci+c`
+// (input) and back from rows `b*co+c` into the per-batch multichannel outlets
+// (output). Missing input channels are zero-padded; extra outlet channels
+// (e.g. `chans` larger than the model output) are silenced.
+void mcs_mab_tilde_perform64(t_mab_tilde* x, t_object* dsp64, double** ins, long numins, double** outs, long numouts, long sampleframes, long flags, void* userparam) {
+    long n = sampleframes;
+    if (n < 0) n = 0;
+
+    // Bypass mode: pass through as many channels as available (flat order).
+    if (!x->is_ready || x->is_bypass || !x->header) {
+        long pass = (numins < numouts) ? numins : numouts;
+        for (long ch = 0; ch < numouts; ch++) {
+            double* out = outs[ch];
+            double* in = (ch < pass && ins[ch]) ? ins[ch] : nullptr;
+            for (long i = 0; i < n; i++) out[i] = in ? in[i] : 0.0;
+        }
+        return;
+    }
+
+    const long blk = (long)x->header->block_size;
+    if (blk < 1) {
+        for (long ch = 0; ch < numouts; ch++)
+            for (long i = 0; i < n; i++) outs[ch][i] = 0.0;
+        return;
+    }
+
+    // Model-declared channel counts (stable; never the per-inlet wiring).
+    const long ci = x->channels_in;
+    const long co = x->channels_out;
+    const long n_batches = x->mcs_batches;
+    if (n_batches < 1) {
+        for (long ch = 0; ch < numouts; ch++)
+            for (long i = 0; i < n; i++) outs[ch][i] = 0.0;
+        return;
+    }
+
+    // Method-change detection (same as mab~/mc.mab~)
+    if (!x->method_pending &&
+        (x->header->method_id != x->active_method_id ||
+         (long)x->header->channels_in != x->channels_in ||
+         (long)x->header->channels_out != x->channels_out)) {
+        x->method_pending = 1;
+        qelem_set(x->io_qelem);
+    }
+
+    // Phase 6 (6.3): batch-major rows. Input row = b*ci + c, output row = b*co + c.
+    const long total_ci = n_batches * ci;
+    const long total_co = n_batches * co;
+    const size_t input_buffer_stride = (size_t)total_ci * (size_t)blk;
+    const size_t output_buffer_stride = (size_t)total_co * (size_t)blk;
+
+    // A1: Double-buffered input. Max delivers the connected channels flat
+    // (inlet 0 channels first, then inlet 1, ...), so the wiring below maps
+    // flat index -> (batch, channel). Missing rows (unconnected channels) stay
+    // nullptr and are zero-padded by block_accumulate_write.
+    if (x->header->is_input_ready == 0) {
+        uint32_t in_idx = x->header->input_buffer_index & 1;
+        float* input_ptr = x->p_input + in_idx * input_buffer_stride;
+
+        const double* wired[MAX_CHANNELS * MAX_CHANNELS] = { nullptr };
+        long flat = 0;
+        for (long b = 0; b < n_batches; b++) {
+            long ch_conn = x->channel_map[b];
+            if (ch_conn < 0) ch_conn = 0;
+            if (ch_conn > ci) ch_conn = ci;
+            for (long c = 0; c < ch_conn && flat < numins; c++, flat++) {
+                if (ins[flat]) wired[b * ci + c] = ins[flat];
+            }
+        }
+
+        if (block_accumulate_write(input_ptr, total_ci, blk, n,
+                                   wired, total_ci, x->in_pos)) {
+            x->header->input_buffer_index = 1 - in_idx;
+            InterlockedExchange(&x->header->is_input_ready, 1);
+            if (x->input_ready_event) {
+                SetEvent(x->input_ready_event);
+            }
+        }
+    }
+
+    // A1: Double-buffered output. Drain the batch-major rows back into the
+    // per-batch multichannel outlets (outlet b starts at flat b*per_outlet).
+    if (x->header->is_output_ready == 1) {
+        uint32_t out_idx = x->header->output_buffer_index & 1;
+        float* output_ptr = x->p_output + out_idx * output_buffer_stride;
+
+        // Per-outlet channel count as reported by mcs_multichanneloutputs.
+        long per_outlet = (x->n_batches > 0) ? x->n_batches : co;
+        if (per_outlet < 1) per_outlet = 1;
+
+        double* wired_out[MAX_CHANNELS * MAX_CHANNELS] = { nullptr };
+        for (long b = 0; b < n_batches; b++) {
+            for (long c = 0; c < co; c++) {
+                long flat_idx = b * per_outlet + c;
+                if (flat_idx < numouts && outs[flat_idx]) {
+                    wired_out[b * co + c] = outs[flat_idx];
+                }
+            }
+        }
+
+        if (block_accumulate_read(output_ptr, total_co, blk, n,
+                                  wired_out, total_co, x->out_pos)) {
+            InterlockedExchange(&x->header->is_output_ready, 0);
+            x->header->output_buffer_index = 1 - out_idx;
+        }
+
+        // Outlets beyond the model's channel count per batch: silence
+        // (no stale data), e.g. `chans 2` on a mono-output decode.
+        for (long b = 0; b < n_batches; b++) {
+            for (long c = co; c < per_outlet; c++) {
+                long flat_idx = b * per_outlet + c;
+                if (flat_idx < numouts && outs[flat_idx]) {
+                    for (long i = 0; i < n; i++) outs[flat_idx][i] = 0.0;
+                }
+            }
+        }
+    } else {
+        for (long ch = 0; ch < numouts; ch++) {
+            double* out = outs[ch];
+            for (long i = 0; i < n; i++) out[i] = 0.0;
+        }
+    }
+}
+
+// multichanneloutputs callback (mcs): called by Max per outlet index to
+// determine how many channels that outlet produces. Returns the fixed count
+// from `chans` (n_batches) if set, otherwise channels_out - same rule as
+// mc.mab~, applied to every batch outlet.
+long mcs_multichanneloutputs(t_mab_tilde* x, long index, long count) {
+    (void)index; (void)count;
+    if (x->n_batches > 0) {
+        return x->n_batches;
+    }
+    return x->channels_out;
+}
+
+// inputchanged callback (mcs): called by Max when the channel count on a batch
+// inlet changes. Updates channel_map[index] and publishes it to the worker.
+// x->channels_in (model layout) is untouched; a mismatch with the model's
+// per-batch input count is logged as a warning (nn_tilde-Parität P9).
+long mcs_inputchanged(t_mab_tilde* x, long index, long count) {
+    if (index < 0 || index >= MAX_CHANNELS) return 0;
+    if (count < 1) count = 1;
+    if (count > MAX_CHANNELS) count = MAX_CHANNELS;
+
+    if (x->channel_map[index] != count) {
+        x->channel_map[index] = count;
+        if (x->header) {
+            x->header->channel_map[index] = (uint32_t)count;
+        }
+        long total = 0;
+        for (long i = 0; i < MAX_CHANNELS; i++) total += x->channel_map[i];
+        post("mcs.mab~: batch inlet %ld channel count changed to %ld (total in=%ld)",
+             index, count, total);
+        if (count != x->channels_in) {
+            post("mcs.mab~: warning: batch %ld has %ld channel(s), model expects "
+                 "%ld per batch - unconnected channels are silenced",
+                 index, count, x->channels_in);
+        }
+    }
+    return 1;
 }

@@ -36,7 +36,7 @@
 		</objarg>
 		<objarg name='cores' optional='1' type='long'>
 			<digest>PyTorch thread count.</digest>
-			<description>Number of CPU threads used by PyTorch, OMP, MKL and OpenBLAS. Defaults to 1. Ignored in GPU mode.</description>
+			<description>Number of CPU threads used by PyTorch, OMP, MKL and OpenBLAS. Defaults to 2 (clamped 1..64). Ignored in GPU mode.</description>
 		</objarg>
 	</objarglist>
 

@@ -1,8 +1,23 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "mab-rave-assistant": {
+      "type": "local",
+      "command": [
+        "C:/Users/marku/Documents/GitHub/artqcid/ai-projects/mab_tilde/.venv/Scripts/python.exe",
+        "-u",
+        "mab_mcp_server.py"
+      ],
+      "cwd": "C:/Users/marku/Documents/GitHub/artqcid/ai-projects/mab_tilde",
+      "environment": {
+        "PYTHONUNBUFFERED": "1"
+      },
+      "enabled": true
+    }
+  },
   "agent": {
     "build": {
-      "model": "opencode-go/kimi-k2.7-code",
+      "model": "opencode-go/deepseek-v4-pro",
       "permission": {
         "edit": "allow",
         "bash": "allow",
@@ -11,7 +26,8 @@
         "websearch": "allow",
         "external_directory": "allow"
       },
-      "system": "[Aktiv: opencode-go/kimi-k2.7-code] Du implementierst C++/Python/Cmake-Änderungen für mab_tilde (Max/MSP-Extension). Antworte NUR mit:\n1. Liste geänderter Dateien (Pfade)\n2. Code (kein Fließtext)\n3. Testergebnis: PASS oder FAIL (+ Fehlerzeile bei FAIL)\nMCP-FIRST (verpflichtend, NUR in diesem Projekt):\n1. read(\"doc/checklist.md\") → Task verstehen\n2. read(\"doc/projektwissen.md\") → Structs, Konstanten, Threading (~200 Zeilen)\n3. query_code_wiki(\"<symbol>\") → Signatur, Datei, Zeilennummer (MCP)\n4. query_code_rag(query, format=\"compact\") → nur wenn Wiki-Wissen fehlt\n5. get_rag_chunk(\"<chunk_id>\") → nur benoetigten Chunk laden\n6. Quellcode NUR mit offset/limit lesen — NIE ganze Dateien\n7. doc/code_wiki.md NIE direkt lesen — IMMER via MCP abfragen\n\nPost-Task Sync (nach jedem abgeschlossenen Task):\n- index_project_code ausfuehren wenn MCP/Wiki nicht aktuell\n- Kein MCP-Zugriff: explizit zurueckmelden dass Sync aussteht"
+      "system": "[Aktiv: opencode-go/deepseek-v4-pro] Du implementierst C++/Python/Cmake-Änderungen für mab_tilde (Max/MSP-Extension). Antworte NUR mit:\n1. Liste geänderter Dateien (Pfade)\n2. Code (kein Fließtext)\n3. Testergebnis: PASS oder FAIL (+ Fehlerzeile bei FAIL)\nMCP-FIRST (verpflichtend, NUR in diesem Projekt):\n1. read(\"doc/checklist.md\") → Task verstehen\n2. read(\"doc/projektwissen.md\") → Structs, Konstanten, Threading (~200 Zeilen)\n3. query_code_wiki(\"<symbol>\") → Signatur, Datei, Zeilennummer (MCP)\n4. query_code_rag(query, format=\"compact\") → nur wenn Wiki-Wissen fehlt\n5. get_rag_chunk(\"<chunk_id>\") → nur benoetigten Chunk laden\n6. Quellcode NUR mit offset/limit lesen — NIE ganze Dateien\n7. doc/code_wiki.md NIE direkt lesen — IMMER via MCP abfragen\n\nPost-Task Sync (nach jedem abgeschlossenen Task):\n- index_project_code ausfuehren wenn MCP/Wiki nicht aktuell\n- Kein MCP-Zugriff: explizit zurueckmelden dass Sync aussteht",
+      "mode": "primary"
     },
     "general": {
       "model": "opencode-go/deepseek-v4-flash",
@@ -56,7 +72,8 @@
         "webfetch": "allow",
         "external_directory": "allow"
       },
-      "system": "[Aktiv: opencode-go/deepseek-v4-flash] Du implementierst C++/Python/CMake-Änderungen für mab_tilde (Max/MSP-Extension). MCP-FIRST (verpflichtend, NUR in diesem Projekt):\n1. read(\"doc/checklist.md\") → Task verstehen\n2. read(\"doc/projektwissen.md\") → Structs, Konstanten, Threading (~200 Zeilen)\n3. query_code_wiki(\"<symbol>\") → Signatur, Datei, Zeilennummer (MCP)\n4. query_code_rag(query, format=\"compact\") → nur wenn Wiki-Wissen fehlt\n5. get_rag_chunk(\"<chunk_id>\") → nur benoetigten Chunk laden\n6. Quellcode NUR mit offset/limit lesen — NIE ganze Dateien\n7. doc/code_wiki.md NIE direkt lesen — IMMER via MCP abfragen\n\nPost-Task Sync (nach jedem abgeschlossenen Task):\n- index_project_code ausfuehren wenn MCP/Wiki nicht aktuell\n- Kein MCP-Zugriff: explizit zurueckmelden dass Sync aussteht"
+      "system": "[Aktiv: opencode-go/deepseek-v4-flash] Du implementierst C++/Python/CMake-Änderungen für mab_tilde (Max/MSP-Extension). MCP-FIRST (verpflichtend, NUR in diesem Projekt):\n1. read(\"doc/checklist.md\") → Task verstehen\n2. read(\"doc/projektwissen.md\") → Structs, Konstanten, Threading (~200 Zeilen)\n3. query_code_wiki(\"<symbol>\") → Signatur, Datei, Zeilennummer (MCP)\n4. query_code_rag(query, format=\"compact\") → nur wenn Wiki-Wissen fehlt\n5. get_rag_chunk(\"<chunk_id>\") → nur benoetigten Chunk laden\n6. Quellcode NUR mit offset/limit lesen — NIE ganze Dateien\n7. doc/code_wiki.md NIE direkt lesen — IMMER via MCP abfragen\n\nPost-Task Sync (nach jedem abgeschlossenen Task):\n- index_project_code ausfuehren wenn MCP/Wiki nicht aktuell\n- Kein MCP-Zugriff: explizit zurueckmelden dass Sync aussteht",
+      "mode": "primary"
     },
     "DEV_OpenRouter": {
       "model": "openrouter/deepseek/deepseek-v4-flash",
@@ -70,7 +87,8 @@
         "webfetch": "allow",
         "external_directory": "allow"
       },
-      "system": "[Aktiv: openrouter/deepseek-v4-flash] Du implementierst C++/Python/CMake-Änderungen für mab_tilde (Max/MSP-Extension). MCP-FIRST (verpflichtend, NUR in diesem Projekt):\n1. read(\"doc/checklist.md\") → Task verstehen\n2. read(\"doc/projektwissen.md\") → Structs, Konstanten, Threading (~200 Zeilen)\n3. query_code_wiki(\"<symbol>\") → Signatur, Datei, Zeilennummer (MCP)\n4. query_code_rag(query, format=\"compact\") → nur wenn Wiki-Wissen fehlt\n5. get_rag_chunk(\"<chunk_id>\") → nur benoetigten Chunk laden\n6. Quellcode NUR mit offset/limit lesen — NIE ganze Dateien\n7. doc/code_wiki.md NIE direkt lesen — IMMER via MCP abfragen\n\nPost-Task Sync (nach jedem abgeschlossenen Task):\n- index_project_code ausfuehren wenn MCP/Wiki nicht aktuell\n- Kein MCP-Zugriff: explizit zurueckmelden dass Sync aussteht"
+      "system": "[Aktiv: openrouter/deepseek-v4-flash] Du implementierst C++/Python/CMake-Änderungen für mab_tilde (Max/MSP-Extension). MCP-FIRST (verpflichtend, NUR in diesem Projekt):\n1. read(\"doc/checklist.md\") → Task verstehen\n2. read(\"doc/projektwissen.md\") → Structs, Konstanten, Threading (~200 Zeilen)\n3. query_code_wiki(\"<symbol>\") → Signatur, Datei, Zeilennummer (MCP)\n4. query_code_rag(query, format=\"compact\") → nur wenn Wiki-Wissen fehlt\n5. get_rag_chunk(\"<chunk_id>\") → nur benoetigten Chunk laden\n6. Quellcode NUR mit offset/limit lesen — NIE ganze Dateien\n7. doc/code_wiki.md NIE direkt lesen — IMMER via MCP abfragen\n\nPost-Task Sync (nach jedem abgeschlossenen Task):\n- index_project_code ausfuehren wenn MCP/Wiki nicht aktuell\n- Kein MCP-Zugriff: explizit zurueckmelden dass Sync aussteht",
+      "mode": "primary"
     },
     "Build_Openrouter": {
       "model": "openrouter/kimi-k2.7-code",
@@ -84,7 +102,8 @@
         "webfetch": "allow",
         "external_directory": "allow"
       },
-      "system": "[Aktiv: openrouter/kimi-k2.7-code] Du implementierst C++/Python/CMake-Änderungen für mab_tilde (Max/MSP-Extension). MCP-FIRST (verpflichtend, NUR in diesem Projekt):\n1. read(\"doc/checklist.md\") → Task verstehen\n2. read(\"doc/projektwissen.md\") → Structs, Konstanten, Threading (~200 Zeilen)\n3. query_code_wiki(\"<symbol>\") → Signatur, Datei, Zeilennummer (MCP)\n4. query_code_rag(query, format=\"compact\") → nur wenn Wiki-Wissen fehlt\n5. get_rag_chunk(\"<chunk_id>\") → nur benoetigten Chunk laden\n6. Quellcode NUR mit offset/limit lesen — NIE ganze Dateien\n7. doc/code_wiki.md NIE direkt lesen — IMMER via MCP abfragen\n\nPost-Task Sync (nach jedem abgeschlossenen Task):\n- index_project_code ausfuehren wenn MCP/Wiki nicht aktuell\n- Kein MCP-Zugriff: explizit zurueckmelden dass Sync aussteht"
+      "system": "[Aktiv: openrouter/kimi-k2.7-code] Du implementierst C++/Python/CMake-Änderungen für mab_tilde (Max/MSP-Extension). MCP-FIRST (verpflichtend, NUR in diesem Projekt):\n1. read(\"doc/checklist.md\") → Task verstehen\n2. read(\"doc/projektwissen.md\") → Structs, Konstanten, Threading (~200 Zeilen)\n3. query_code_wiki(\"<symbol>\") → Signatur, Datei, Zeilennummer (MCP)\n4. query_code_rag(query, format=\"compact\") → nur wenn Wiki-Wissen fehlt\n5. get_rag_chunk(\"<chunk_id>\") → nur benoetigten Chunk laden\n6. Quellcode NUR mit offset/limit lesen — NIE ganze Dateien\n7. doc/code_wiki.md NIE direkt lesen — IMMER via MCP abfragen\n\nPost-Task Sync (nach jedem abgeschlossenen Task):\n- index_project_code ausfuehren wenn MCP/Wiki nicht aktuell\n- Kein MCP-Zugriff: explizit zurueckmelden dass Sync aussteht",
+      "mode": "primary"
     }
   },
   "provider": {

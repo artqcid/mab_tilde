@@ -4,9 +4,10 @@
 """
 inference_worker.py
 
-A lock-free, process-isolated backend for MaxMSP objects `mab~` and `mc.mab~`.
-It creates shared memory and signals C++ to attach, then exchanges audio blocks
-via Windows shared memory with a lock-free SPSC ring buffer for control messages.
+A lock-free, process-isolated backend for MaxMSP objects `mab~`, `mc.mab~` and
+`mcs.mab~`. It creates shared memory and signals C++ to attach, then exchanges
+audio blocks via Windows shared memory with a lock-free SPSC ring buffer for
+control messages.
 
 Features
 --------
@@ -19,6 +20,9 @@ Features
 * Uses a single-producer / single-consumer ring buffer for messages – no Python
   `queue` overhead, fully lock-free.
 * Multi-channel support with contiguous memory layout [num_channels, block_size]
+* Phase 5 (mc.mab~): per-inlet channel counts via header channel_map.
+* Phase 6 (mcs.mab~): batch-major layout [n_batches x channels x block_size],
+  batched inference in one forward pass (view(n_batches, ci, bs)).
 """
 
 import sys
@@ -128,22 +132,29 @@ class SharedMemoryManager:
     
     def __init__(self, shm_name: str, ready_event_name: str,
                  block_size: int, channels_in: int, channels_out: int,
-                 input_ready_event_name: str = ""):
+                 input_ready_event_name: str = "", n_batches: int = 1):
         """buffers are sized for the MAXIMUM channel counts across all methods,
-        so a method switch never needs a shared-memory remap."""
+        so a method switch never needs a shared-memory remap.
+
+        Phase 6 (mcs.mab~): `n_batches` > 1 sizes the buffers batch-major
+        [n_batches x channels x block_size]; the views returned by
+        get_numpy_input/get_numpy_output are then 3-D (n_batches, channels,
+        block_size) so the worker can feed all batches through the model in a
+        single forward pass."""
         self.shm_name = shm_name
         self.ready_event_name = ready_event_name
         self.input_ready_event_name = input_ready_event_name or f"{shm_name}_InputReady"
         self.block_size = block_size
         self.channels_in = channels_in
         self.channels_out = channels_out
+        self.n_batches = max(1, int(n_batches))
         
         # Calculate buffer sizes
         # A1: allocate two input and two output buffers for overlapped I/O.
         self.header_size = ctypes.sizeof(SharedMemoryHeader)
         self.control_size = ctypes.sizeof(ControlRingBuffer)
-        self.input_size = block_size * channels_in * 4  # float32 = 4 bytes, one buffer
-        self.output_size = block_size * channels_out * 4
+        self.input_size = block_size * channels_in * self.n_batches * 4  # float32 = 4 bytes, one buffer
+        self.output_size = block_size * channels_out * self.n_batches * 4
         self.total_size = (self.header_size + self.control_size
                            + 2 * self.input_size + 2 * self.output_size)
 
@@ -323,25 +334,43 @@ class SharedMemoryManager:
         return True
     
     def get_numpy_input(self, index: int = 0, channels: int = 0) -> np.ndarray:
-        """Get NumPy view of input buffer `index` (zero-copy), sliced to `channels`."""
+        """Get NumPy view of input buffer `index` (zero-copy), sliced to `channels`.
+
+        mcs.mab~ (Phase 6, n_batches > 1): batch-major view
+        `(n_batches, channels_in, block_size)`; mono/mc.mab~: 2-D
+        `(channels_in, block_size)`.
+        """
         if channels <= 0:
             channels = self.channels_in
         base = ctypes.addressof(self._p_input.contents) + index * self.input_size
+        total = self.block_size * self.channels_in * self.n_batches
         arr = np.frombuffer(
-            (ctypes.c_float * (self.block_size * self.channels_in)).from_address(base),
+            (ctypes.c_float * total).from_address(base),
             dtype=np.float32
         )
+        if self.n_batches > 1:
+            return arr.reshape(self.n_batches, self.channels_in,
+                               self.block_size)[:, :channels]
         return arr.reshape(self.channels_in, self.block_size)[:channels]
 
     def get_numpy_output(self, index: int = 0, channels: int = 0) -> np.ndarray:
-        """Get NumPy view of output buffer `index` (zero-copy), sliced to `channels`."""
+        """Get NumPy view of output buffer `index` (zero-copy), sliced to `channels`.
+
+        mcs.mab~ (Phase 6, n_batches > 1): batch-major view
+        `(n_batches, channels_out, block_size)`; mono/mc.mab~: 2-D
+        `(channels_out, block_size)`.
+        """
         if channels <= 0:
             channels = self.channels_out
         base = ctypes.addressof(self._p_output.contents) + index * self.output_size
+        total = self.block_size * self.channels_out * self.n_batches
         arr = np.frombuffer(
-            (ctypes.c_float * (self.block_size * self.channels_out)).from_address(base),
+            (ctypes.c_float * total).from_address(base),
             dtype=np.float32
         )
+        if self.n_batches > 1:
+            return arr.reshape(self.n_batches, self.channels_out,
+                               self.block_size)[:, :channels]
         return arr.reshape(self.channels_out, self.block_size)[:channels]
 
     def read_channel_map(self) -> list:
@@ -768,6 +797,11 @@ def query_model(model_path: str):
                    % (model_path, base, pkg, pkg, pkg))
         info = {"error": msg, "model_path": resolved}
 
+    if "model" in locals():
+        del model
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
     print_info_block(info)
     sys.exit(0 if not info.get("error") else 1)
 
@@ -800,23 +834,34 @@ def infer_method(model, device, method: str, method_params: dict,
                        latent frame (nn_tilde `select(-1,-1)` semantics); the
                        output is then held to block_size by repeating frames
                        `output_ratio` times.
+
+    Phase 6 (mcs.mab~): a 3-D input block `(n_batches, channels_in,
+    block_size)` runs all batches through the model in ONE batched forward
+    pass (output `(n_batches, channels_out, block_size)`). A 2-D input block
+    keeps the original single-batch behaviour (output `(channels_out,
+    block_size)`), so existing callers stay unchanged.
     """
     ci, in_ratio, co, out_ratio = method_params[method]
-    block_size = input_block.shape[1]
+    block_size = input_block.shape[-1]
+    batched = input_block.ndim == 3
 
     tensor = torch.from_numpy(np.ascontiguousarray(input_block)).to(device)
 
     with torch.no_grad():
         if method in ("decode", "prior"):
-            z = tensor[:, -1].unsqueeze(0).unsqueeze(-1)  # (1, ci, 1)
+            if batched:
+                z = tensor[..., -1].unsqueeze(-1)          # (B, ci, 1)
+            else:
+                z = tensor[:, -1].unsqueeze(0).unsqueeze(-1)  # (1, ci, 1)
             out = getattr(model, method)(z)
         else:
-            x = tensor.unsqueeze(0)  # (1, ci, block_size)
-            out = getattr(model, method)(x)
+            if not batched:
+                tensor = tensor.unsqueeze(0)  # (1, ci, block_size)
+            out = getattr(model, method)(tensor)
 
     out = out.detach().cpu()
     if out.dim() == 2:
-        out = out.unsqueeze(0)   # (1, co, frames)
+        out = out.unsqueeze(0)   # (B, co, frames)
     if out.dim() < 3:
         out = out.unsqueeze(-1)
 
@@ -835,7 +880,9 @@ def infer_method(model, device, method: str, method_params: dict,
         pad = torch.zeros(out.size(0), co - out.size(1), out.size(-1))
         out = torch.cat([out, pad], dim=1)
 
-    return out[0, :co, :block_size].numpy().astype(np.float32)
+    if batched:
+        return out[:, :co, :block_size].numpy().astype(np.float32)  # (B, co, bs)
+    return out[0, :co, :block_size].numpy().astype(np.float32)      # (co, bs)
 
 
 # ---------------------------------------------------------------------------
@@ -1214,12 +1261,15 @@ def main():
     parser.add_argument("method", nargs='?', default="forward", help="Default inference method (e.g. forward)")
     parser.add_argument("bufsize", type=int, nargs='?', default=512, help="Audio block size in samples")
     parser.add_argument("gpu", type=int, nargs='?', default=0, help="0 = CPU only, 1 = GPU if available")
+    parser.add_argument("n_batches", type=int, nargs='?', default=1,
+                        help="Number of parallel batch inlets/outlets (mcs.mab~, Phase 6; 1 = mab~/mc.mab~)")
     parser.add_argument("shm_name", nargs='?', default="", help="Shared memory name (from C++)")
     parser.add_argument("instance_id", type=int, nargs='?', default=0, help="Process ID for event naming")
     parser.add_argument("num_channels", type=int, nargs='?', default=1, help="Number of audio channels (1 for mab~, up to 16 for mc.mab~)")
-    parser.add_argument("cores", type=int, nargs='?', default=1,
-                        help="PyTorch inference threads (default 1: prevents the "
-                             "all-core thread spread that causes ASIO XRuns)")
+    parser.add_argument("cores", type=int, nargs='?', default=2,
+                        help="PyTorch inference threads (default 2: balanced "
+                             "load without the all-core thread spread that "
+                             "causes ASIO XRuns)")
     parser.add_argument("--query", action="store_true",
                         help="Inspection mode for mab.info: load the model, print an info block on stdout and exit")
     # P11: Standalone-Befehle für mab.info (nn_tilde-Parität). Starten einen
@@ -1275,7 +1325,7 @@ def main():
         return  # unreachable (query_model calls sys.exit)
 
     # Debug: print received arguments
-    print(f"[inference_worker] Received args: model={args.model}, method={args.method}, bufsize={args.bufsize}, gpu={args.gpu}, instance_id={args.instance_id}, num_channels={args.num_channels}")
+    print(f"[inference_worker] Received args: model={args.model}, method={args.method}, bufsize={args.bufsize}, gpu={args.gpu}, n_batches={args.n_batches}, instance_id={args.instance_id}, num_channels={args.num_channels}")
     
     # Generate unique names for this instance
     shm_name = f"MabSharedMem_{args.instance_id:08X}"
@@ -1334,7 +1384,8 @@ def main():
         ready_event_name=ready_event_name,
         block_size=block_size,
         channels_in=max_channels_in,
-        channels_out=max_channels_out
+        channels_out=max_channels_out,
+        n_batches=args.n_batches
     )
 
     if not shm.create():
@@ -1524,34 +1575,50 @@ def main():
                 # No model / no layout - pass through (bypass)
                 ibuf = shm.get_numpy_input(in_idx)
                 obuf = shm.get_numpy_output(out_idx)
-                # Phase 5: mc.mab~ publishes the connected per-inlet channel
-                # count; copy exactly those channels through instead of relying
-                # on the (model-less) buffer shape.
-                ci = shm.get_total_input_channels()
-                ci = min(ci, ibuf.shape[0], obuf.shape[0])
-                for ch in range(ci):
-                    obuf[ch, :] = ibuf[ch, :]
+                if shm.n_batches > 1:
+                    # Phase 6: per-batch passthrough (batch b -> batch b)
+                    n_ch = min(ibuf.shape[1], obuf.shape[1])
+                    for b in range(shm.n_batches):
+                        obuf[b, :n_ch, :] = ibuf[b, :n_ch, :]
+                else:
+                    # Phase 5: mc.mab~ publishes the connected per-inlet channel
+                    # count; copy exactly those channels through instead of relying
+                    # on the (model-less) buffer shape.
+                    ci = shm.get_total_input_channels()
+                    ci = min(ci, ibuf.shape[0], obuf.shape[0])
+                    for ch in range(ci):
+                        obuf[ch, :] = ibuf[ch, :]
                 shm._p_header.is_output_ready = True
                 shm._p_header.is_input_ready = False
             else:
                 ci = method_params[active_method][0]
                 co = method_params[active_method][2]
-                # Phase 5: verify the MC wiring against the model layout and log
-                # a mismatch once (throttled via _mc_warned).
+                # Phase 5/6: verify the MC wiring against the model layout and log
+                # a mismatch once (throttled via _mc_warned). mcs.mab~ expects
+                # n_batches * ci total channels (ci per batch inlet).
+                expected = ci * shm.n_batches if shm.n_batches > 1 else ci
                 connected = shm.get_total_input_channels()
-                if connected != ci and connected != int(shm._p_header.channels_in):
+                if connected != expected and connected != int(shm._p_header.channels_in):
                     key = "mc_warned"
                     if getattr(shm, key, False) is False:
                         print(f"[inference_worker] MC wiring: {connected} channel(s) "
-                              f"connected, model '{active_method}' expects {ci} - "
-                              "unconnected channels are silenced")
+                              f"connected, model '{active_method}' expects {expected} "
+                              f"({ci} per batch) - unconnected channels are silenced")
                         setattr(shm, key, True)
-                elif connected == ci and getattr(shm, "mc_warned", False) is True:
+                elif connected == expected and getattr(shm, "mc_warned", False) is True:
                     setattr(shm, "mc_warned", False)
                 input_block = shm.get_numpy_input(in_idx, ci)
                 output_block = infer_method(
                     model, device, active_method, method_params, input_block)
-                shm.get_numpy_output(out_idx, co)[:, :] = output_block
+                out_view = shm.get_numpy_output(out_idx, co)
+                # Phase 6: batched inference returns (B, co, bs); strip the
+                # leading singleton batch dim when writing into the classic
+                # 2-D buffer view (defensive, single-batch mcs).
+                if output_block.ndim == 3 and output_block.shape[0] == 1 \
+                        and out_view.ndim == 2:
+                    out_view[:, :] = output_block[0]
+                else:
+                    out_view[:, :] = output_block
 
                 # Signal output is ready
                 shm._p_header.is_output_ready = True
