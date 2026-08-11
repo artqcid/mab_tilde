@@ -77,7 +77,9 @@ _Einlese-Reihenfolge: checklist.md → code_wiki.md → query_code_wiki → quer
 ### ❌ Offen
 
 - [ ] **5.8** Max-Runtime-Verifikation: `[mc.mab~ musicnet.ts decode 2048]` mit `[noise~ 16]`
-  - Deploy: `Copy-Item build\Debug\mc.mab~.mxe64 "$env:USERPROFILE\Documents\Max 9\Packages\mab_tilde\externals\"`
+  - **Fix deployt (2026-08-11):** `Z_MC_INLETS | Z_NO_INPLACE`-Flags in `mc_mab_tilde_new` + `mab_tilde_rebuild_io` (`z_dsp.h:45`, min-api-Referenz `c74_min_operator_vector.h:120-128`) — ohne `Z_MC_INLETS` lieferte Max nur Kanal 1 an den Inlet
+  - Erwartung: Max-Konsole zeigt `mc.mab~: DSP: 1 inlet(s), 16 channel(s) connected (model expects 16)`; alle 16 Latent-Kanäle wirken auf den Audio-Output
+  - Deploy: `Copy-Item build\Debug\mc.mab~.mxe64 "$env:USERPROFILE\Documents\Max 9\Packages\mab_tilde\externals\"` (Max dafür schließen/neu starten)
 
 ## Phase 6 – mcs.mab~ (Batched Multichannel)
 

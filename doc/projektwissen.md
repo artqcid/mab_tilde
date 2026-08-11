@@ -320,6 +320,16 @@ Outlet**. Die Kanalzahl wird über das MC-System transportiert:
 - `inputchanged`/`dsp64` melden die verbundenen Inlet-Kanäle → `channel_map`
 - perform64 erhält `numins` = Summe aller verbundenen Inlet-Kanäle (ein Buffer pro Kanal)
 
+**KRITISCH für MC-Funktion — `Z_MC_INLETS`-Flag:**
+Das `z_misc`-Feld des `t_pxobject` muss `Z_NO_INPLACE | Z_MC_INLETS` enthalten
+(`z_dsp.h:45`: "object knows how to count channels of incoming multi-channel
+signals"). Ohne `Z_MC_INLETS` liefert Max nur **Kanal 1** einer MC-Bundle an
+den Inlet → alle anderen Latent-Kanäle werden im Shared-Memory-Buffer genullt.
+Dieselben Flags setzt die min-api für `mc_operator_base`-Klassen
+(`c74_min_operator_vector.h:120-128`). Gesetzt in `mc_mab_tilde_new` und
+`mab_tilde_rebuild_io` (nach `dsp_resize`, da dieses das Flag potenziell
+zurücksetzt).
+
 **Unterschiede zu mab~:**
 - `is_mc = 1` → `mab_tilde_rebuild_io` erzeugt `"multichannelsignal"`-Outlets statt `"signal"`
 - MC-Callbacks: `multichanneloutputs` (Frage nach Output-Kanalzahl pro Outlet-Index) und

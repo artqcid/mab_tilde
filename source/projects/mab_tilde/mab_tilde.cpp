@@ -608,6 +608,16 @@ void mab_tilde_rebuild_io(t_mab_tilde* x, long new_in, long new_out) {
     // Rebuild inlets (dsp_resize creates/frees the signal proxies)
     dsp_resize((t_pxobject*)x, new_in);
 
+    // Phase 5: mc.mab~ Inlets müssen Multichannel-Signale zählen können.
+    // Z_MC_INLETS (z_dsp.h) meldet Max, dass das Objekt die Kanalzahl
+    // eingehender MC-Signale verarbeitet - ohne diesen Flag liefert Max nur
+    // Kanal 1 an ein Standard-Signal-Inlet. Z_NO_INPLACE verhindert
+    // In-Place-Bearbeitung (ins == outs). Dieselben Flags setzt die min-api
+    // für mc_operator-Klassen (c74_min_operator_vector.h:120-128).
+    if (x->is_mc) {
+        x->ob.z_misc |= Z_NO_INPLACE | Z_MC_INLETS;
+    }
+
     // Rebuild signal outlets: free the existing chain, then recreate.
     // Phase 5: mc.mab~ uses "multichannelsignal" outlets instead of "signal".
     while (x->ob.z_ob.o_outlet) {
@@ -1080,6 +1090,10 @@ void* mc_mab_tilde_new(t_symbol* s, long argc, t_atom* argv) {
 
     // Use dsp_setup with 1 inlet initially (will be resized after worker connects)
     dsp_setup((t_pxobject*)x, 1);
+    // Phase 5: Multichannel-Fähigkeit aktivieren (Z_MC_INLETS = Kanalzahl der
+    // eingehenden MC-Signale zählen; Z_NO_INPLACE = kein In-Place-Processing).
+    // Ohne Z_MC_INLETS liefert Max nur Kanal 1 an den Inlet.
+    x->ob.z_misc |= Z_NO_INPLACE | Z_MC_INLETS;
     outlet_new(x, "multichannelsignal");
 
     // Initialize variables (same as mab~)
@@ -1220,6 +1234,14 @@ void mc_mab_tilde_dsp64(t_mab_tilde* x, t_object* dsp64, short* count, double sa
         for (long i = 0; i < MAX_CHANNELS; i++) {
             x->header->channel_map[i] = (uint32_t)x->channel_map[i];
         }
+    }
+
+    // Läuft nur bei DSP-Kompilierung (nicht pro Tick): zeigt die tatsächlich
+    // verbundenen Kanalzahlen - wichtig für die MC-Verifikation (5.8).
+    if (total_in != x->channels_in) {
+        post("mc.mab~: DSP: %ld inlet(s), %ld channel(s) connected "
+             "(model expects %ld). Unconnected model channels are silenced.",
+             n_inlets, total_in, x->channels_in);
     }
 
     object_method(dsp64, gensym("dsp_add64"), x, mc_mab_tilde_perform64, 0, NULL);
