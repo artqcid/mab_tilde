@@ -144,12 +144,19 @@ bool worker_find_venv_python(const wchar_t* project_dir, wchar_t* out, size_t ou
         L"venv\\Scripts\\python.exe",
     };
     wchar_t probe[MAX_PATH];
-    for (size_t i = 0; i < sizeof(candidates) / sizeof(candidates[0]); i++) {
-        swprintf_s(probe, MAX_PATH, L"%ls\\%ls", project_dir, candidates[i]);
-        if (GetFileAttributesW(probe) != INVALID_FILE_ATTRIBUTES) {
-            wcsncpy_s(out, out_size, probe, _TRUNCATE);
-            return true;
+    wchar_t dir[MAX_PATH];
+    wcsncpy_s(dir, MAX_PATH, project_dir, _TRUNCATE);
+    while (true) {
+        for (size_t i = 0; i < sizeof(candidates) / sizeof(candidates[0]); i++) {
+            swprintf_s(probe, MAX_PATH, L"%ls\\%ls", dir, candidates[i]);
+            if (GetFileAttributesW(probe) != INVALID_FILE_ATTRIBUTES) {
+                wcsncpy_s(out, out_size, probe, _TRUNCATE);
+                return true;
+            }
         }
+        wchar_t* last = wcsrchr(dir, L'\\');
+        if (!last) break;
+        *last = L'\0';
     }
     return false;
 }

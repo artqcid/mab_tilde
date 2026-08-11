@@ -9,8 +9,8 @@
 
 param(
     [switch]$NoBuild,
-    [ValidateSet("Max8", "Max9")]
-    [string]$Target = "Max9"
+    [ValidateSet("Max 8", "Max 9")]
+    [string]$Target = "Max 9"
 )
 
 $ErrorActionPreference = "Stop"
@@ -62,6 +62,23 @@ if (Test-Path $pyc) {
     Remove-Item $pyc -Recurse -Force
     Write-Host "  __pycache__ removed" -ForegroundColor DarkGray
 }
+
+# 5. Set MAB_PROJECT_DIR env var + create venv junction (GPU/CUDA support)
+Write-Host "=== Environment setup ===" -ForegroundColor Cyan
+$oldEnv = [Environment]::GetEnvironmentVariable("MAB_PROJECT_DIR", "User")
+if ($oldEnv -ne $projectRoot) {
+    [Environment]::SetEnvironmentVariable("MAB_PROJECT_DIR", $projectRoot, "User")
+    Write-Host "  MAB_PROJECT_DIR = $projectRoot" -ForegroundColor Green
+}
+
+# venv junction: falls find_worker_dir über den Max-Package-Pfad auflöst,
+# findet worker_find_venv_python das .venv via Junction
+$venvJunction = "$targetDir\.venv"
+if (Test-Path $venvJunction) {
+    Remove-Item $venvJunction -Force -ErrorAction SilentlyContinue
+}
+New-Item -ItemType Junction -Path $venvJunction -Target "$projectRoot\.venv" -Force | Out-Null
+Write-Host "  .venv junction -> $projectRoot\.venv" -ForegroundColor Green
 
 Write-Host "=== Deploy complete ===" -ForegroundColor Green
 Write-Host "Restart Max $Target to load new externals." -ForegroundColor Yellow
