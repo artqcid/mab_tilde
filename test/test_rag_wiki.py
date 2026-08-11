@@ -164,6 +164,30 @@ inline bool bar(long n)
         self.assertIn("Inlets", by_name)
         self.assertEqual(by_name["Inlets"]["symbol_type"], "section")
 
+    def test_cpp_three_level_chunking(self):
+        """R2: 3-Ebenen-Chunking: Namespace -> Klasse -> Methode."""
+        src = '''namespace my_ns {
+    struct MyClass {
+        void foo(int x) {
+            return;
+        }
+        int bar() const {
+            return 42;
+        }
+    };
+}
+'''
+        chunks = mcp._chunk_cpp(src)
+        by_name = {c["symbol_name"]: c for c in chunks if c["symbol_name"]}
+        # MyClass sollte als Klasse erkannt werden
+        self.assertIn("MyClass", by_name)
+        self.assertEqual(by_name["MyClass"]["symbol_type"], "class")
+        # Methoden innerhalb der Klasse (innerhalb des Namespace)
+        self.assertIn("MyClass::foo", by_name)
+        self.assertEqual(by_name["MyClass::foo"]["symbol_type"], "method")
+        self.assertIn("MyClass::bar", by_name)
+        self.assertEqual(by_name["MyClass::bar"]["symbol_type"], "method")
+
 
 class RAGIntegrationTests(unittest.TestCase):
     def setUp(self):
@@ -204,9 +228,10 @@ class RAGIntegrationTests(unittest.TestCase):
         results = self.rag.query("mab_tilde_enable", top_k=3)
         self.assertTrue(results)
         for r in results:
-            self.assertIsInstance(r.get("id"), int)
+            self.assertIsInstance(r.get("chunk_id"), str)
+            self.assertTrue(r["chunk_id"].startswith("mab_"))
         self.assertIn("mab_", mcp.ProjectRAG.chunk_ref(results[0]))
-        self.assertIn(str(results[0]["id"]), mcp.ProjectRAG.chunk_ref(results[0]))
+        self.assertIn(results[0]["chunk_id"], mcp.ProjectRAG.chunk_ref(results[0]))
 
     def test_format_compact_is_one_line_per_hit(self):
         results = self.rag.query("mab_tilde_enable", top_k=3)
@@ -227,7 +252,8 @@ class RAGIntegrationTests(unittest.TestCase):
     def test_query_wiki_returns_chunk_ids(self):
         rows = self.rag.query_wiki("SharedMemoryManager")
         self.assertTrue(rows)
-        self.assertIsInstance(rows[0].get("id"), int)
+        self.assertIsInstance(rows[0].get("chunk_id"), str)
+        self.assertTrue(rows[0]["chunk_id"].startswith("mab_"))
 
     def test_query_wiki(self):
         rows = self.rag.query_wiki("SharedMemoryManager")
@@ -248,6 +274,71 @@ class RAGIntegrationTests(unittest.TestCase):
         self.assertIn("## Inhaltsverzeichnis", text)
         self.assertIn("SharedMemoryManager.handshake", text)
         self.assertIn("#include <windows.h>", text)
+
+    def test_semantic_search_rerank(self):
+        """R7: Semantisches Re-Ranking via N-Gramm-Cosine-Ähnlichkeit."""
+        # Normale Query ohne semantic
+        results_normal = self.rag.query("mab_tilde_enable", top_k=3, semantic=False)
+        self.assertTrue(results_normal)
+        # Mit semantic=True
+        results_semantic = self.rag.query("mab_tilde_enable", top_k=3, semantic=True)
+        self.assertTrue(results_semantic)
+        # Semantic sollte dieselben oder ähnliche Ergebnisse liefern
+        names_normal = [r.get("symbol_name") for r in results_normal]
+        names_semantic = [r.get("symbol_name") for r in results_semantic]
+        self.assertTrue(any(n in names_semantic for n in names_normal))
+
+    def test_semantic_search_empty_query(self):
+        """R7: Leere Query im Semantic-Mode crasht nicht."""
+        results = self.rag.query("", top_k=3, semantic=True)
+        self.assertEqual(results, [])
+
+    def test_ngram_embedding_consistency(self):
+        """R7: Gleicher Text erzeugt gleiches Embedding."""
+        from mab_mcp_server import _char_ngrams, _ngram_embedding, _cosine_similarity
+        e1 = _ngram_embedding("shared memory handshake")
+        e2 = _ngram_embedding("shared memory handshake")
+        self.assertEqual(e1, e2)
+        sim = _cosine_similarity(e1, e2)
+        self.assertAlmostEqual(sim, 1.0)
+
+    def test_ngram_cosine_similarity(self):
+        """R7: Ähnliche Texte haben höhere Cosine-Ähnlichkeit."""
+        from mab_mcp_server import _ngram_embedding, _cosine_similarity
+        e1 = _ngram_embedding("handshake protocol init")
+        e2 = _ngram_embedding("handshake procedure start")
+        e3 = _ngram_embedding("completely unrelated text about audio")
+        sim_similar = _cosine_similarity(e1, e2)
+        sim_diff = _cosine_similarity(e1, e3)
+        self.assertGreater(sim_similar, sim_diff)
+
+    def test_short_query_fallback_like(self):
+        """R4: Kurze Queries (< 3 Zeichen) nutzen LIKE-Fallback statt FTS5."""
+        # "fl" ist nur 2 Zeichen -> Trigramm-Tokenizer matched nicht
+        # Kommt vor in "flag", "shutdown_flag" in CPP_SRC
+        results = self.rag.query("fl", top_k=3)
+        # Sollte Treffer liefern (z.B. "mab_tilde_enable" enthält "flag")
+        self.assertTrue(results, "Kurz-Query 'fl' sollte Treffer via LIKE-Fallback liefern")
+
+    def test_short_query_two_char_symbol(self):
+        """R4: 2-Zeichen-Symbol-Namen werden via LIKE-Fallback gefunden."""
+        results = self.rag.query("fl", top_k=5)
+        content = " ".join(r.get("content", "") for r in results)
+        self.assertIn("flag", content, "LIKE-Fallback sollte 'flag' finden")
+
+    def test_build_match_expr_returns_none_for_short_query(self):
+        """R4: _build_match_expr gibt None für Queries ohne 3-Zeichen-Tokens."""
+        expr = mcp.ProjectRAG._build_match_expr("io")
+        self.assertIsNone(expr)
+        expr = mcp.ProjectRAG._build_match_expr("a bc")
+        self.assertIsNone(expr)
+
+    def test_build_match_expr_works_for_normal_query(self):
+        """R4: _build_match_expr arbeitet normal für Queries mit >= 3-Zeichen-Tokens."""
+        expr = mcp.ProjectRAG._build_match_expr("handshake test")
+        self.assertIsNotNone(expr)
+        self.assertIn("handshake", expr)
+        self.assertIn("test", expr)
 
 
 if __name__ == "__main__":

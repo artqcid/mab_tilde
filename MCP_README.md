@@ -22,7 +22,7 @@ python mab_mcp_server.py
 2. Fügen Sie die MCP-Konfiguration in `.mcp.json` hinzu
 3. Starten Sie den MCP-Server über die Command Palette
 
-## Verfügbare Tools
+## Verfügbare Tools (7)
 
 ### `run_cpp_tests()`
 Führt den Build-Prozess für das mab~ External über `cmake --build --preset debug`
@@ -34,23 +34,7 @@ Dynamische Projektübersicht. Liest aktuelle Dateien (`mab_tilde.cpp`,
 statischen Tools `get_project_info`, `check_shared_memory_config` und
 `analyze_inference_worker`.
 
-### `search_max_sdk_docs(query: str)`
-Statische Max SDK Dokumentation zu typischen Begriffen
-(`t_pxobject`, `dsp_setup`, `class_addmethod`, `InterlockedExchange`).
 
-**Parameter:**
-- `query`: Suchbegriff für die Dokumentation
-
-**Returns:**
-- Fundene Informationen und Code-Beispiele
-
-### `validate_ipc_sync()`
-Analysiert statisch den C++ Code (`mab_tilde.cpp`) und das Python-Worker-Skript,
-um sicherzustellen, dass die Shared-Memory-Magie (`0x4D414254` / `'MABT'`) und
-die Ringbuffer-Indizes (`head`/`tail`) synchron implementiert sind.
-
-**Returns:**
-- IPC-Synchronisations-Report mit Problemen und Warnungen
 
 ### `inspect_rave_model(model_path: str)`
 Leichtgewichtige RAVE/ONNX/TorchScript-Analyse: Dateimetadaten, Ein-/Ausgangs-
@@ -131,15 +115,16 @@ Shapes, Hop-Size-Detektion, verfügbare Methoden (`encode`/`decode`/`forward`)
 und eine Empfehlung für `block_size`/`num_channels` des mab~-Ringbuffers.
 Nutzt optional `onnxruntime`/`torch`, funktioniert aber auch ohne.
 
-### Verpflichtender Workflow für Coding-Agents
-1. **Code-Wiki lesen:** `doc/code_wiki.md` einmalig pro Session als stabilen
-   Kontext (prompt-cache-freundlich) einlesen – danach gezielt suchen.
-2. **`query_code_wiki`** für Struktur-/Architekturfragen verwenden.
-3. **`query_code_rag`** für Implementierungsdetails; Treffer **immer am echten
-   Quellcode verifizieren** (Pfad + Zeilennummern).
-4. **Nach Quellcode-Änderungen:** `index_project_code` erneut ausführen, damit
-   Datenbank und Code-Wiki aktuell bleiben.
+### Workflow für Coding-Agents (Wiki-First)
+1. `doc/checklist.md` → nächsten offenen Task nehmen
+2. `doc/code_wiki.md` einmalig pro Session als stabilen Kontext einlesen
+3. `query_code_wiki("<symbol>")` für Strukturfragen (Signatur, Datei, Zeilennummer)
+4. **Nur wenn Wiki-Wissen nicht ausreicht:** `query_code_rag(..., format="compact")`
+5. **Nur benötigten Chunk laden:** `get_rag_chunk("mab_XXX")`
+6. Im echten Code verifizieren (Pfad + Zeilennummern)
+7. **Nach Quellcode-Änderungen:** `index_project_code` → Wiki wird aktualisiert
 
+**Regel:** Was einmal im Wiki steht, wird nie wieder per RAG gesucht.
 ### Token-Effizienter RAG-Workflow
 Für große Suchmengen die Kontext-Fülle reduzieren:
 1. Erste Erkundung mit `format="compact"` (eine Zeile pro Treffer, inkl.
@@ -166,20 +151,6 @@ mab_tilde/
 ├── CMakeLists.txt                            # Build-Konfiguration
 └── .mcp.json                                 # MCP Konfiguration
 ```
-
-## Shared Memory Handshake-Protokoll
-
-Siehe `get_project_summary()` für aktuelle Konstanten und
-`validate_ipc_sync()` für die Synchronisations-Prüfung.
-
-## Modell-Analyse
-
-### `inspect_rave_model(model_path)`
-Vollständige Modellanalyse für RAVE-Modelle:
-- ONNX Runtime Integration für detaillierte Shape-Analyse
-- Automatische Hop-Size-Erkennung
-- RAVE-Konformitäts-Check
-- C++ Kompatibilitäts-Empfehlungen
 
 ## Lizenz
 

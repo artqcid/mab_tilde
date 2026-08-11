@@ -13,7 +13,7 @@
 // Shared memory header structure (must match Python's ctypes.Structure)
 struct SharedMemoryHeader {
     uint32_t magic;           // 0x4D414254 ('MABT')
-    uint32_t version;         // 2
+    uint32_t version;         // 3
     uint32_t block_size;      // samples per block
     uint32_t num_channels;    // legacy channel count (== channels_out)
     uint32_t channels_in;     // active method: input channels
@@ -21,10 +21,14 @@ struct SharedMemoryHeader {
     uint32_t latent_size;     // latent dimension of the active method
     uint32_t input_ratio;     // active method: input ratio
     uint32_t output_ratio;    // active method: output ratio
-    char     method[64];      // active method name (forward/encode/decode/prior)
+    char     method[52];      // active method name (forward/encode/decode/prior)
+    uint32_t method_id;       // stable hash of method for atomic comparison
     uint32_t input_offset;    // bytes to input buffer
     uint32_t output_offset;   // bytes to output buffer
     uint32_t control_offset;  // bytes to control ring buffer
+    uint32_t input_buffer_index;   // A1: index of input buffer C++ is filling (0/1)
+    uint32_t output_buffer_index;  // A1: index of output buffer C++ is draining (0/1)
+    uint32_t channel_map[16]; // Phase 5 (mc.mab~): per-inlet channel counts
     long is_input_ready;      // atomic flag (volatile)
     long is_output_ready;     // atomic flag (volatile)
     long is_python_ready;     // atomic flag (volatile)
@@ -101,7 +105,7 @@ void test_shared_memory_creation() {
     // Initialize header
     SharedMemoryHeader* header = (SharedMemoryHeader*)pBuf;
     header->magic = 0x4D414254;
-    header->version = 2;
+    header->version = 3;
     header->block_size = block_size;
     header->num_channels = num_channels;
     header->input_offset = (uint32_t)header_size;
@@ -113,7 +117,7 @@ void test_shared_memory_creation() {
     
     // Validate header
     assert(header->magic == 0x4D414254);
-    assert(header->version == 2);
+    assert(header->version == 3);
     assert(header->block_size == block_size);
     assert(header->num_channels == num_channels);
     

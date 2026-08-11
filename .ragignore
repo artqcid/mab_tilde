@@ -1,0 +1,5 @@
+# .ragignore – von index_project_code ausgeschlossene Pfade
+source/min-api/
+build/
+.venv/
+__pycache__/

@@ -1,0 +1,96 @@
+<?xml version='1.0' encoding='utf-8' standalone='yes'?>
+<c74object name='mab~' category='MSP Externals'>
+	<digest>RAVE / AFTER TorchScript inference in Max.</digest>
+	<description>
+		mab~ loads a TorchScript model (e.g. RAVE or AFTER) in a separate Python worker process and performs inference via shared memory. The object exposes audio or latent signal inlets/outlets depending on the active method (forward, encode, decode, prior). The Python process stays alive when bypassed or disabled; use <m>reload</m> to restart it.
+	</description>
+
+	<metadatalist>
+		<metadata name='author'>mab_tilde</metadata>
+		<metadata name='tag'>audio</metadata>
+		<metadata name='tag'>neural</metadata>
+		<metadata name='tag'>rave</metadata>
+		<metadata name='tag'>after</metadata>
+	</metadatalist>
+
+	<objarglist>
+		<objarg name='model' optional='0' type='symbol'>
+			<digest>Path to a TorchScript model file.</digest>
+			<description>Absolute or package-relative path to a TorchScript (.ts) model. If no path is given the object starts in "no model" state and waits for a <m>load</m> message.</description>
+		</objarg>
+		<objarg name='method' optional='1' type='symbol'>
+			<digest>Method to use.</digest>
+			<description>Name of the model method to run. Common values are forward, encode, decode and prior. Defaults to forward.</description>
+		</objarg>
+		<objarg name='buffer_size' optional='1' type='long'>
+			<digest>Inference block size.</digest>
+			<description>Number of samples processed in one inference block. Defaults to 512.</description>
+		</objarg>
+		<objarg name='gpu' optional='1' type='long'>
+			<digest>Enable GPU acceleration.</digest>
+			<description>Non-zero loads the model onto the GPU. Defaults to 0 (CPU).</description>
+		</objarg>
+		<objarg name='num_channels' optional='1' type='long'>
+			<digest>Legacy channel count.</digest>
+			<description>Channel count hint passed to the worker. Defaults to 1.</description>
+		</objarg>
+		<objarg name='cores' optional='1' type='long'>
+			<digest>PyTorch thread count.</digest>
+			<description>Number of CPU threads used by PyTorch, OMP, MKL and OpenBLAS. Defaults to 1. Ignored in GPU mode.</description>
+		</objarg>
+	</objarglist>
+
+	<methodlist>
+		<method name='enable'>
+			<digest>Enable or bypass audio processing.</digest>
+			<description><m>enable 1</m> turns processing on; <m>enable 0</m> bypasses audio without killing the Python worker.</description>
+		</method>
+		<method name='gpu'>
+			<digest>Set GPU mode.</digest>
+			<description><m>gpu 1</m> moves inference to the GPU; <m>gpu 0</m> uses the CPU. The worker reloads the model when changed.</description>
+		</method>
+		<method name='reload'>
+			<digest>Restart the Python worker.</digest>
+			<description>Shuts down the current worker and starts a fresh one with the current model and settings. Use this to recover from a worker crash.</description>
+		</method>
+		<method name='dump'>
+			<digest>Print model state to the Max console.</digest>
+			<description>Posts the current model path, method, buffer size, GPU mode, layout and ready state. Also requests a full metadata dump from the worker.</description>
+		</method>
+		<method name='set'>
+			<digest>Set an attribute or forward it to the model.</digest>
+			<description>Built-in attributes: <m>set gpu <i>0/1</i></m>, <m>set buffer_size <i>samples</i></m>, <m>set channels <i>n</i></m>. Any other name is forwarded to the model as an attribute.</description>
+		</method>
+		<method name='get'>
+			<digest>Query an attribute value.</digest>
+			<description>Built-in queries: gpu, buffer_size, channels, ready, method, model. Other names are forwarded to the model.</description>
+		</method>
+		<method name='method'>
+			<digest>Switch the active method.</digest>
+			<description>Switch to a different model method (forward, encode, decode, prior). The inlets and outlets are rebuilt automatically on the Max main thread.</description>
+		</method>
+		<method name='load'>
+			<digest>Load a new model.</digest>
+			<description><m>load <i>path</i></m> sets a new model path and triggers a reload.</description>
+		</method>
+	</methodlist>
+
+	<attributelist>
+		<attribute name='gpu' get='1' set='1' type='long' size='1'>
+			<digest>GPU acceleration flag.</digest>
+			<description>Non-zero when the worker is running on the GPU.</description>
+		</attribute>
+		<attribute name='buffer_size' get='1' set='1' type='long' size='1'>
+			<digest>Inference block size.</digest>
+			<description>Number of samples collected before one inference call.</description>
+		</attribute>
+		<attribute name='channels' get='1' set='1' type='long' size='1'>
+			<digest>Legacy channel count.</digest>
+			<description>Channel count hint used by the worker.</description>
+		</attribute>
+	</attributelist>
+
+	<seealsolist>
+		<seealso name='mab.info' />
+	</seealsolist>
+</c74object>

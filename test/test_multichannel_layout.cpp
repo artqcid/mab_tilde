@@ -10,7 +10,7 @@
 // Shared memory header structure
 struct SharedMemoryHeader {
     uint32_t magic;           // 0x4D414254 ('MABT')
-    uint32_t version;         // 2
+    uint32_t version;         // 3
     uint32_t block_size;      // samples per block
     uint32_t num_channels;    // legacy channel count (== channels_out)
     uint32_t channels_in;     // active method: input channels
@@ -18,10 +18,14 @@ struct SharedMemoryHeader {
     uint32_t latent_size;     // latent dimension of the active method
     uint32_t input_ratio;     // active method: input ratio
     uint32_t output_ratio;    // active method: output ratio
-    char     method[64];      // active method name (forward/encode/decode/prior)
+    char     method[52];      // active method name (forward/encode/decode/prior)
+    uint32_t method_id;       // stable hash of method for atomic comparison
     uint32_t input_offset;    // bytes to input buffer
     uint32_t output_offset;   // bytes to output buffer
     uint32_t control_offset;  // bytes to control ring buffer
+    uint32_t input_buffer_index;   // A1: index of input buffer C++ is filling (0/1)
+    uint32_t output_buffer_index;  // A1: index of output buffer C++ is draining (0/1)
+    uint32_t channel_map[16]; // Phase 5 (mc.mab~): per-inlet channel counts
     long is_input_ready;      // atomic flag (volatile)
     long is_output_ready;     // atomic flag (volatile)
     long is_python_ready;     // atomic flag (volatile)
@@ -37,11 +41,11 @@ void test_single_channel_layout() {
     
     SharedMemoryHeader header = {};
     header.magic = 0x4D414254;
-    header.version = 2;
+    header.version = 3;
     header.block_size = block_size;
     header.num_channels = num_channels;
     header.input_offset = sizeof(SharedMemoryHeader);
-    header.output_offset = sizeof(SharedMemoryHeader) + block_size * num_channels * sizeof(float);
+    header.output_offset = sizeof(SharedMemoryHeader) + 2 * block_size * num_channels * sizeof(float);
     
     // Verify input buffer size
     size_t input_size = block_size * num_channels * sizeof(float);
@@ -52,7 +56,7 @@ void test_single_channel_layout() {
     assert(output_size == 512 * 4);  // 2048 bytes
     
     // Verify total size
-    size_t total_size = sizeof(SharedMemoryHeader) + input_size + output_size;
+    size_t total_size = sizeof(SharedMemoryHeader) + 2 * input_size + 2 * output_size;
     printf("  Single channel: header=%zu, input=%zu, output=%zu, total=%zu\n",
            sizeof(SharedMemoryHeader), input_size, output_size, total_size);
     
@@ -68,11 +72,11 @@ void test_stereo_layout() {
     
     SharedMemoryHeader header = {};
     header.magic = 0x4D414254;
-    header.version = 2;
+    header.version = 3;
     header.block_size = block_size;
     header.num_channels = num_channels;
     header.input_offset = sizeof(SharedMemoryHeader);
-    header.output_offset = sizeof(SharedMemoryHeader) + block_size * num_channels * sizeof(float);
+    header.output_offset = sizeof(SharedMemoryHeader) + 2 * block_size * num_channels * sizeof(float);
     
     // Verify input buffer size
     size_t input_size = block_size * num_channels * sizeof(float);
@@ -83,7 +87,7 @@ void test_stereo_layout() {
     assert(output_size == 512 * 2 * 4);  // 4096 bytes
     
     // Verify total size
-    size_t total_size = sizeof(SharedMemoryHeader) + input_size + output_size;
+    size_t total_size = sizeof(SharedMemoryHeader) + 2 * input_size + 2 * output_size;
     printf("  Stereo: header=%zu, input=%zu, output=%zu, total=%zu\n",
            sizeof(SharedMemoryHeader), input_size, output_size, total_size);
     
@@ -99,11 +103,11 @@ void test_quad_layout() {
     
     SharedMemoryHeader header = {};
     header.magic = 0x4D414254;
-    header.version = 2;
+    header.version = 3;
     header.block_size = block_size;
     header.num_channels = num_channels;
     header.input_offset = sizeof(SharedMemoryHeader);
-    header.output_offset = sizeof(SharedMemoryHeader) + block_size * num_channels * sizeof(float);
+    header.output_offset = sizeof(SharedMemoryHeader) + 2 * block_size * num_channels * sizeof(float);
     
     // Verify input buffer size
     size_t input_size = block_size * num_channels * sizeof(float);
@@ -114,7 +118,7 @@ void test_quad_layout() {
     assert(output_size == 512 * 4 * 4);  // 8192 bytes
     
     // Verify total size
-    size_t total_size = sizeof(SharedMemoryHeader) + input_size + output_size;
+    size_t total_size = sizeof(SharedMemoryHeader) + 2 * input_size + 2 * output_size;
     printf("  Quad: header=%zu, input=%zu, output=%zu, total=%zu\n",
            sizeof(SharedMemoryHeader), input_size, output_size, total_size);
     
@@ -130,14 +134,14 @@ void test_buffer_pointer_calculations() {
     
     SharedMemoryHeader header = {};
     header.magic = 0x4D414254;
-    header.version = 2;
+    header.version = 3;
     header.block_size = block_size;
     header.num_channels = num_channels;
     header.input_offset = sizeof(SharedMemoryHeader);
-    header.output_offset = sizeof(SharedMemoryHeader) + block_size * num_channels * sizeof(float);
+    header.output_offset = sizeof(SharedMemoryHeader) + 2 * block_size * num_channels * sizeof(float);
     
     // Simulate shared memory buffer
-    uint8_t* buffer = new uint8_t[sizeof(SharedMemoryHeader) + block_size * num_channels * 4 * 2];
+    uint8_t* buffer = new uint8_t[sizeof(SharedMemoryHeader) + block_size * num_channels * 4 * 4];
     
     // Calculate pointers
     float* p_input = (float*)(buffer + header.input_offset);

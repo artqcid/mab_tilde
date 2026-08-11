@@ -1,0 +1,68 @@
+<?xml version='1.0' encoding='utf-8' standalone='yes'?>
+<c74object name='mab.info' category='Max Objects'>
+	<digest>Process-isolated TorchScript model inspector.</digest>
+	<description>
+		mab.info queries a TorchScript model in a separate Python worker and reports its metadata over five outlets: model path, available methods, attributes, per-method parameters and a dictionary containing the full inspection result. The query runs on a background thread; results are delivered on the Max main thread.
+	</description>
+
+	<metadatalist>
+		<metadata name='author'>mab_tilde</metadata>
+		<metadata name='tag'>utilities</metadata>
+		<metadata name='tag'>neural</metadata>
+		<metadata name='tag'>rave</metadata>
+		<metadata name='tag'>after</metadata>
+	</metadatalist>
+
+	<objarglist>
+		<objarg name='model' optional='1' type='symbol'>
+			<digest>Path to a TorchScript model file.</digest>
+			<description>Absolute or package-relative path to a TorchScript (.ts) model. If omitted, use <m>set <i>path</i></m> or <m>path <i>path</i></m> to inspect a model.</description>
+		</objarg>
+	</objarglist>
+
+	<methodlist>
+		<method name='set'>
+			<digest>Set the model path and inspect it.</digest>
+			<description><m>set <i>path</i></m> resolves the model path and starts a background query.</description>
+		</method>
+		<method name='bang'>
+			<digest>Output cached info or re-query.</digest>
+			<description>If a model has already been inspected, output the cached result. Otherwise start a query if a model path is set.</description>
+		</method>
+		<method name='dump'>
+			<digest>Post full inspection to the Max console.</digest>
+			<description>Prints model path, type, block size, channels, latent size, methods, attributes and per-method parameters. Also sends the data to the outlets.</description>
+		</method>
+		<method name='path'>
+			<digest>Set or get the model path.</digest>
+			<description>With an argument, behaves like <m>set <i>path</i></m>. Without an argument, outputs the current path from the first outlet.</description>
+		</method>
+		<method name='methods'>
+			<digest>Output available methods.</digest>
+			<description>Sends a symbol list of the model's methods from the second outlet.</description>
+		</method>
+		<method name='attributes'>
+			<digest>Output available attributes.</digest>
+			<description>Sends a symbol list of the model's attributes from the third outlet.</description>
+		</method>
+		<method name='parameters'>
+			<digest>Output per-method parameters.</digest>
+			<description>With an optional method-name argument, outputs the parameters for that method (channels_in, ratio_in, channels_out, ratio_out) from the fourth outlet.</description>
+		</method>
+		<method name='dict'>
+			<digest>Register and output a named dictionary.</digest>
+			<description><m>dict <i>name</i></m> registers the inspection result as a named dictionary and outputs it from the fifth outlet.</description>
+		</method>
+		<method name='dump_dict'>
+			<digest>Output the inspection dictionary.</digest>
+			<description>Sends the full inspection dictionary from the fifth outlet without registering it.</description>
+		</method>
+	</methodlist>
+
+	<attributelist>
+	</attributelist>
+
+	<seealsolist>
+		<seealso name='mab~' />
+	</seealsolist>
+</c74object>

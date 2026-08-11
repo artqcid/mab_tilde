@@ -238,7 +238,7 @@ typedef struct _mab_tilde t_mab_tilde;
 
 struct SharedMemoryHeader {
     uint32_t magic;           // 0x4D414254 ('MABT')
-    uint32_t version;         // 2
+    uint32_t version;         // 3
     uint32_t block_size;      // samples per block
     uint32_t num_channels;    // legacy channel count (== channels_out)
     uint32_t channels_in;     // active method: input channels
@@ -246,10 +246,14 @@ struct SharedMemoryHeader {
     uint32_t latent_size;     // latent dimension of the active method
     uint32_t input_ratio;     // active method: input ratio
     uint32_t output_ratio;    // active method: output ratio
-    char     method[64];      // active method name (forward/encode/decode/prior)
+    char     method[52];      // active method name (forward/encode/decode/prior)
+    uint32_t method_id;       // stable hash of method for atomic comparison
     uint32_t input_offset;    // bytes to input buffer
     uint32_t output_offset;   // bytes to output buffer
     uint32_t control_offset;  // bytes to control ring buffer
+    uint32_t input_buffer_index;   // A1: index of input buffer C++ is filling (0/1)
+    uint32_t output_buffer_index;  // A1: index of output buffer C++ is draining (0/1)
+    uint32_t channel_map[16]; // Phase 5 (mc.mab~): per-inlet channel counts
     long is_input_ready;      // atomic flag (volatile)
     long is_output_ready;     // atomic flag (volatile)
     long is_python_ready;     // atomic flag (volatile)
@@ -314,22 +318,24 @@ void test_shared_memory_header_layout() {
     
     // Test: Verify struct can be fully initialized
     header.magic = MAGIC_NUMBER;
-    header.version = 2;
+    header.version = 3;
     header.block_size = DEFAULT_BUFFER_SIZE;
     header.num_channels = 1;
     header.input_offset = sizeof(SharedMemoryHeader);
-    header.output_offset = sizeof(SharedMemoryHeader) + DEFAULT_BUFFER_SIZE * sizeof(float);
+    header.output_offset = sizeof(SharedMemoryHeader) + 2 * DEFAULT_BUFFER_SIZE * sizeof(float);
     header.is_input_ready = 0;
     header.is_output_ready = 0;
     header.is_python_ready = 0;
     header.shutdown_flag = 0;
+    header.channel_map[0] = 16;  // Phase 5: MC per-inlet channel count
     
     assert(header.magic == MAGIC_NUMBER);
-    assert(header.version == 2);
+    assert(header.version == 3);
     assert(header.block_size == DEFAULT_BUFFER_SIZE);
     assert(header.num_channels == 1);
     assert(header.input_offset == sizeof(SharedMemoryHeader));
-    assert(header.output_offset == sizeof(SharedMemoryHeader) + DEFAULT_BUFFER_SIZE * 4);
+    assert(header.output_offset == sizeof(SharedMemoryHeader) + 2 * DEFAULT_BUFFER_SIZE * 4);
+    assert(header.channel_map[0] == 16);
 }
 
 // ============================================================================

@@ -73,6 +73,36 @@ if(MSVC)
     )
 endif()
 
+# mc.mab~ -- Multichannel-Variante von mab~ (Phase 5).
+# Wird aus derselben mab_tilde.cpp kompiliert wie mab~, aber mit
+# MC_MAB_TILDE_MODULE, sodass ext_main nur die mc.mab~-Klasse registriert.
+add_library(mc_mab_tilde MODULE
+    source/projects/mab_tilde/mab_tilde.cpp
+    source/projects/mab_tilde/worker_launch.cpp
+    source/projects/mab_tilde/max_path_resolve.cpp
+)
+target_include_directories(mc_mab_tilde PRIVATE
+    ${MAX_SDK_DIR}/max-includes
+    ${MAX_SDK_DIR}/msp-includes
+)
+target_link_libraries(mc_mab_tilde PRIVATE
+    ${MAX_SDK_DIR}/max-includes/x64/MaxAPI.lib
+    ${MAX_SDK_DIR}/msp-includes/x64/MaxAudio.lib
+)
+if(MSVC)
+    target_compile_definitions(mc_mab_tilde PRIVATE
+        WIN32_LEAN_AND_MEAN
+        NOMINMAX
+        _CRT_SECURE_NO_WARNINGS
+        MC_MAB_TILDE_MODULE
+    )
+    set_target_properties(mc_mab_tilde PROPERTIES
+        PREFIX ""
+        OUTPUT_NAME "mc.mab~"
+        SUFFIX ".mxe64"
+    )
+endif()
+
 # mab.info -- prozessisolierter Modell-Inspektor (Phase 4)
 add_library(mab_info MODULE
     source/projects/mab_tilde/mab_info.cpp
@@ -170,6 +200,10 @@ target_compile_definitions(test_crash_monitoring PRIVATE WIN32_LEAN_AND_MEAN NOM
 # Test: Block Accumulator (perform64 block fill/drain math)
 add_executable(test_block_accumulator test/test_block_accumulator.cpp)
 target_compile_definitions(test_block_accumulator PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX)
+
+# Test: mc.mab~ (Phase 5) multichannel logic (IO layout, chans, channel_map)
+add_executable(test_mc_mab_tilde test/test_mc_mab_tilde.cpp)
+target_compile_definitions(test_mc_mab_tilde PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX)
 
 # Test: Worker Launch (project-dir resolution, MAB_INFO parsing, e2e --query)
 add_executable(test_worker_launch

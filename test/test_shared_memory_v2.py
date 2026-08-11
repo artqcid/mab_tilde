@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Unit tests for the Phase 3 SharedMemoryHeader v2 (method-aware metadata).
+Unit tests for the Phase 5 SharedMemoryHeader v3 (method-aware metadata +
+MC channel_map).
 
-Verifies that the real ctypes header layout matches the C++ struct (128 bytes,
+Verifies that the real ctypes header layout matches the C++ struct (192 bytes,
 field offsets) and that SharedMemoryManager.apply_method() publishes the active
 method layout (method / channels / ratios / latent size) that C++ reads to
 rebuild inlets and outlets.
@@ -16,7 +17,7 @@ import ctypes
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from inference_worker import SharedMemoryHeader, SharedMemoryManager
+from inference_worker import SharedMemoryHeader, SharedMemoryManager, _method_id
 
 MUSICNET_PARAMS = {
     'decode': (16, 2048, 1, 1),    # latent -> audio
@@ -27,8 +28,8 @@ MUSICNET_PARAMS = {
 
 
 class TestHeaderLayoutV2(unittest.TestCase):
-    def test_header_size_is_128(self):
-        self.assertEqual(ctypes.sizeof(SharedMemoryHeader), 128)
+    def test_header_size_is_192(self):
+        self.assertEqual(ctypes.sizeof(SharedMemoryHeader), 192)
 
     def test_field_offsets_match_cpp(self):
         # Field offsets asserted by test_shared_memory_header_compatibility.cpp
@@ -42,13 +43,20 @@ class TestHeaderLayoutV2(unittest.TestCase):
         self.assertEqual(SharedMemoryHeader.input_ratio.offset, 28)
         self.assertEqual(SharedMemoryHeader.output_ratio.offset, 32)
         self.assertEqual(SharedMemoryHeader.method.offset, 36)
-        self.assertEqual(SharedMemoryHeader.input_offset.offset, 100)
-        self.assertEqual(SharedMemoryHeader.output_offset.offset, 104)
-        self.assertEqual(SharedMemoryHeader.control_offset.offset, 108)
-        self.assertEqual(SharedMemoryHeader.is_input_ready.offset, 112)
-        self.assertEqual(SharedMemoryHeader.is_output_ready.offset, 116)
-        self.assertEqual(SharedMemoryHeader.is_python_ready.offset, 120)
-        self.assertEqual(SharedMemoryHeader.shutdown_flag.offset, 124)
+        self.assertEqual(SharedMemoryHeader.method_id.offset, 88)
+        self.assertEqual(SharedMemoryHeader.input_offset.offset, 92)
+        self.assertEqual(SharedMemoryHeader.output_offset.offset, 96)
+        self.assertEqual(SharedMemoryHeader.control_offset.offset, 100)
+        self.assertEqual(SharedMemoryHeader.input_buffer_index.offset, 104)
+        self.assertEqual(SharedMemoryHeader.output_buffer_index.offset, 108)
+        # Phase 5: channel_map follows the buffer indices
+        self.assertEqual(SharedMemoryHeader.channel_map.offset, 112)
+        self.assertEqual(ctypes.sizeof(SharedMemoryHeader.channel_map.type),
+                         16 * ctypes.sizeof(ctypes.c_uint32))
+        self.assertEqual(SharedMemoryHeader.is_input_ready.offset, 176)
+        self.assertEqual(SharedMemoryHeader.is_output_ready.offset, 180)
+        self.assertEqual(SharedMemoryHeader.is_python_ready.offset, 184)
+        self.assertEqual(SharedMemoryHeader.shutdown_flag.offset, 188)
 
     def test_flags_are_c_long(self):
         # Must be c_long, not c_bool: C++ uses `long` + InterlockedExchange
@@ -71,6 +79,7 @@ class TestApplyMethod(unittest.TestCase):
         mgr.apply_method("decode", MUSICNET_PARAMS)
         h = mgr._p_header
         self.assertEqual(h.method, b"decode")
+        self.assertEqual(h.method_id, _method_id("decode"))
         self.assertEqual(h.channels_in, 16)
         self.assertEqual(h.channels_out, 1)
         self.assertEqual(h.input_ratio, 2048)
@@ -82,6 +91,7 @@ class TestApplyMethod(unittest.TestCase):
         mgr.apply_method("encode", MUSICNET_PARAMS)
         h = mgr._p_header
         self.assertEqual(h.method, b"encode")
+        self.assertEqual(h.method_id, _method_id("encode"))
         self.assertEqual(h.channels_in, 1)
         self.assertEqual(h.channels_out, 16)
         self.assertEqual(h.input_ratio, 1)
@@ -93,6 +103,7 @@ class TestApplyMethod(unittest.TestCase):
         mgr.apply_method("forward", MUSICNET_PARAMS)
         h = mgr._p_header
         self.assertEqual(h.method, b"forward")
+        self.assertEqual(h.method_id, _method_id("forward"))
         self.assertEqual(h.channels_in, 1)
         self.assertEqual(h.channels_out, 1)
         self.assertEqual(h.latent_size, 0)
@@ -109,6 +120,32 @@ class TestApplyMethod(unittest.TestCase):
         mgr = _manager_with_header()
         mgr.apply_method("forward", {})
         self.assertEqual(mgr._p_header.method, b"")
+
+
+class TestChannelMapPhase5(unittest.TestCase):
+    """Phase 5: mc.mab~ publishes per-inlet channel counts in the header."""
+
+    def test_read_channel_map_empty_by_default(self):
+        mgr = _manager_with_header()
+        self.assertEqual(mgr.read_channel_map(), [])
+
+    def test_read_channel_map_skips_zeros(self):
+        mgr = _manager_with_header()
+        mgr._p_header.channel_map[0] = 16
+        mgr._p_header.channel_map[2] = 2
+        self.assertEqual(mgr.read_channel_map(), [16, 2])
+
+    def test_get_total_input_channels_sums_map(self):
+        mgr = _manager_with_header()
+        mgr._p_header.channel_map[0] = 8
+        mgr._p_header.channel_map[1] = 8
+        self.assertEqual(mgr.get_total_input_channels(), 16)
+
+    def test_get_total_falls_back_to_channels_in(self):
+        # Mono mode: C++ never writes channel_map -> header->channels_in
+        mgr = _manager_with_header()
+        mgr._p_header.channels_in = 16
+        self.assertEqual(mgr.get_total_input_channels(), 16)
 
 
 if __name__ == '__main__':

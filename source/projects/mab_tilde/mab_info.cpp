@@ -48,11 +48,55 @@ typedef struct _mab_info {
     std::thread* query_thread;
     t_qelem* result_qelem;
     long query_pending;
+
+    // P11: download/delete/print_available_models (nn_tilde-Parität).
+    // Der Worker läuft standalone (--download/--delete/--list) auf einem
+    // eigenen Hintergrund-Thread; stdout wird auf Outlet 1 ausgegeben.
+    std::thread* cmd_thread;
+    t_qelem* cmd_qelem;         // Main-Thread-Trampolin für mab_info_apply_cmd
+    long cmd_pending;           // 1 = Kommando läuft
+    char cmd_args[1024];        // Argument-Zeile für worker_launch
+    char cmd_result[8192];      // Worker-stdout (Ergebniszeilen)
+    char cmd_error[512];        // Launch-/Netzwerk-Fehler
 } t_mab_info;
 
 // ============================================================================
 // Query-Auswertung (thread-safe: schreibt nur in x, kein Max-SDK-Aufruf)
 // ============================================================================
+
+// Liest die komplette stdout-Pipe des Workers bis zum Prozess-Ende (polling,
+// mit 90s Timeout). Schließt stdout_read. Da die Ausgaben klein sind, ist ein
+// blockierender Pipe-Read hier unkritisch (Hintergrund-Thread).
+static void mab_info_drain_stdout(const WorkerProcess* wp, std::string* text) {
+    if (!wp || !wp->stdout_read) return;
+    char buf[4096];
+    DWORD available = 0;
+    DWORD nread = 0;
+    DWORD waited = 0;
+    const DWORD timeout_ms = 90000;
+    while (waited < timeout_ms) {
+        if (!PeekNamedPipe(wp->stdout_read, NULL, 0, NULL, &available, NULL)) {
+            break; // Pipe geschlossen -> EOF
+        }
+        if (available > 0) {
+            if (ReadFile(wp->stdout_read, buf, sizeof(buf), &nread, NULL) &&
+                nread > 0) {
+                text->append(buf, nread);
+                waited = 0;
+                continue;
+            }
+        }
+        if (WaitForSingleObject(wp->process, 100) == WAIT_OBJECT_0) {
+            while (ReadFile(wp->stdout_read, buf, sizeof(buf), &nread, NULL) &&
+                   nread > 0) {
+                text->append(buf, nread);
+            }
+            break;
+        }
+        waited += 100;
+    }
+    CloseHandle(wp->stdout_read);
+}
 
 static void mab_info_query_thread(t_mab_info* x) {
     char argbuf[MAX_PATH * 2 + 32];
@@ -69,38 +113,8 @@ static void mab_info_query_thread(t_mab_info* x) {
         return;
     }
 
-    // stdout des Workers auslesen (polling, mit Timeout). Da die Query-Ausgabe
-    // klein ist, ist ein blockierender Pipe-Read hier unkritisch.
     std::string text;
-    if (wp.stdout_read) {
-        char buf[4096];
-        DWORD available = 0;
-        DWORD nread = 0;
-        DWORD waited = 0;
-        const DWORD timeout_ms = 90000;
-        while (waited < timeout_ms) {
-            if (!PeekNamedPipe(wp.stdout_read, NULL, 0, NULL, &available, NULL)) {
-                break; // Pipe geschlossen -> EOF
-            }
-            if (available > 0) {
-                if (ReadFile(wp.stdout_read, buf, sizeof(buf), &nread, NULL) &&
-                    nread > 0) {
-                    text.append(buf, nread);
-                    waited = 0;
-                    continue;
-                }
-            }
-            if (WaitForSingleObject(wp.process, 100) == WAIT_OBJECT_0) {
-                while (ReadFile(wp.stdout_read, buf, sizeof(buf), &nread, NULL) &&
-                       nread > 0) {
-                    text.append(buf, nread);
-                }
-                break;
-            }
-            waited += 100;
-        }
-        CloseHandle(wp.stdout_read);
-    }
+    mab_info_drain_stdout(&wp, &text);
     WaitForSingleObject(wp.process, 1000);
     CloseHandle(wp.process);
 
@@ -171,6 +185,89 @@ static void mab_info_apply(t_mab_info* x) {
     t_dictionary* d = nullptr;
     mab_info_make_dict(x, &d);
     if (d) mab_info_out_dict(x, d);
+}
+
+// ============================================================================
+// P11: download/delete/print_available_models (standalone Worker-Läufe)
+// ============================================================================
+
+// Hintergrund-Thread: startet den Worker mit der in x->cmd_args stehenden
+// Argument-Zeile, liest dessen stdout und liefert das Ergebnis über das
+// cmd_qelem auf den Max-Haupt-Thread. Schreibt nur in x (kein Max-SDK-Call),
+// analog zum Query-Thread.
+static void mab_info_cmd_thread(t_mab_info* x) {
+    WorkerProcess wp;
+    worker_launch(x->cmd_args, true, &wp);
+
+    if (!wp.process) {
+        snprintf(x->cmd_error, sizeof(x->cmd_error),
+                 "Failed to launch Python worker.");
+        x->cmd_result[0] = '\0';
+        qelem_set(x->cmd_qelem);
+        return;
+    }
+
+    std::string text;
+    mab_info_drain_stdout(&wp, &text);
+    WaitForSingleObject(wp.process, 1000);
+    CloseHandle(wp.process);
+
+    if (!text.empty()) {
+        // Nur die letzten 8KB behalten (--list kann mehrere Zeilen liefern).
+        size_t n = text.size();
+        const size_t maxlen = sizeof(x->cmd_result) - 1;
+        if (n > maxlen) text = text.substr(n - maxlen);
+        strncpy(x->cmd_result, text.c_str(), maxlen);
+        x->cmd_result[maxlen] = '\0';
+        x->cmd_error[0] = '\0';
+    } else {
+        snprintf(x->cmd_error, sizeof(x->cmd_error),
+                 "Worker returned no output.");
+        x->cmd_result[0] = '\0';
+    }
+    qelem_set(x->cmd_qelem);
+}
+
+// Haupt-Thread: Kommando-Ergebnis ausgeben. Fehler (Launch-/Netzwerkprobleme)
+// werden als object_error gemeldet statt zu crashen; Ergebniszeilen gehen auf
+// Outlet 1 (path).
+static void mab_info_apply_cmd(t_mab_info* x) {
+    x->cmd_pending = 0;
+    if (x->cmd_error[0]) {
+        object_error((t_object*)x, "mab.info: %s", x->cmd_error);
+        return;
+    }
+    const char* p = x->cmd_result;
+    while (p && *p) {
+        const char* nl = strchr(p, '\n');
+        size_t len = nl ? (size_t)(nl - p) : strlen(p);
+        std::string line(p, len);
+        while (!line.empty() && (line.back() == '\r' || line.back() == ' '))
+            line.pop_back();
+        if (!line.empty())
+            outlet_anything(x->out_path, gensym(line.c_str()), 0, NULL);
+        if (!nl) break;
+        p = nl + 1;
+    }
+}
+
+// Startet einen standalone-Worker-Lauf (nur ein Kommando gleichzeitig).
+static void mab_info_run_command(t_mab_info* x, const char* arg_string) {
+    if (x->cmd_pending) {
+        post("mab.info: Command already running");
+        return;
+    }
+    if (x->cmd_thread) {
+        if (x->cmd_thread->joinable()) x->cmd_thread->join();
+        delete x->cmd_thread;
+        x->cmd_thread = nullptr;
+    }
+    strncpy(x->cmd_args, arg_string, sizeof(x->cmd_args) - 1);
+    x->cmd_args[sizeof(x->cmd_args) - 1] = '\0';
+    x->cmd_result[0] = '\0';
+    x->cmd_error[0] = '\0';
+    x->cmd_pending = 1;
+    x->cmd_thread = new std::thread(mab_info_cmd_thread, x);
 }
 
 // ============================================================================
@@ -284,6 +381,42 @@ static void mab_info_dict(t_mab_info* x, t_symbol* name) {
     mab_info_out_dict(x, d);
 }
 
+// P11: download <card> [name] -> Worker --download (IRCAM Forum API).
+static void mab_info_download(t_mab_info* x, t_symbol* s, long argc, t_atom* argv) {
+    if (argc < 1 || argv[0].a_type != A_SYM || !argv[0].a_w.w_sym->s_name) {
+        error("mab.info: download requires a model card "
+              "(see print_available_models)");
+        return;
+    }
+    const char* card = argv[0].a_w.w_sym->s_name;
+    const char* name = (argc >= 2 && argv[1].a_type == A_SYM)
+                           ? argv[1].a_w.w_sym->s_name : nullptr;
+    char argbuf[1024];
+    if (name && name[0])
+        snprintf(argbuf, sizeof(argbuf), "--download \"%s\" \"%s\"", card, name);
+    else
+        snprintf(argbuf, sizeof(argbuf), "--download \"%s\"", card);
+    mab_info_run_command(x, argbuf);
+}
+
+// P11: delete <model> -> Worker --delete.
+static void mab_info_delete(t_mab_info* x, t_symbol* s, long argc, t_atom* argv) {
+    if (argc < 1 || argv[0].a_type != A_SYM || !argv[0].a_w.w_sym->s_name) {
+        error("mab.info: delete requires a model name "
+              "(see print_available_models)");
+        return;
+    }
+    char argbuf[1024];
+    snprintf(argbuf, sizeof(argbuf), "--delete \"%s\"",
+             argv[0].a_w.w_sym->s_name);
+    mab_info_run_command(x, argbuf);
+}
+
+// P11: print_available_models -> Worker --list (lokale + Remote-Modelle).
+static void mab_info_print(t_mab_info* x) {
+    mab_info_run_command(x, "--list");
+}
+
 // ============================================================================
 // Objekt-Lifecycle
 // ============================================================================
@@ -306,6 +439,14 @@ static void* mab_info_new(t_symbol* s, long argc, t_atom* argv) {
     ZeroMemory(&x->info, sizeof(x->info));
     x->dict_json[0] = '\0';
 
+    // P11: download/delete/print-Kommandos
+    x->cmd_thread = nullptr;
+    x->cmd_pending = 0;
+    x->cmd_args[0] = '\0';
+    x->cmd_result[0] = '\0';
+    x->cmd_error[0] = '\0';
+    x->cmd_qelem = qelem_new(x, (method)mab_info_apply_cmd);
+
     if (argc >= 1 && argv[0].a_type == A_SYM && argv[0].a_w.w_sym->s_name) {
         strncpy(x->model_path, argv[0].a_w.w_sym->s_name, sizeof(x->model_path) - 1);
         char resolved[MAX_PATH];
@@ -327,11 +468,23 @@ static void mab_info_free(t_mab_info* x) {
         qelem_free(x->result_qelem);
         x->result_qelem = nullptr;
     }
+    // P11: Kommando-Thread beenden bevor das qelem freigegeben wird.
+    if (x->cmd_thread) {
+        if (x->cmd_thread->joinable()) x->cmd_thread->join();
+        delete x->cmd_thread;
+        x->cmd_thread = nullptr;
+    }
+    if (x->cmd_qelem) {
+        qelem_unset(x->cmd_qelem);
+        qelem_free(x->cmd_qelem);
+        x->cmd_qelem = nullptr;
+    }
 }
 
 static void mab_info_assist(t_mab_info* x, void* b, long m, long a, char* s) {
     if (m == ASSIST_INLET) {
-        sprintf(s, "(messages) Model inspection. Use [set <model>], [path <model>], [bang]");
+        sprintf(s, "(messages) Model inspection. Use [set <model>], [path <model>], [bang], "
+                   "[download <card> [name]], [delete <model>], [print_available_models]");
     } else {
         switch (a) {
             case 0: sprintf(s, "(symbol) Model path"); break;
@@ -365,6 +518,9 @@ extern "C" __declspec(dllexport) void ext_main(void* r) {
     class_addmethod(c, (method)mab_info_parameters, "parameters", A_GIMME, 0);
     class_addmethod(c, (method)mab_info_dump_dict, "dump_dict", 0);
     class_addmethod(c, (method)mab_info_dict, "dict", A_SYM, 0);
+    class_addmethod(c, (method)mab_info_download, "download", A_GIMME, 0);
+    class_addmethod(c, (method)mab_info_delete, "delete", A_GIMME, 0);
+    class_addmethod(c, (method)mab_info_print, "print_available_models", 0);
     class_addmethod(c, (method)mab_info_assist, "assist", A_CANT, 0);
 
     class_register(CLASS_BOX, c);

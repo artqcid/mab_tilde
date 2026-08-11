@@ -18,6 +18,8 @@ import json
 import hashlib
 import sqlite3
 from contextlib import closing
+import fnmatch
+import math
 
 # Initialisiere den FastMCP Server
 mcp = FastMCP("MAB-RAVE-Assistant")
@@ -60,7 +62,10 @@ WIKI_PATH = os.path.join(
 # Schema-Version: bump bei strukturellen Änderungen -> erzwingt Rebuild der DB.
 # v1 = Zeilen-Chunking, v2 = strukturelles Chunking + Symbol-Metadaten.
 # v3 = C++-Header-Rekonstruktion (mehrzeilige Signaturen) + LF-Normalisierung.
-RAG_SCHEMA_VERSION = 3
+# v4 = Stabile Chunk-IDs (hash-basiert statt AUTOINCREMENT).
+# v5 = Recreate FTS5 when upgrading databases created with the incomplete
+#      symbol-index schema.
+RAG_SCHEMA_VERSION = 5
 
 # Zu indizierende Sprachen und ihre Dateiendungen.
 # `.md` ist inkludiert, damit auch die zentrale Anleitung
@@ -99,20 +104,130 @@ RAG_IGNORED_FILENAMES = {"code_wiki.md"}
 # Strukturelles Chunking (AST / brace-basiert / Überschriften)
 # ---------------------------------------------------------------------------
 
-def _emit_chunk(lines, start, end, symbol_type, symbol_name, signature, docstring) -> dict:
-    """Baut einen Chunk-Datensatz aus 0-basiertem Zeilenbereich [start, end]."""
+def _stable_chunk_id(file_path: str, line_start: int, symbol_name: str | None) -> str:
+    """Erzeugt eine stabile Chunk-ID aus Dateipfad, Startzeile und Symbolnamen.
+
+    Hash-basiert (SHA-256, first 12 hex chars = 48 Bit), sodass die ID über
+    Sessions und Re-Indexierungen hinweg stabil bleibt (anders als AUTOINCREMENT).
+    Das Format entspricht `[mab_<hash>]` und ist kompatibel mit get_rag_chunk.
+    """
+    raw = f"{file_path}::{line_start}::{symbol_name or ''}"
+    h = hashlib.sha256(raw.encode("utf-8")).hexdigest()[:12]
+    return f"mab_{h}"
+
+
+# ---------------------------------------------------------------------------
+# Character N-Gram Embeddings (für R7: semantische Ähnlichkeit ohne externe
+# Abhängigkeiten wie sentence-transformers oder FAISS)
+# ---------------------------------------------------------------------------
+
+def _char_ngrams(text: str, n_min: int = 2, n_max: int = 4) -> list[str]:
+    """Extrahiert Character-N-Gramme aus einem Text.
+
+    Verwendet N-Gramme der Längen n_min..n_max als Feature-Vektoren.
+    Padding mit '#' am Anfang und Ende für bessere Grenzerkennung.
+    """
+    normalized = text.lower().strip()
+    if not normalized:
+        return []
+    padded = f"#{normalized}#"
+    grams = []
+    for n in range(n_min, n_max + 1):
+        for i in range(len(padded) - n + 1):
+            grams.append(padded[i:i + n])
+    return grams
+
+
+def _ngram_embedding(text: str) -> dict[str, float]:
+    """Erzeugt ein TF-gewichtetes N-Gramm-Embedding als Dictionary.
+
+    Jeder N-Gramm wird auf seine relative Häufigkeit normiert (L2-ähnlich).
+    Ergebnis kann als sparse embedding für cosine similarity genutzt werden.
+    """
+    grams = _char_ngrams(text)
+    if not grams:
+        return {}
+    freq: dict[str, float] = {}
+    for g in grams:
+        freq[g] = freq.get(g, 0.0) + 1.0
+    # TF-Normierung
+    total = len(grams)
+    return {k: v / total for k, v in freq.items()}
+
+
+def _cosine_similarity(a: dict[str, float], b: dict[str, float]) -> float:
+    """Berechnet cosine similarity zwischen zwei sparse Embeddings."""
+    if not a or not b:
+        return 0.0
+    dot = 0.0
+    na = 0.0
+    nb = 0.0
+    # Iteriere über das kleinere Dictionary
+    if len(a) > len(b):
+        a, b = b, a
+    for k, va in a.items():
+        vb = b.get(k, 0.0)
+        dot += va * vb
+        na += va * va
+    for _, vb in b.items():
+        nb += vb * vb
+    denom = math.sqrt(na * nb)
+    return dot / denom if denom > 0 else 0.0
+
+
+def _semantic_rerank(query: str, results: list[dict], top_k: int) -> list[dict]:
+    """Rerankt Ergebnisse mittels N-Gramm-Cosine-Ähnlichkeit.
+
+    Ergänzung zum BM25-Ranking: erfasst semantische Ähnlichkeit über
+    character n-gram overlaps. Ersetzt nicht das lexikalische Ranking,
+    sondern mischt es hinein (gewichteter Score).
+    """
+    if not results or not query.strip():
+        return results
+
+    query_emb = _ngram_embedding(query)
+    if not query_emb:
+        return results
+
+    scored = []
+    for r in results:
+        hay = " ".join([
+            r.get("content") or "",
+            r.get("symbol_name") or "",
+            r.get("signature") or "",
+        ])
+        doc_emb = _ngram_embedding(hay)
+        sim = _cosine_similarity(query_emb, doc_emb)
+        # Kombinierter Score: BM25-rank (niedriger = besser) + semantic (höher = besser)
+        # Normalisiere: BM25 rank wird invertiert (je niedriger desto besser)
+        rank = r.get("rank", 0)
+        combined = sim * 0.4 + (1.0 / (1.0 + rank)) * 0.6
+        scored.append((combined, r))
+
+    scored.sort(key=lambda x: -x[0])
+    return [r for _, r in scored[:top_k]]
+
+
+def _emit_chunk(lines, start, end, symbol_type, symbol_name, signature, docstring, file_path="") -> dict:
+    """Baut einen Chunk-Datensatz aus 0-basiertem Zeilenbereich [start, end].
+
+    Enthält eine stabile Chunk-ID (hash-basiert), die über Sessions und
+    Re-Indexierungen hinweg gültig bleibt.
+    """
+    line_start = start + 1
     return {
-        "line_start": start + 1,
+        "line_start": line_start,
         "line_end": end + 1,
         "content": "\n".join(lines[start:end + 1]),
         "symbol_type": symbol_type,
         "symbol_name": symbol_name,
         "signature": (signature or "").strip() or None,
         "docstring": docstring,
+        "chunk_id": _stable_chunk_id(file_path, line_start, symbol_name),
     }
 
 
-def _module_chunks(lines, start, end) -> list:
+def _module_chunks(lines, start, end, file_path="") -> list:
     """Zerlegt einen Bereich ohne benannte Symbole in max. 60-Zeilen-Blöcke."""
     start = max(0, start)
     end = min(len(lines) - 1, end)
@@ -121,7 +236,7 @@ def _module_chunks(lines, start, end) -> list:
     out = []
     for s in range(start, end + 1, MODULE_CHUNK_LINES):
         e = min(end, s + MODULE_CHUNK_LINES - 1)
-        out.append(_emit_chunk(lines, s, e, "module", None, None, None))
+        out.append(_emit_chunk(lines, s, e, "module", None, None, None, file_path))
     return out
 
 
@@ -159,7 +274,7 @@ def _py_bases(node) -> str:
     return "(" + ", ".join(names) + ")"
 
 
-def _chunk_python(source: str) -> list:
+def _chunk_python(source: str, file_path: str = "") -> list:
     """Zerlegt Python-Code über das stdlib-`ast` in Klassen/Funktionen/Methoden.
 
     Liefert Chunks mit symbol_type (class/function/method), qualified name,
@@ -171,10 +286,28 @@ def _chunk_python(source: str) -> list:
     try:
         tree = ast.parse(source)
     except SyntaxError:
-        return _module_chunks(lines, 0, len(lines) - 1)
+        return _module_chunks(lines, 0, len(lines) - 1, file_path)
 
     chunks = []
     covered = []  # 1-basierte Intervalle [lineno, end_lineno] der Definitionen
+
+    # Top-level uppercase assignments are module constants, not anonymous
+    # module text.  Keep them as named symbols so the wiki can index protocol
+    # constants such as MAGIC_NUMBER.
+    for node in tree.body:
+        if isinstance(node, ast.Assign):
+            targets = node.targets
+        elif isinstance(node, ast.AnnAssign):
+            targets = [node.target]
+        else:
+            continue
+        for target in targets:
+            if isinstance(target, ast.Name) and target.id.isupper():
+                chunks.append(_emit_chunk(
+                    lines, node.lineno - 1, node.end_lineno - 1,
+                    "constant", target.id, lines[node.lineno - 1].strip(),
+                    None, file_path))
+                covered.append((node.lineno, node.end_lineno))
 
     def walk(body, parent):
         for node in body:
@@ -185,7 +318,7 @@ def _chunk_python(source: str) -> list:
                 doc = ast.get_docstring(node)
                 chunks.append(_emit_chunk(
                     lines, node.lineno - 1, node.end_lineno - 1,
-                    kind, name, sig, doc))
+                    kind, name, sig, doc, file_path))
                 covered.append((node.lineno, node.end_lineno))
             elif isinstance(node, ast.ClassDef):
                 name = f"{parent}.{node.name}" if parent else node.name
@@ -193,22 +326,22 @@ def _chunk_python(source: str) -> list:
                 doc = ast.get_docstring(node)
                 chunks.append(_emit_chunk(
                     lines, node.lineno - 1, node.end_lineno - 1,
-                    "class", name, sig, doc))
+                    "class", name, sig, doc, file_path))
                 covered.append((node.lineno, node.end_lineno))
                 walk(node.body, name)
 
     walk(tree.body, None)
 
     if not covered:
-        return _module_chunks(lines, 0, len(lines) - 1)
+        return _module_chunks(lines, 0, len(lines) - 1, file_path)
 
     cursor = 1
     for a, b in sorted(covered):
         if a > cursor:
-            chunks.extend(_module_chunks(lines, cursor - 1, a - 2))
+            chunks.extend(_module_chunks(lines, cursor - 1, a - 2, file_path))
         cursor = max(cursor, b + 1)
     if cursor <= len(lines):
-        chunks.extend(_module_chunks(lines, cursor - 1, len(lines) - 1))
+        chunks.extend(_module_chunks(lines, cursor - 1, len(lines) - 1, file_path))
 
     chunks.sort(key=lambda c: c["line_start"])
     return chunks
@@ -230,11 +363,15 @@ def _cpp_def_kind(header: str):
     m = re.match(r"namespace\s+([A-Za-z_]\w*)", h)
     if m:
         return ("namespace", m.group(1))
+    # Check for extern "C" + function before the generic extern block check.
+    m = re.match(r'extern\s*"C"\s+.*?([A-Za-z_]\w*)\s*\(', h)
+    if m and m.group(1) not in _CPP_CTRL:
+        return ("function", m.group(1))
     if re.match(r'extern\s*"C"', h):
         return ("extern", None)
     m = re.match(
         r"(?:template\s*<[^>]*>\s*)?"
-        r"(?:(?:class|struct|union)\s+([A-Za-z_]\w*)|"
+        r"(?:(?:typedef\s+)?(?:class|struct|union)\s+([A-Za-z_]\w*)|"
         r"enum(?:\s+class)?\s+([A-Za-z_]\w*))",
         h,
     )
@@ -310,84 +447,110 @@ def _cpp_sub_blocks(lines, start, end, base) -> list:
     return blocks
 
 
-def _chunk_cpp_class(lines, start, end, base, name) -> list:
+def _chunk_cpp_class(lines, start, end, base, name, file_path="") -> list:
     """Zerlegt eine C++-Klasse: Methoden separat, Header/Members als class-Chunk."""
     blocks = _cpp_sub_blocks(lines, start + 1, end - 1, base + 1)
     if not blocks:
-        return [_emit_chunk(lines, start, end, "class", name, lines[start].strip(), None)]
+        chunks = [_emit_chunk(lines, start, end, "class", name,
+                              lines[start].strip(), None, file_path)]
+        # A typedef struct has two useful names: the tag (e.g. _mab_info)
+        # and the public typedef alias (e.g. t_mab_info).  Keep the tag as the
+        # primary class symbol, but index the alias too for callers using the
+        # public C type name.
+        alias_match = re.search(r"}\s*([A-Za-z_]\w*)\s*;", lines[end].strip())
+        if alias_match and alias_match.group(1) != name:
+            chunks.append(_emit_chunk(
+                lines, start, end, "class", alias_match.group(1),
+                lines[start].strip(), None, file_path))
+        return chunks
 
     chunks = []
     cursor = start
     for (hdr_idx, hdr_line, end_idx) in blocks:
         if hdr_idx > cursor:
             chunks.append(_emit_chunk(lines, cursor, hdr_idx - 1, "class", name,
-                                      lines[start].strip(), None))
+                                      lines[start].strip(), None, file_path))
         kind, mname = _cpp_def_kind(hdr_line)
         if kind == "function" and mname:
             chunks.append(_emit_chunk(lines, hdr_idx, end_idx, "method",
-                                      f"{name}::{mname}", hdr_line, None))
+                                      f"{name}::{mname}", hdr_line, None, file_path))
         else:
             chunks.append(_emit_chunk(lines, hdr_idx, end_idx, "block", name,
-                                      hdr_line, None))
+                                      hdr_line, None, file_path))
         cursor = end_idx + 1
     if cursor <= end:
         chunks.append(_emit_chunk(lines, cursor, end, "class", name,
-                                  lines[start].strip(), None))
+                                  lines[start].strip(), None, file_path))
     return chunks
 
 
-def _chunk_cpp_region(lines, start, end, base) -> list:
+def _chunk_cpp_defines(lines, file_path="") -> list:
+    """Extract #define constants as named chunks."""
+    chunks = []
+    for idx, line in enumerate(lines):
+        stripped = line.strip()
+        m = re.match(r'#define\s+([A-Za-z_]\w*)\s+(.+)', stripped)
+        if m:
+            chunks.append(_emit_chunk(
+                lines, idx, idx, "constant", m.group(1), stripped, None,
+                file_path))
+    return chunks
+
+
+def _chunk_cpp_region(lines, start, end, base, file_path="") -> list:
     """Zerlegt einen C++-Bereich: Blöcke auf Tiefe base+1 + Modul-Lücken."""
     chunks = []
     blocks = _cpp_sub_blocks(lines, start, end, base)
     cursor = start
     for (hdr_idx, hdr_line, end_idx) in blocks:
         if hdr_idx > cursor:
-            chunks.extend(_module_chunks(lines, cursor, hdr_idx - 1))
+            chunks.extend(_module_chunks(lines, cursor, hdr_idx - 1, file_path))
         kind, name = _cpp_def_kind(hdr_line)
         if kind in ("namespace", "extern"):
-            inner = _chunk_cpp_region(lines, hdr_idx + 1, end_idx - 1, base + 1)
+            inner = _chunk_cpp_region(lines, hdr_idx + 1, end_idx - 1, base + 1, file_path)
             if inner:
                 chunks.extend(inner)
             else:
                 chunks.append(_emit_chunk(lines, hdr_idx, end_idx, kind, name,
-                                          hdr_line, None))
+                                          hdr_line, None, file_path))
         elif kind == "class":
-            chunks.extend(_chunk_cpp_class(lines, hdr_idx, end_idx, base, name))
+            chunks.extend(_chunk_cpp_class(lines, hdr_idx, end_idx, base, name, file_path))
         elif kind == "function":
             chunks.append(_emit_chunk(lines, hdr_idx, end_idx, "function", name,
-                                      hdr_line, None))
+                                      hdr_line, None, file_path))
         else:
             chunks.append(_emit_chunk(lines, hdr_idx, end_idx, "block", name,
-                                      hdr_line, None))
+                                      hdr_line, None, file_path))
         cursor = end_idx + 1
     if cursor <= end:
-        chunks.extend(_module_chunks(lines, cursor, end))
+        chunks.extend(_module_chunks(lines, cursor, end, file_path))
     return chunks
 
 
-def _chunk_cpp(source: str) -> list:
+def _chunk_cpp(source: str, file_path: str = "") -> list:
     """Zerlegt C++-Code strukturiert (brace-basiert, ohne tree-sitter)."""
     source = source.replace("\r\n", "\n").replace("\r", "\n")
     lines = source.split("\n")
-    return _chunk_cpp_region(lines, 0, len(lines) - 1, 0)
+    chunks = _chunk_cpp_defines(lines, file_path)
+    chunks.extend(_chunk_cpp_region(lines, 0, len(lines) - 1, 0, file_path))
+    return chunks
 
 
-def _chunk_markdown(source: str) -> list:
+def _chunk_markdown(source: str, file_path: str = "") -> list:
     """Zerlegt Markdown nach Überschriften (Sections = Chunks)."""
     source = source.replace("\r\n", "\n").replace("\r", "\n")
     lines = source.split("\n")
     headings = [i for i, ln in enumerate(lines) if re.match(r"^#{1,6}\s", ln)]
     chunks = []
     if not headings:
-        return _module_chunks(lines, 0, len(lines) - 1)
+        return _module_chunks(lines, 0, len(lines) - 1, file_path)
     if headings[0] > 0:
-        chunks.extend(_module_chunks(lines, 0, headings[0] - 1))
+        chunks.extend(_module_chunks(lines, 0, headings[0] - 1, file_path))
     for k, hi in enumerate(headings):
         e = headings[k + 1] - 1 if k + 1 < len(headings) else len(lines) - 1
         title = re.sub(r"^#+\s*", "", lines[hi]).strip() or lines[hi].strip()
         chunks.append(_emit_chunk(lines, hi, e, "section", title,
-                                  lines[hi].strip(), None))
+                                  lines[hi].strip(), None, file_path))
     return chunks
 
 
@@ -420,6 +583,7 @@ class ProjectRAG:
                 conn.execute("""
                     CREATE TABLE IF NOT EXISTS code_chunks (
                         id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                        chunk_id    TEXT    NOT NULL UNIQUE,
                         file_path   TEXT    NOT NULL,
                         language    TEXT    NOT NULL,
                         chunk_index INTEGER NOT NULL,
@@ -436,10 +600,12 @@ class ProjectRAG:
                 """)
                 # FTS5-Virtual-Table: rowid verweist auf code_chunks.id.
                 # Trigramm-Tokenizer bevorzugt, Fallback auf unicode61.
+                # v4: symbol_name, signature, docstring als suchbare FTS5-Felder.
                 fts_sql = (
                     "CREATE VIRTUAL TABLE IF NOT EXISTS code_fts USING fts5("
                     "file_path UNINDEXED, language UNINDEXED, "
-                    "line_start UNINDEXED, line_end UNINDEXED, content, "
+                    "line_start UNINDEXED, line_end UNINDEXED, "
+                    "symbol_name, signature, docstring, content, "
                     "tokenize = '{}')"
                 )
                 try:
@@ -459,6 +625,27 @@ class ProjectRAG:
     # -- Scanning ------------------------------------------------------------
     def _scan_directory(self, directory_path: str) -> list:
         """Sammelt alle indizierbaren Quelldateien unter directory_path."""
+        # .ragignore laden (optional)
+        ragignore_patterns = []
+        ragignore_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), ".ragignore"
+        )
+        if os.path.isfile(ragignore_path):
+            with open(ragignore_path, "r", encoding="utf-8") as rf:
+                for raw in rf:
+                    line = raw.strip()
+                    if line and not line.startswith("#"):
+                        ragignore_patterns.append(line)
+
+        def _is_ignored(abs_path: str, rel_path: str) -> bool:
+            for pat in ragignore_patterns:
+                if fnmatch.fnmatch(rel_path, pat) or fnmatch.fnmatch(abs_path, pat):
+                    return True
+                # Match auch Verzeichnis-Prefix (z.B. "build/" matcht "build/Debug/file.cpp")
+                if pat.endswith("/") and (rel_path.startswith(pat) or abs_path.startswith(pat)):
+                    return True
+            return False
+
         files = []
         for root, dirs, names in os.walk(directory_path):
             dirs[:] = [d for d in dirs if d not in RAG_IGNORED_DIRS]
@@ -471,19 +658,22 @@ class ProjectRAG:
                     continue
                 abs_path = os.path.join(root, name)
                 try:
+                    rel_path = os.path.relpath(abs_path, directory_path)
+                except ValueError:
+                    rel_path = abs_path
+                if _is_ignored(abs_path, rel_path):
+                    continue
+                try:
                     if os.path.getsize(abs_path) > RAG_MAX_FILE_SIZE:
                         continue
                     with open(abs_path, "rb") as f:
                         content_bytes = f.read()
                 except OSError:
-                    continue  # nicht lesbare Datei (z.B. gesperrt) überspringen
+                    continue
                 try:
                     content = content_bytes.decode("utf-8")
                 except UnicodeDecodeError:
                     content = content_bytes.decode("utf-8", errors="replace")
-                # Zeilenenden normalisieren: CRLF/CR -> LF. Sonst bleiben `\r`-
-                # Reste an Zeilenenden und brechen den C++-Header-Scanner
-                # (Grenz-Checks auf `;`/`{`/`}`) sowie Tokenizer.
                 content = content.replace("\r\n", "\n").replace("\r", "\n")
                 files.append({
                     "path": os.path.normpath(abs_path),
@@ -492,19 +682,18 @@ class ProjectRAG:
                     "content": content,
                 })
         return files
-
-    def _chunk_file(self, language: str, content: str) -> list:
+    def _chunk_file(self, language: str, content: str, file_path: str = "") -> list:
         """Chunkt eine Quelldatei sprachabhängig (strukturell statt Zeilenblöcke)."""
         if language == "python":
-            return _chunk_python(content)
+            return _chunk_python(content, file_path)
         if language == "cpp":
-            return _chunk_cpp(content)
-        return _chunk_markdown(content)
+            return _chunk_cpp(content, file_path)
+        return _chunk_markdown(content, file_path)
 
     # -- Indexierung ---------------------------------------------------------
     def index_directory(self, directory_path: str) -> dict:
         """Indiziert (bzw. aktualisiert inkrementell) alle Code-Dateien."""
-        directory_path = os.path.normpath(directory_path)
+        directory_path = os.path.abspath(os.path.normpath(directory_path))
         if not os.path.isdir(directory_path):
             raise ValueError(f"Verzeichnis nicht gefunden: {directory_path}")
 
@@ -514,6 +703,17 @@ class ProjectRAG:
         skipped = 0
 
         with closing(self._connect()) as conn:
+            # Purge entries from old non-canonicalized indexing runs
+            # (relative paths or different absolute roots that no longer match)
+            with conn:
+                conn.execute(
+                    "DELETE FROM code_chunks WHERE file_path NOT LIKE ?",
+                    (directory_path + os.sep + "%",)
+                )
+                conn.execute(
+                    "DELETE FROM code_fts WHERE file_path NOT LIKE ?",
+                    (directory_path + os.sep + "%",)
+                )
             with conn:
                 for f in files:
                     # Inkrementell: unveränderte Dateien (gleicher SHA) überspringen
@@ -530,24 +730,27 @@ class ProjectRAG:
                     conn.execute("DELETE FROM code_chunks WHERE file_path = ?", (f["path"],))
 
                     # Datei strukturell in Chunks zerlegen und einfügen
-                    for idx, chunk in enumerate(self._chunk_file(f["language"], f["content"])):
+                    for idx, chunk in enumerate(self._chunk_file(f["language"], f["content"], f["path"])):
                         cur = conn.execute(
                             "INSERT INTO code_chunks "
-                            "(file_path, language, chunk_index, line_start, "
+                            "(chunk_id, file_path, language, chunk_index, line_start, "
                             " line_end, content, symbol_type, symbol_name, "
                             " signature, docstring, file_sha) "
-                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                            (f["path"], f["language"], idx, chunk["line_start"],
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                            (chunk.get("chunk_id"), f["path"], f["language"], idx, chunk["line_start"],
                              chunk["line_end"], chunk["content"],
                              chunk.get("symbol_type"), chunk.get("symbol_name"),
                              chunk.get("signature"), chunk.get("docstring"), f["sha"]),
                         )
                         conn.execute(
                             "INSERT INTO code_fts "
-                            "(rowid, file_path, language, line_start, line_end, content) "
-                            "VALUES (?, ?, ?, ?, ?, ?)",
+                            "(rowid, file_path, language, line_start, line_end, "
+                            " symbol_name, signature, docstring, content) "
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                             (cur.lastrowid, f["path"], f["language"],
-                             chunk["line_start"], chunk["line_end"], chunk["content"]),
+                             chunk["line_start"], chunk["line_end"],
+                             chunk.get("symbol_name"), chunk.get("signature"),
+                             chunk.get("docstring"), chunk["content"]),
                         )
                     indexed += 1
 
@@ -585,21 +788,38 @@ class ProjectRAG:
 
         Trigramm-Tokenizer verlangt Phrasen >= 3 Zeichen. Jeder Term wird als
         gequoteter Substring mit UND verknüpft, damit alle Begriffe vorkommen.
+
+        Fallback: Falls nur Token < 3 Zeichen vorhanden sind (z.B. "io", "mc"),
+        wird ein LIKE-ähnlicher Platzhalter '*' für FTS5 verwendet, der jedes
+        einzelne Zeichen als Substring matcht. Die Query-Methode erkennt diesen
+        Fallback und führt ergänzend eine LIKE-Suche auf symbol_name durch.
         """
         tokens = re.findall(r"[A-Za-z0-9_]{3,}", query)[:20]
         if not tokens:
             return None
         return " AND ".join('"' + t + '"' for t in tokens)
 
-    def query(self, query: str, top_k: int = 3) -> list:
-        """Hybride Suche: FTS5/bm25-Kandidaten + Re-Ranking nach exakten Treffern."""
+    def query(self, query: str, top_k: int = 3, semantic: bool = False) -> list:
+        """Hybride Suche: FTS5/bm25-Kandidaten + Re-Ranking nach exakten Treffern.
+
+        Fallback bei kurzen Queries (< 3 Zeichen): LIKE-basierte Suche auf
+        symbol_name, da der Trigramm-Tokenizer kurze Tokens nicht matcht.
+
+        Args:
+            query: Suchanfrage.
+            top_k: Anzahl der Treffer.
+            semantic: Wenn True, zusätzliches Re-Ranking via Character-N-Gramm-
+                Cosine-Ähnlichkeit (R7). Erfordert keine externen Pakete.
+        """
+        if not query or not query.strip():
+            return []
         match_expr = self._build_match_expr(query)
         if not match_expr:
-            return []
+            return self._query_like_fallback(query, top_k)
         with closing(self._connect()) as conn:
             rows = conn.execute(
                 """
-                SELECT c.id, c.file_path, c.language, c.line_start, c.line_end,
+                SELECT c.id, c.chunk_id, c.file_path, c.language, c.line_start, c.line_end,
                        c.content, c.symbol_type, c.symbol_name, c.signature,
                        c.docstring, bm25(code_fts) AS rank
                 FROM code_fts
@@ -627,20 +847,77 @@ class ProjectRAG:
             return (r["rank"], -exact)
 
         rows.sort(key=combined)
+
+        if semantic and rows:
+            rows = _semantic_rerank(query, rows, top_k)
+
         return rows[:top_k]
+
+    def _query_like_fallback(self, query: str, top_k: int = 3) -> list:
+        """LIKE-Fallback für kurze Queries (< 3 Zeichen pro Token).
+
+        Sucht über symbol_name, file_path und content mittels LIKE.
+        Wird aktiviert, wenn der FTS5-MATCH aufgrund zu kurzer Tokens
+        keine Ergebnisse liefern kann.
+        """
+        q = query.strip().lower()
+        if not q:
+            return []
+        like_pattern = "%" + q + "%"
+        with closing(self._connect()) as conn:
+            rows = conn.execute(
+                """
+                SELECT c.id, c.chunk_id, c.file_path, c.language, c.line_start, c.line_end,
+                       c.content, c.symbol_type, c.symbol_name, c.signature,
+                       c.docstring, 0.0 AS rank
+                FROM code_chunks c
+                WHERE LOWER(c.symbol_name) LIKE ?
+                   OR LOWER(c.file_path) LIKE ?
+                   OR LOWER(c.content) LIKE ?
+                ORDER BY c.file_path, c.line_start
+                LIMIT ?
+                """,
+                (like_pattern, like_pattern, like_pattern, top_k),
+            ).fetchall()
+        return [dict(r) for r in rows]
 
     # -- Wiki-Symbolabfrage --------------------------------------------------
     def query_wiki(self, query: str, max_results: int = 12) -> list:
-        """Symbol-basierte Suche im Code-Wiki (name/signature/docstring)."""
+        """Symbol-basierte Suche im Code-Wiki (name/signature/docstring).
+
+        Nutzt FTS5-Volltextsuche über symbol_name, signature und docstring.
+        Für Queries mit Token >= 3 Zeichen (Trigramm-Tokenizer). Kürzere
+        Queries fallen auf LIKE zurück.
+        """
         tokens = [t for t in re.findall(r"[A-Za-z_][A-Za-z0-9_]*", query) if len(t) >= 3]
         if not tokens:
-            return []
+            return self._query_wiki_like(query, max_results)
+        match_expr = " AND ".join('"' + t + '"' for t in tokens)
         with closing(self._connect()) as conn:
-            like = "%" + query.strip().lower() + "%"
             rows = conn.execute(
                 """
-                SELECT id, file_path, language, line_start, line_end, symbol_type,
-                       symbol_name, signature, docstring
+                SELECT c.id, c.chunk_id, c.file_path, c.language, c.line_start,
+                       c.line_end, c.symbol_type, c.symbol_name, c.signature,
+                       c.docstring
+                FROM code_fts
+                JOIN code_chunks c ON c.id = code_fts.rowid
+                WHERE code_fts MATCH ?
+                  AND c.symbol_name IS NOT NULL
+                ORDER BY bm25(code_fts)
+                LIMIT ?
+                """,
+                (match_expr, max_results),
+            ).fetchall()
+        return [dict(r) for r in rows]
+
+    def _query_wiki_like(self, query: str, max_results: int = 12) -> list:
+        """LIKE-Fallback für query_wiki bei kurzen Queries (< 3 Zeichen)."""
+        like = "%" + query.strip().lower() + "%"
+        with closing(self._connect()) as conn:
+            rows = conn.execute(
+                """
+                SELECT id, chunk_id, file_path, language, line_start, line_end,
+                       symbol_type, symbol_name, signature, docstring
                 FROM code_chunks
                 WHERE symbol_name IS NOT NULL
                   AND (LOWER(symbol_name) LIKE ? OR LOWER(signature) LIKE ?
@@ -655,8 +932,8 @@ class ProjectRAG:
     # -- Formatierung --------------------------------------------------------
     @staticmethod
     def chunk_ref(r) -> str:
-        """Stabile Kurz-Referenz für einen Chunk: [mab_123]."""
-        return f"[mab_{r.get('id') or r.get('chunk_id') or '?'}]"
+        """Stabile Kurz-Referenz für einen Chunk: [mab_<hash>]."""
+        return f"[{r.get('chunk_id') or r.get('id') or '?'}]"
 
     @staticmethod
     def format_results(results: list, query: str, format: str = "text") -> str:
@@ -727,7 +1004,7 @@ class ProjectRAG:
             "count": len(results),
             "results": [
                 {
-                    "chunk_id": r.get("id"),
+                    "chunk_id": r.get("chunk_id"),
                     "file_path": r.get("file_path"),
                     "language": r.get("language"),
                     "line_start": r.get("line_start"),
@@ -769,6 +1046,45 @@ class ProjectRAG:
                     return deps
         return deps
 
+    @staticmethod
+    def _find_usages(conn, symbol_name: str, file_path: str) -> list:
+        """Findet Verwendungen eines Symbols im Content anderer Chunks.
+
+        Prüft, ob `symbol_name` als ganzes Wort im Content von Chunks
+        anderer Dateien vorkommt (= `used_by`-Beziehung).
+        Liefert Liste von (file_path, line_start, symbol_type, chunk_id).
+        """
+        if not symbol_name or len(symbol_name) < 3:
+            return []
+        rows = conn.execute(
+            """
+            SELECT DISTINCT c.file_path, c.line_start, c.symbol_type, c.chunk_id
+            FROM code_chunks c
+            WHERE c.file_path != ?
+              AND c.chunk_id IS NOT NULL
+              AND c.content LIKE ?
+            LIMIT 20
+            """,
+            (file_path, f"%{symbol_name}%"),
+        ).fetchall()
+        # Post-Filter auf ganze Wörter (keine Substring-Treffer wie "init" in "initialized")
+        pattern = re.compile(r"(?<!\w)" + re.escape(symbol_name) + r"(?!\w)")
+        result = []
+        seen = set()
+        for r in rows:
+            key = (r["file_path"], r["line_start"])
+            if key in seen:
+                continue
+            seen.add(key)
+            # Hole den Content zur Verifikation
+            chunk = conn.execute(
+                "SELECT content FROM code_chunks WHERE chunk_id = ?",
+                (r["chunk_id"],),
+            ).fetchone()
+            if chunk and pattern.search(chunk["content"]):
+                result.append(dict(r))
+        return result[:10]
+
     def generate_wiki(self, wiki_path: str = WIKI_PATH) -> dict:
         """Generiert das Code-Wiki (stabiler Symbolindex) als Markdown-Datei."""
         with closing(self._connect()) as conn:
@@ -783,6 +1099,12 @@ class ProjectRAG:
             out = [
                 "# mab~ Code-Wiki",
                 "",
+                "_Automatisch generierter Symbolindex. Ergänzt "
+                "[`doc/projektwissen.md`](./projektwissen.md) – manuell gepflegtes "
+                "Architekturwissen (Struct-Layouts, Konstanten, Threading-Modell)._",
+                "",
+                "<!-- AUTOGENERATED_WIKI_START -->",
+                "",
                 f"_Automatisch generiert von `index_project_code` (MCP-Server). "
                 f"{len(files)} Dateien, {n_chunks} Chunks, {n_syms} Symbole._",
                 "",
@@ -791,7 +1113,7 @@ class ProjectRAG:
                 "und verifizieren Details immer am echten Quellcode (Pfad + Zeilennummern).",
                 "",
                 "## Inhaltsverzeichnis",
-            ]
+                        ]
             for f in files:
                 out.append(f"- [`{f['file_path']}`](#{_wiki_anchor(f['file_path'])})")
             out.append("")
@@ -830,6 +1152,14 @@ class ProjectRAG:
                         if doc1:
                             entry += f" - {doc1}"
                         out.append(entry)
+                        # used_by: Symbole aus anderen Dateien, die dieses referenzieren
+                        used_by = self._find_usages(conn, s["symbol_name"], f["file_path"])
+                        if used_by:
+                            for u in used_by:
+                                out.append(
+                                    f"  - *used by* `{u['file_path']}:{u['line_start']}` "
+                                    f"({u['symbol_type'] or '?'}) [{u['chunk_id']}]"
+                                )
                 out.append("")
 
         out_dir = os.path.dirname(os.path.abspath(wiki_path))
@@ -852,25 +1182,20 @@ _rag = ProjectRAG()
 @mcp.tool()
 def run_cpp_tests() -> str:
     """
-    Führt den Build-Prozess für das mab~ External über CMake-Presets aus.
+    Baut das mab~ External über CMake-Presets und führt alle Test-Binaries aus.
 
     Nutzt `cmake --build --preset debug` (siehe `CMakePresets.json`).
     Vor dem ersten Build muss `cmake --preset debug` konfiguriert worden sein.
+    Nach erfolgreichem Build werden alle `.exe`-Dateien im `build/Debug/`-
+    Verzeichnis ausgeführt (C++-Unit-Tests).
 
     Returns:
-        Ergebnis des Build-Prozesses
+        Ergebnis von Build + Test-Ausführung.
     """
     try:
         # Prüfe ob CMakePresets.json existiert
         if not os.path.exists("CMakePresets.json"):
             return "Fehler: CMakePresets.json nicht gefunden."
-
-        # Prüfe ob Build-Verzeichnis existiert (wird durch `cmake --preset debug` angelegt)
-        if not os.path.exists("build"):
-            return (
-                "Fehler: Build-Verzeichnis nicht gefunden. "
-                "Führe zuerst 'cmake --preset debug' aus."
-            )
 
         # Build über Preset
         result = subprocess.run(
@@ -880,10 +1205,45 @@ def run_cpp_tests() -> str:
             timeout=300,
         )
 
-        if result.returncode == 0:
-            return "Build erfolgreich!\n\n" + result.stdout
-        else:
+        if result.returncode != 0:
             return "Build-Fehler:\n\n" + (result.stderr or result.stdout)
+
+        lines = ["Build erfolgreich!", "=" * 60, ""]
+
+        # Test-Binaries im Build-Verzeichnis finden und ausführen
+        build_dir = os.path.join("build", "Debug")
+        if os.path.isdir(build_dir):
+            test_exes = [
+                os.path.join(build_dir, f)
+                for f in os.listdir(build_dir)
+                if f.endswith(".exe") and "test" in f.lower()
+            ]
+            if test_exes:
+                for exe in sorted(test_exes):
+                    lines.append(f"Test: {os.path.basename(exe)}")
+                    lines.append("-" * 40)
+                    try:
+                        t_result = subprocess.run(
+                            [exe],
+                            capture_output=True,
+                            text=True,
+                            timeout=120,
+                        )
+                        if t_result.stdout:
+                            lines.append(t_result.stdout.strip())
+                        if t_result.stderr:
+                            lines.append("STDERR: " + t_result.stderr.strip())
+                        status = "✓ PASS" if t_result.returncode == 0 else "✗ FAIL"
+                        lines.append(f"→ {status} (exit={t_result.returncode})\n")
+                    except subprocess.TimeoutExpired:
+                        lines.append(f"→ ✗ TIMEOUT (120s überschritten)\n")
+            else:
+                lines.append("Keine Test-Binaries (*test*.exe) in build/Debug/ gefunden.")
+                lines.append("Tipp: C++-Tests zu CMakeLists.txt hinzufügen.")
+        else:
+            lines.append("build/Debug/ nicht gefunden – überspringe Test-Ausführung.")
+
+        return "\n".join(lines)
 
     except subprocess.TimeoutExpired:
         return "Fehler: Build-Prozess hat einen Timeout erfahren (300s)."
@@ -997,282 +1357,6 @@ def get_project_summary() -> str:
     return "\n".join(lines)
 
 
-@mcp.tool()
-def search_max_sdk_docs(query: str) -> str:
-    """
-    Durchsucht lokale Markdown-Notizen oder Header-Dateien des Max SDK
-    nach Begriffen wie t_pxobject, dsp_setup, class_addmethod oder InterlockedExchange.
-    
-    Args:
-        query: Suchbegriff für die Dokumentation
-        
-    Returns:
-        Fundene Informationen und Code-Beispiele
-    """
-    # Suche im Projekt nach relevanten Dateien
-    search_paths = [
-        "source/projects/mab_tilde/mab_tilde.cpp",
-        "inference_worker.py",
-        "doc/",
-        "."
-    ]
-    
-    results = []
-    query_lower = query.lower()
-    
-    # Spezifische Suchergebnisse für häufige Max SDK Begriffe
-    max_sdk_patterns = {
-        "t_pxobject": """t_pxobject ist die Grundstruktur für Patcher-Objekte mit DSP-Fähigkeit.
-
-Verwendung:
-```c
-typedef struct _mab_tilde {
-    t_pxobject ob;  // Muss die erste Komponente sein
-    // ... weitere Felder
-} t_mab_tilde;
-```
-
-Wichtige Eigenschaften:
-- p_in1, p_in2: Eingangs-Pointer für Signalobjekte
-- p_out1, p_out2: Ausgangs-Pointer
-- z_in_num: Anzahl der Eingänge
-- z_out_num: Anzahl der Ausgänge
-- z_oshead: OS-spezifischer Header""",
-        
-        "dsp_setup": """dsp_setup() initialisiert ein Signalobjekt für DSP-Verarbeitung.
-
-Verwendung:
-```c
-dsp_setup((t_pxobject*)x, 1);  // 1 Eingang
-```
-
-Parameter:
-- x: Pointer auf das Objekt-Struct
-- n: Anzahl der Eingänge (0 = kein Signal)
-
-Wichtig: Muss vor outlet_new() aufgerufen werden!""",
-        
-        "class_addmethod": """class_addmethod() fügt Methoden zu einer Max-Klasse hinzu.
-
-Verwendung:
-```c
-class_addmethod(c, (method)mab_tilde_enable, "enable", A_LONG, 0);
-```
-
-Parameter:
-- c: Die Klasse
-- method: Die Funktion
-- selector: Der Message-Name in Max
-- type: Argument-Typ (A_LONG, A_FLOAT, A_SYM, A_GIMME, A_CANT)
-- arg: Zusätzlicher Parameter (meist 0)""",
-        
-        "interlockedexchange": """InterlockedExchange() führt eine atomare Wertersetzung aus.
-
-Verwendung:
-```c
-InterlockedExchange(&x->header->shutdown_flag, 1);
-```
-
-Wichtig für Shared Memory IPC zwischen C++ und Python!
-
-Weitere nützliche Interlocked-Funktionen:
-- InterlockedIncrement() - atomares Inkrement
-- InterlockedDecrement() - atomares Dekrement
-- InterlockedCompareExchange() - Compare-and-Swap"""
-    }
-    
-    # Prüfe auf direkte Übereinstimmung
-    if query_lower in max_sdk_patterns:
-        return f"Max SDK Suche: '{query}'\n" + "=" * 50 + "\n\n" + max_sdk_patterns[query_lower]
-    
-    # Suche nach Teilübereinstimmungen
-    for key, value in max_sdk_patterns.items():
-        if key in query_lower:
-            results.append(f"Gefunden: {key}\n" + value + "\n")
-    
-    if results:
-        return "\n".join(results)
-    
-    # Standardantwort mit allgemeinen Informationen
-    return f"""Max SDK Suchergebnis für: '{query}'
-
-Verfügbare Suchbegriffe:
-- t_pxobject: Signalobjekt-Struktur
-- dsp_setup: DSP-Initialisierung
-- class_addmethod: Methoden-Registrierung
-- interlockedexchange: Atomare Operationen
-
-Weitere Informationen:
-- Max SDK Dokumentation: https://cycling74.com/sdk/
-- GitHub: https://github.com/Cycling74/max-sdk
-
-Falls du spezifischere Informationen brauchst, verwende einen der oben genannten Suchbegriffe."""
-
-
-@mcp.tool()
-def validate_ipc_sync() -> str:
-    """
-    Analysiert statisch den C++ Code (mab_tilde.cpp) und das Python-Worker-Skript,
-    um sicherzustellen, dass die Shared-Memory-Magie (0x4D414254 / 'MABT') und
-    die Ringbuffer-Indizes (head/tail) synchron implementiert sind.
-    
-    Returns:
-        IPC-Synchronisations-Report
-    """
-    result = "IPC SYNCHRONISATIONS-ANALYSE\n"
-    result += "=" * 50 + "\n\n"
-    
-    issues = []
-    warnings = []
-    ok_checks = []
-    
-    # Prüfe C++ Datei
-    cpp_path = "source/projects/mab_tilde/mab_tilde.cpp"
-    py_path = "inference_worker.py"
-    
-    # 1. Magic Number Prüfung
-    result += "1. MAGIC NUMBER PRÜFUNG\n"
-    result += "-" * 30 + "\n"
-    
-    try:
-        with open(cpp_path, 'r', encoding='utf-8') as f:
-            cpp_content = f.read()
-        
-        if "0x4D414254" in cpp_content or "'MABT'" in cpp_content:
-            ok_checks.append("✓ C++: Magic Number 0x4D414254 ('MABT') gefunden")
-        else:
-            issues.append("✗ C++: Magic Number nicht gefunden")
-    except FileNotFoundError:
-        issues.append("✗ C++: mab_tilde.cpp nicht gefunden")
-    
-    try:
-        with open(py_path, 'r', encoding='utf-8') as f:
-            py_content = f.read()
-        
-        if "0x4D414254" in py_content or "MAGIC_NUMBER" in py_content:
-            ok_checks.append("✓ Python: Magic Number 0x4D414254 definiert")
-        else:
-            issues.append("✗ Python: Magic Number nicht definiert")
-    except FileNotFoundError:
-        issues.append("✗ Python: inference_worker.py nicht gefunden")
-    
-    # 2. Shared Memory Namen
-    result += "\n2. SHARED MEMORY NAMEN\n"
-    result += "-" * 30 + "\n"
-    
-    if "MabSharedMem_" in cpp_content:
-        ok_checks.append("✓ C++: Shared Memory Name-Format gefunden")
-    else:
-        warnings.append("⚠ C++: Shared Memory Name-Format nicht gefunden")
-    
-    if "MabSharedMem_" in py_content:
-        ok_checks.append("✓ Python: Shared Memory Name-Format gefunden")
-    else:
-        warnings.append("⚠ Python: Shared Memory Name-Format nicht gefunden")
-    
-    # 3. Ring Buffer Head/Tail Implementierung
-    result += "\n3. RING BUFFER IMPLEMENTIERG\n"
-    result += "-" * 30 + "\n"
-    
-    # C++ Head (Producer)
-    if "InterlockedIncrement" in cpp_content and "p_control->head" in cpp_content:
-        ok_checks.append("✓ C++: Head mit InterlockedIncrement (atomar)")
-    else:
-        issues.append("✗ C++: Head-Implementierung nicht korrekt")
-    
-    # C++ Tail (Consumer) - sollte nicht direkt geschrieben werden
-    if "p_control->tail" in cpp_content:
-        # Prüfe ob tail nur gelesen wird
-        if cpp_content.count("p_control->tail") > 1:
-            warnings.append("⚠ C++: Tail wird mehrfach referenziert - prüfe SPSC-Eigenschaften")
-        else:
-            ok_checks.append("✓ C++: Tail wird nur gelesen (Consumer)")
-    
-    # Python Tail (Consumer)
-    if "shm._p_control.tail" in py_content or "p_control.tail" in py_content:
-        ok_checks.append("✓ Python: Tail als Consumer verwendet")
-    else:
-        issues.append("✗ Python: Tail-Implementierung fehlt")
-    
-    # Python Head (Producer) - sollte nicht geschrieben werden
-    if "shm._p_control.head" in py_content:
-        # Prüfe ob head nur gelesen wird
-        py_head_writes = py_content.count("shm._p_control.head =")
-        if py_head_writes > 0:
-            issues.append(f"✗ Python: Head wurde {py_head_writes}x geschrieben (soll Producer sein)")
-        else:
-            ok_checks.append("✓ Python: Head wird nur gelesen (Producer)")
-    
-    # 4. CONTROL_RING_SIZE Konsistenz
-    result += "\n4. KONSTANTEN KONSISTENZ\n"
-    result += "-" * 30 + "\n"
-    
-    if "CONTROL_RING_SIZE 256" in cpp_content:
-        ok_checks.append("✓ C++: CONTROL_RING_SIZE = 256")
-    else:
-        warnings.append("⚠ C++: CONTROL_RING_SIZE unbekannt")
-    
-    if "CONTROL_RING_SIZE = 256" in py_content or "CONTROL_RING_SIZE" in py_content:
-        ok_checks.append("✓ Python: CONTROL_RING_SIZE definiert")
-    else:
-        warnings.append("⚠ Python: CONTROL_RING_SIZE nicht gefunden")
-    
-    # 5. Shared Memory Header Struktur
-    result += "\n5. HEADER STRUKTUR\n"
-    result += "-" * 30 + "\n"
-    
-    header_fields = ["magic", "version", "block_size", "num_channels", 
-                     "input_offset", "output_offset", "control_offset",
-                     "is_input_ready", "is_output_ready", "shutdown_flag"]
-    
-    for field in header_fields:
-        if field in cpp_content:
-            ok_checks.append(f"✓ C++: Header Feld '{field}' gefunden")
-        else:
-            issues.append(f"✗ C++: Header Feld '{field}' fehlt")
-    
-    # 6. Event-Synchronisation
-    result += "\n6. EVENT-SYNCHRONISATION\n"
-    result += "-" * 30 + "\n"
-    
-    if "CreateEventW" in cpp_content:
-        ok_checks.append("✓ C++: CreateEventW verwendet")
-    else:
-        issues.append("✗ C++: CreateEventW nicht gefunden")
-    
-    if "SetEvent" in py_content:
-        ok_checks.append("✓ Python: SetEvent für Ready-Signal")
-    else:
-        issues.append("✗ Python: SetEvent nicht gefunden")
-    
-    # Zusammenfassung
-    result += "\n" + "=" * 50 + "\n"
-    result += "ERGEBNIS\n"
-    result += "=" * 50 + "\n\n"
-    
-    if ok_checks:
-        result += "✓ BESTANDEN:\n"
-        for check in ok_checks:
-            result += f"  {check}\n"
-    
-    if warnings:
-        result += "\n⚠ WARNUNGEN:\n"
-        for warning in warnings:
-            result += f"  {warning}\n"
-    
-    if issues:
-        result += "\n✗ PROBLEME:\n"
-        for issue in issues:
-            result += f"  {issue}\n"
-    
-    if not issues:
-        result += "\n✅ IPC-Synchronisation ist korrekt implementiert!\n"
-    else:
-        result += f"\n❌ {len(issues)} Probleme gefunden - bitte korrigieren!\n"
-    
-    return result
-
-
 # ============================================================================
 # SQLite-RAG Tools
 # ============================================================================
@@ -1325,19 +1409,19 @@ def index_project_code(directory_path: str) -> str:
         f"  - Unverändert übersprungen: {stats['skipped']}\n"
         f"  - Datenbank: {_rag.db_path}"
         f"{wiki_line}\n\n"
-        "Verwende `query_code_rag` für gezielte Codestellen und "
+        "Wiki aktualisiert. Agents: doc/code_wiki.md neu einlesen. Verwende `query_code_rag` für gezielte Codestellen und "
         "`query_code_wiki` für die Symbol-/Struktur-Suche."
     )
 
 
 @mcp.tool()
-def query_code_rag(query: str, top_k: int = 3, format: str = "text") -> str:
+def query_code_rag(query: str, top_k: int = 3, format: str = "text", semantic: bool = False) -> str:
     """Durchsucht die RAG-Datenbank nach Code-Stellen passend zur Suchanfrage.
 
     Hybride Suche: SQLite FTS5 mit Trigramm-Tokenizer (bm25, lexikalisch -
     matcht auch Identifikator-Substrings wie `mab_tilde`, `block_size`,
     `dsp_setup`) plus Re-Ranking nach exakten Identifier-Treffern (Syntax-
-    Boost). Treffer tragen stabile Chunk-Referenzen ([mab_<id>]), die für
+    Boost). Treffer tragen stabile Chunk-Referenzen ([mab_<hash>]), die für
     `get_rag_chunk` genutzt werden können.
 
     Args:
@@ -1346,6 +1430,9 @@ def query_code_rag(query: str, top_k: int = 3, format: str = "text") -> str:
         format: Ausgabeformat - "text" (Code-Snippets, Standard), "compact"
             (eine Zeile pro Treffer, token-sparsam) oder "json"
             (maschinenlesbar, inkl. chunk_id).
+        semantic: Wenn True, zusätzliches semantisches Re-Ranking via
+            Character-N-Gramm-Cosine-Ähnlichkeit. Erfordert keine externen
+            Pakete (R7 Feature).
 
     Returns:
         Die relevantesten Code-Chunks inkl. Dateipfad, Zeilennummern und Chunk-ID.
@@ -1355,7 +1442,7 @@ def query_code_rag(query: str, top_k: int = 3, format: str = "text") -> str:
             "Die RAG-Datenbank ist noch leer.\n"
             "Führe zuerst `index_project_code` auf dem Projektverzeichnis aus."
         )
-    results = _rag.query(query, top_k=top_k)
+    results = _rag.query(query, top_k=top_k, semantic=semantic)
     return _rag.format_results(results, query, format=format)
 
 
@@ -1379,20 +1466,16 @@ def get_rag_chunk(chunk_id: str) -> str:
     if not chunk_id or not chunk_id.startswith("mab_"):
         return (
             f"Ungültige Chunk-ID: '{chunk_id}'. Erwartet wird das Format "
-            "'mab_<id>' aus `query_code_rag`/`query_code_wiki`."
+            "'mab_<hash>' aus `query_code_rag`/`query_code_wiki`."
         )
-    try:
-        cid = int(chunk_id[len("mab_"):])
-    except ValueError:
-        return f"Ungültige Chunk-ID: '{chunk_id}' (id ist keine Zahl)."
     with closing(_rag._connect()) as conn:
         row = conn.execute(
             """
-            SELECT id, file_path, language, line_start, line_end, content,
+            SELECT id, chunk_id, file_path, language, line_start, line_end, content,
                    symbol_type, symbol_name, signature, docstring
-            FROM code_chunks WHERE id = ?
+            FROM code_chunks WHERE chunk_id = ?
             """,
-            (cid,),
+            (chunk_id,),
         ).fetchone()
     if not row:
         return f"Kein Chunk mit ID '{chunk_id}' in der RAG-Datenbank."
@@ -1600,3 +1683,4 @@ def _rave_integration_hint() -> str:
 
 if __name__ == "__main__":
     mcp.run()
+

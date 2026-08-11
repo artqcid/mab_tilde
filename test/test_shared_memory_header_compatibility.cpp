@@ -1,6 +1,6 @@
 // Test for SharedMemoryHeader struct compatibility between C++ and Python
 // This test verifies that the C++ and Python SharedMemoryHeader structures
-// have identical memory layout and field offsets (header version 2).
+// have identical memory layout and field offsets (header version 3).
 //
 // Build this test separately and run it to verify struct compatibility.
 
@@ -11,10 +11,11 @@
 #include <cstddef>
 
 // Shared memory header structure (must match Python's ctypes.Structure exactly)
-// Version 2 adds the method-aware metadata used for dynamic inlets/outlets.
+// Version 3 adds the method-aware metadata (v2) plus the per-inlet MC channel
+// map used by mc.mab~ (Phase 5).
 struct SharedMemoryHeader {
     uint32_t magic;           // 0x4D414254 ('MABT')
-    uint32_t version;         // 2
+    uint32_t version;         // 3
     uint32_t block_size;      // samples per audio block
     uint32_t num_channels;    // legacy channel count (== channels_out)
     uint32_t channels_in;     // active method: input channels
@@ -22,10 +23,14 @@ struct SharedMemoryHeader {
     uint32_t latent_size;     // latent dimension of the active method
     uint32_t input_ratio;     // active method: input ratio
     uint32_t output_ratio;    // active method: output ratio
-    char     method[64];      // active method name
+    char     method[52];      // active method name
+    uint32_t method_id;       // stable hash of method for atomic comparison
     uint32_t input_offset;    // bytes to input buffer
     uint32_t output_offset;   // bytes to output buffer
     uint32_t control_offset;  // bytes to control ring buffer
+    uint32_t input_buffer_index;   // A1: index of input buffer C++ is filling (0/1)
+    uint32_t output_buffer_index;  // A1: index of output buffer C++ is draining (0/1)
+    uint32_t channel_map[16]; // Phase 5 (mc.mab~): per-inlet channel counts
     long is_input_ready;      // atomic flag (volatile)
     long is_output_ready;     // atomic flag (volatile)
     long is_python_ready;     // atomic flag (volatile)
@@ -85,16 +90,28 @@ void test_field_offsets() {
     assert(offset_output_ratio == 32);
     assert(offset_method == 36);
 
-    // After method[64]: input_offset, output_offset, control_offset
-    assert(offset_input_offset == 100);
-    assert(offset_output_offset == 104);
-    assert(offset_control_offset == 108);
+    // After method[52] + method_id (4): input_offset, output_offset, control_offset
+    assert(offset_input_offset == 92);
+    assert(offset_output_offset == 96);
+    assert(offset_control_offset == 100);
+    size_t offset_input_buffer_index = offsetof(SharedMemoryHeader, input_buffer_index);
+    size_t offset_output_buffer_index = offsetof(SharedMemoryHeader, output_buffer_index);
+    printf("  input_buffer_index offset: %zu\n", offset_input_buffer_index);
+    printf("  output_buffer_index offset: %zu\n", offset_output_buffer_index);
+    assert(offset_input_buffer_index == 104);
+    assert(offset_output_buffer_index == 108);
 
-    // long fields (4 bytes each on Windows MSVC)
-    assert(offset_is_input_ready == 112);
-    assert(offset_is_output_ready == 116);
-    assert(offset_is_python_ready == 120);
-    assert(offset_shutdown_flag == 124);
+    // Phase 5: channel_map[16] (uint32) right after the buffer indices
+    size_t offset_channel_map = offsetof(SharedMemoryHeader, channel_map);
+    printf("  channel_map offset: %zu\n", offset_channel_map);
+    assert(offset_channel_map == 112);
+    assert(sizeof(SharedMemoryHeader().channel_map) == 16 * sizeof(uint32_t));
+
+    // long fields (4 bytes each on Windows MSVC) follow channel_map
+    assert(offset_is_input_ready == 176);
+    assert(offset_is_output_ready == 180);
+    assert(offset_is_python_ready == 184);
+    assert(offset_shutdown_flag == 188);
 
     printf("  All field offsets verified!\n");
 }
@@ -103,13 +120,15 @@ void test_field_offsets() {
 void test_struct_size() {
     printf("Testing SharedMemoryHeader struct size...\n");
 
-    size_t expected_size = 9 * sizeof(uint32_t) + 64 + 3 * sizeof(uint32_t)
+    size_t expected_size = 9 * sizeof(uint32_t) + 52 + sizeof(uint32_t)
+                           + 3 * sizeof(uint32_t) + 2 * sizeof(uint32_t)
+                           + 16 * sizeof(uint32_t)   // channel_map (Phase 5)
                            + 4 * sizeof(long);
 
     printf("  Expected size: %zu\n", expected_size);
     printf("  Actual size: %zu\n", sizeof(SharedMemoryHeader));
 
-    assert(sizeof(SharedMemoryHeader) == 128);
+    assert(sizeof(SharedMemoryHeader) == 192);
     assert(sizeof(SharedMemoryHeader) == expected_size);
     printf("  Struct size verified!\n");
 }
@@ -122,7 +141,7 @@ void test_header_usage() {
 
     // Initialize header
     header.magic = 0x4D414254;  // 'MABT'
-    header.version = 2;
+    header.version = 3;
     header.block_size = 2048;
     header.num_channels = 1;
     header.channels_in = 16;    // e.g. RAVE decode latent input
@@ -132,15 +151,16 @@ void test_header_usage() {
     header.output_ratio = 1;
     strncpy(header.method, "decode", sizeof(header.method) - 1);
     header.input_offset = sizeof(SharedMemoryHeader);
-    header.output_offset = sizeof(SharedMemoryHeader) + 16 * 2048 * sizeof(float);
+    header.output_offset = sizeof(SharedMemoryHeader) + 2 * 16 * 2048 * sizeof(float);
     header.is_input_ready = 0;
     header.is_output_ready = 0;
     header.is_python_ready = 0;
     header.shutdown_flag = 0;
+    header.channel_map[0] = 16;  // 16 latent channels on the single MC inlet
 
     // Verify values
     assert(header.magic == 0x4D414254);
-    assert(header.version == 2);
+    assert(header.version == 3);
     assert(header.block_size == 2048);
     assert(header.channels_in == 16);
     assert(header.channels_out == 1);
@@ -149,7 +169,9 @@ void test_header_usage() {
     assert(header.output_ratio == 1);
     assert(strcmp(header.method, "decode") == 0);
     assert(header.input_offset == sizeof(SharedMemoryHeader));
-    assert(header.output_offset == sizeof(SharedMemoryHeader) + 16 * 2048 * 4);
+    assert(header.output_offset == sizeof(SharedMemoryHeader) + 2 * 16 * 2048 * 4);
+    assert(header.channel_map[0] == 16);
+    assert(header.channel_map[1] == 0);
 
     // Test atomic flag operations
     header.is_input_ready = 1;
@@ -177,11 +199,11 @@ void test_buffer_offsets() {
     header.channels_out = max_channels_out;
     header.input_offset = sizeof(SharedMemoryHeader);
     header.output_offset = sizeof(SharedMemoryHeader)
-                           + block_size * max_channels_in * sizeof(float);
+                           + 2 * block_size * max_channels_in * sizeof(float);
 
     size_t input_size = block_size * max_channels_in * sizeof(float);
     size_t output_size = block_size * max_channels_out * sizeof(float);
-    size_t total_size = sizeof(SharedMemoryHeader) + input_size + output_size;
+    size_t total_size = sizeof(SharedMemoryHeader) + 2 * input_size + 2 * output_size;
 
     printf("  Header size: %zu\n", sizeof(SharedMemoryHeader));
     printf("  Input size: %zu bytes\n", input_size);
@@ -189,7 +211,7 @@ void test_buffer_offsets() {
     printf("  Total size: %zu bytes\n", total_size);
 
     assert(header.input_offset == sizeof(SharedMemoryHeader));
-    assert(header.output_offset == sizeof(SharedMemoryHeader) + input_size);
+    assert(header.output_offset == sizeof(SharedMemoryHeader) + 2 * input_size);
 
     printf("  Buffer offsets verified!\n");
 }
@@ -208,7 +230,7 @@ void test_multichannel_layout() {
     header.channels_in = channels;
     header.channels_out = channels;
     header.input_offset = sizeof(SharedMemoryHeader);
-    header.output_offset = sizeof(SharedMemoryHeader) + block_size * channels * sizeof(float);
+    header.output_offset = sizeof(SharedMemoryHeader) + 2 * block_size * channels * sizeof(float);
 
     size_t total_samples = block_size * channels;
     size_t total_bytes = total_samples * sizeof(float);
@@ -217,13 +239,13 @@ void test_multichannel_layout() {
     printf("  Total samples: %zu\n", total_samples);
     printf("  Total bytes: %zu\n", total_bytes);
 
-    assert(header.output_offset == sizeof(SharedMemoryHeader) + total_bytes);
+    assert(header.output_offset == sizeof(SharedMemoryHeader) + 2 * total_bytes);
 
     printf("  Multi-channel layout verified!\n");
 }
 
 int main() {
-    printf("=== SharedMemoryHeader Compatibility Tests (v2) ===\n\n");
+    printf("=== SharedMemoryHeader Compatibility Tests (v3) ===\n\n");
 
     test_field_offsets();
     printf("\n");

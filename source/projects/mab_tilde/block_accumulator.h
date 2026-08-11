@@ -8,6 +8,43 @@
 // No Max SDK dependency: mab_tilde.cpp uses them on the real audio thread and
 // unit tests exercise them standalone.
 
+#include <emmintrin.h>
+#include <cstring>
+
+// A6: SIMD vectorised float <-> double conversion. SSE2 is guaranteed on x64.
+// These helpers use unaligned loads/stores so no padding/alignment is required.
+static inline void convert_d2f(const double* __restrict src,
+                               float* __restrict dst, size_t n) {
+    size_t i = 0;
+    // Process two doubles -> two floats per iteration.
+    for (; i + 2 <= n; i += 2) {
+        __m128d vd = _mm_loadu_pd(src + i);
+        __m128 vf = _mm_cvtpd_ps(vd);
+        dst[i] = _mm_cvtss_f32(vf);
+        dst[i + 1] = _mm_cvtss_f32(_mm_shuffle_ps(vf, vf, _MM_SHUFFLE(0, 0, 0, 1)));
+    }
+    for (; i < n; ++i) {
+        dst[i] = static_cast<float>(src[i]);
+    }
+}
+
+static inline void convert_f2d(const float* __restrict src,
+                               double* __restrict dst, size_t n) {
+    size_t i = 0;
+    // Process four floats -> four doubles per iteration.
+    for (; i + 4 <= n; i += 4) {
+        __m128 vf = _mm_loadu_ps(src + i);
+        __m128d vd0 = _mm_cvtps_pd(vf);
+        __m128 vf_hi = _mm_movehl_ps(vf, vf);
+        __m128d vd1 = _mm_cvtps_pd(vf_hi);
+        _mm_storeu_pd(dst + i, vd0);
+        _mm_storeu_pd(dst + i + 2, vd1);
+    }
+    for (; i < n; ++i) {
+        dst[i] = static_cast<double>(src[i]);
+    }
+}
+
 // Append `n` samples per channel to a [channels][block_size] float buffer.
 // Never writes past the current block boundary, so a pending (not yet
 // consumed by Python) block is never overwritten. A tick that exceeds the
@@ -25,8 +62,10 @@ inline bool block_accumulate_write(float* buffer, long channels, long block_size
     for (long ch = 0; ch < channels; ch++) {
         const double* in = (ch < numins && ins[ch]) ? ins[ch] : nullptr;
         float* dst = buffer + (long long)ch * block_size + pos;
-        for (long i = 0; i < w; i++) {
-            dst[i] = in ? (float)in[i] : 0.0f;
+        if (in) {
+            convert_d2f(in, dst, static_cast<size_t>(w));
+        } else {
+            std::memset(dst, 0, static_cast<size_t>(w) * sizeof(float));
         }
     }
     pos += w;
@@ -52,9 +91,7 @@ inline bool block_accumulate_read(float* buffer, long channels, long block_size,
         double* out = (ch < numouts) ? outs[ch] : nullptr;
         if (!out) continue;
         const float* src = buffer + (long long)ch * block_size + pos;
-        for (long i = 0; i < r; i++) {
-            out[i] = (double)src[i];
-        }
+        convert_f2d(src, out, static_cast<size_t>(r));
     }
     pos += r;
     bool completed = (pos >= block_size);

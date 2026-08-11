@@ -23,6 +23,7 @@ Features
 
 import sys
 import os
+import gc
 import ctypes
 import struct
 import time
@@ -60,13 +61,14 @@ MODEL_API_ROOT = "https://play.forum.ircam.fr/rave-vst-api/"
 class SharedMemoryHeader(ctypes.Structure):
     """Header structure that Python creates and C++ reads.
 
-    Version 2 adds method-aware metadata (channels_in/out, ratios, latent size
-    and the active method name) so C++ can set up dynamic inlets/outlets.
+    Version 3 adds method-aware metadata (channels_in/out, ratios, latent size
+    and the active method name) so C++ can set up dynamic inlets/outlets, plus
+    the per-inlet MC `channel_map` for mc.mab~ (Phase 5).
     Field order must match the C++ `SharedMemoryHeader` exactly.
     """
     _fields_ = [
         ("magic", ctypes.c_uint32),           # Validation signature 'MABT'
-        ("version", ctypes.c_uint32),         # Header version (2)
+        ("version", ctypes.c_uint32),         # Header version (3)
         ("block_size", ctypes.c_uint32),      # Samples per audio block
         ("num_channels", ctypes.c_uint32),    # Legacy channel count
         ("channels_in", ctypes.c_uint32),     # Method input channels (decode/prior: latent)
@@ -74,10 +76,14 @@ class SharedMemoryHeader(ctypes.Structure):
         ("latent_size", ctypes.c_uint32),     # Latent dimension of the active method
         ("input_ratio", ctypes.c_uint32),     # Method input ratio (e.g. RAVE decode: 2048)
         ("output_ratio", ctypes.c_uint32),    # Method output ratio (e.g. RAVE decode: 1)
-        ("method", ctypes.c_char * 64),       # Active method name: forward/encode/decode/prior
-        ("input_offset", ctypes.c_uint32),    # Byte offset to input buffer
-        ("output_offset", ctypes.c_uint32),   # Byte offset to output buffer
+        ("method", ctypes.c_char * 52),       # Active method name: forward/encode/decode/prior
+        ("method_id", ctypes.c_uint32),       # Stable hash of method for atomic C++ compare
+        ("input_offset", ctypes.c_uint32),    # Byte offset to input buffer 0
+        ("output_offset", ctypes.c_uint32),   # Byte offset to output buffer 0
         ("control_offset", ctypes.c_uint32),  # Byte offset to control ring buffer
+        ("input_buffer_index", ctypes.c_uint32),   # A1: C++ fill index (0/1)
+        ("output_buffer_index", ctypes.c_uint32),  # A1: C++ drain index (0/1)
+        ("channel_map", ctypes.c_uint32 * 16),     # Phase 5: per-inlet channel counts (mc.mab~)
         ("is_input_ready", ctypes.c_long),    # atomic flag (volatile) - must match C++ long
         ("is_output_ready", ctypes.c_long),   # atomic flag (volatile) - must match C++ long
         ("is_python_ready", ctypes.c_long),   # atomic flag (volatile) - must match C++ long
@@ -96,6 +102,15 @@ class ControlRingBuffer(ctypes.Structure):
         ("messages", ctypes.c_char * (CONTROL_RING_SIZE * CONTROL_MSG_SIZE)),
     ]
 
+
+def _method_id(name: str) -> int:
+    """Stable 32-bit hash for method names (matches C++ side)."""
+    h = 0
+    for c in name.encode("utf-8"):
+        h = (h * 31 + c) & 0xFFFFFFFF
+    return h
+
+
 # ---------------------------------------------------------------------------
 #  Shared Memory Management (Handshake Protocol)
 # ---------------------------------------------------------------------------
@@ -111,27 +126,31 @@ class SharedMemoryManager:
     4. Both sides communicate via atomic flags in the header
     """
     
-    def __init__(self, shm_name: str, ready_event_name: str, 
-                 block_size: int, channels_in: int, channels_out: int):
+    def __init__(self, shm_name: str, ready_event_name: str,
+                 block_size: int, channels_in: int, channels_out: int,
+                 input_ready_event_name: str = ""):
         """buffers are sized for the MAXIMUM channel counts across all methods,
         so a method switch never needs a shared-memory remap."""
         self.shm_name = shm_name
         self.ready_event_name = ready_event_name
+        self.input_ready_event_name = input_ready_event_name or f"{shm_name}_InputReady"
         self.block_size = block_size
         self.channels_in = channels_in
         self.channels_out = channels_out
         
         # Calculate buffer sizes
+        # A1: allocate two input and two output buffers for overlapped I/O.
         self.header_size = ctypes.sizeof(SharedMemoryHeader)
         self.control_size = ctypes.sizeof(ControlRingBuffer)
-        self.input_size = block_size * channels_in * 4  # float32 = 4 bytes
+        self.input_size = block_size * channels_in * 4  # float32 = 4 bytes, one buffer
         self.output_size = block_size * channels_out * 4
-        self.total_size = self.header_size + self.control_size + self.input_size + self.output_size
-        
+        self.total_size = (self.header_size + self.control_size
+                           + 2 * self.input_size + 2 * self.output_size)
+
         # Offsets
         self.control_offset = self.header_size
         self.input_offset = self.header_size + self.control_size
-        self.output_offset = self.header_size + self.control_size + self.input_size
+        self.output_offset = self.header_size + self.control_size + 2 * self.input_size
         
         # Handles
         self.kernel32 = ctypes.WinDLL('kernel32', use_last_error=True)
@@ -168,6 +187,11 @@ class SharedMemoryManager:
         self.kernel32.CreateEventW.restype = ctypes.c_void_p
         self.kernel32.SetEvent.argtypes = [ctypes.c_void_p]
         self.kernel32.SetEvent.restype = ctypes.c_ulong
+        self.kernel32.WaitForSingleObject.argtypes = [
+            ctypes.c_void_p,   # hHandle
+            ctypes.c_ulong,    # dwMilliseconds
+        ]
+        self.kernel32.WaitForSingleObject.restype = ctypes.c_ulong
 
         self._h_map = None
         self._p_header = None
@@ -175,7 +199,8 @@ class SharedMemoryManager:
         self._p_output = None
         self._p_control = None
         self._h_ready_event = None
-        
+        self._h_input_ready_event = None
+
     def create(self) -> bool:
         """Create shared memory and initialize header."""
         # Create file mapping
@@ -211,7 +236,7 @@ class SharedMemoryManager:
         
         # Initialize header
         self._p_header.magic = MAGIC_NUMBER
-        self._p_header.version = 2
+        self._p_header.version = 3
         self._p_header.block_size = self.block_size
         self._p_header.num_channels = self.channels_out
         self._p_header.channels_in = self.channels_in
@@ -220,9 +245,12 @@ class SharedMemoryManager:
         self._p_header.input_ratio = 1
         self._p_header.output_ratio = 1
         self._p_header.method = b"forward"
+        self._p_header.method_id = _method_id("forward")
         self._p_header.input_offset = self.input_offset
         self._p_header.output_offset = self.output_offset
         self._p_header.control_offset = self.control_offset
+        self._p_header.input_buffer_index = 0
+        self._p_header.output_buffer_index = 0
         self._p_header.is_input_ready = False
         self._p_header.is_output_ready = False
         self._p_header.is_python_ready = False
@@ -241,7 +269,18 @@ class SharedMemoryManager:
         self._p_control = ControlRingBuffer.from_address(p_base + self.control_offset)
         self._p_control.head = 0
         self._p_control.tail = 0
-        
+
+        # A4: input-ready event lets C++ wake us immediately instead of polling.
+        self._h_input_ready_event = self.kernel32.CreateEventW(
+            None,   # default security
+            False,  # auto-reset
+            False,  # not signaled initially
+            self.input_ready_event_name
+        )
+        if not self._h_input_ready_event:
+            print(f"[inference_worker] Failed to create input-ready event: {ctypes.WinError(ctypes.get_last_error())}")
+            # non-fatal: fall back to sleep polling
+
         return True
     
     def apply_method(self, method: str, method_params: dict):
@@ -249,7 +288,8 @@ class SharedMemoryManager:
         if not method_params or method not in method_params:
             return
         ci, in_ratio, co, out_ratio = method_params[method]
-        self._p_header.method = method.encode('utf-8')[:63]
+        self._p_header.method = method.encode('utf-8')[:60]
+        self._p_header.method_id = _method_id(method)
         self._p_header.channels_in = ci
         self._p_header.channels_out = co
         self._p_header.input_ratio = in_ratio
@@ -282,34 +322,61 @@ class SharedMemoryManager:
         
         return True
     
-    def get_numpy_input(self, channels: int = 0) -> np.ndarray:
-        """Get NumPy view of input buffer (zero-copy), sliced to `channels`."""
+    def get_numpy_input(self, index: int = 0, channels: int = 0) -> np.ndarray:
+        """Get NumPy view of input buffer `index` (zero-copy), sliced to `channels`."""
         if channels <= 0:
             channels = self.channels_in
-        # Create a NumPy array that wraps the shared memory
-        # Shape: (max_channels_in, block_size)
+        base = ctypes.addressof(self._p_input.contents) + index * self.input_size
         arr = np.frombuffer(
-            (ctypes.c_float * (self.block_size * self.channels_in)).from_address(
-                ctypes.addressof(self._p_input.contents)
-            ),
+            (ctypes.c_float * (self.block_size * self.channels_in)).from_address(base),
             dtype=np.float32
         )
         return arr.reshape(self.channels_in, self.block_size)[:channels]
-    
-    def get_numpy_output(self, channels: int = 0) -> np.ndarray:
-        """Get NumPy view of output buffer (zero-copy), sliced to `channels`."""
+
+    def get_numpy_output(self, index: int = 0, channels: int = 0) -> np.ndarray:
+        """Get NumPy view of output buffer `index` (zero-copy), sliced to `channels`."""
         if channels <= 0:
             channels = self.channels_out
+        base = ctypes.addressof(self._p_output.contents) + index * self.output_size
         arr = np.frombuffer(
-            (ctypes.c_float * (self.block_size * self.channels_out)).from_address(
-                ctypes.addressof(self._p_output.contents)
-            ),
+            (ctypes.c_float * (self.block_size * self.channels_out)).from_address(base),
             dtype=np.float32
         )
         return arr.reshape(self.channels_out, self.block_size)[:channels]
+
+    def read_channel_map(self) -> list:
+        """Per-inlet channel counts published by C++ (mc.mab~, Phase 5).
+
+        Returns the list of non-zero entries: [channels_of_inlet_0, ...].
+        Empty in mab~ (mono) mode where C++ never writes channel_map.
+        """
+        out = []
+        for i in range(16):
+            v = int(self._p_header.channel_map[i])
+            if v <= 0:
+                continue
+            out.append(v)
+        return out
+
+    def get_total_input_channels(self) -> int:
+        """Total connected MC channels = sum(channel_map).
+
+        Falls back to header->channels_in when C++ has not published a map yet
+        (mono mode, or before the first dsp64 call).
+        """
+        total = 0
+        for i in range(16):
+            v = int(self._p_header.channel_map[i])
+            if v > 0:
+                total += v
+        if total <= 0:
+            total = int(self._p_header.channels_in)
+        return total
     
     def cleanup(self):
         """Clean up handles."""
+        if self._h_input_ready_event:
+            self.kernel32.CloseHandle(self._h_input_ready_event)
         if self._h_ready_event:
             self.kernel32.CloseHandle(self._h_ready_event)
         if self._p_header:
@@ -356,6 +423,26 @@ class LockFreeRingBuffer:
         msg_ptr = self._msgs[idx]
         self._tail += 1
         return msg_ptr
+
+
+# ---------------------------------------------------------------------------
+#  P7 (Vorbereitung): Zukünftige Buffer~-API (nn_tilde-Parität)
+# ---------------------------------------------------------------------------
+#  Erledigt in Phase 5 zusammen mit dem nativen Max-SDK buffer_reference in
+#  C++ (buffer_manager.h). Geplante Control-Messages an den Worker:
+#
+#    track_buffers <0/1>              Buffer-Tracking ein/aus (Default: 0)
+#    set <attr> <buffer~name>         Verlinkt Modell-Buffer-Attribut mit
+#                                     einem Max-Buffer~
+#    notify <key> <buffer~name> <len> <sr> <channels>
+#                                     Buffer-Update an Max melden
+#    print <key>                      Download-/Buffer-Progress (intern)
+#
+#  Datenfluss: C++ (buffer_manager.h) -> ControlRingBuffer -> dieser Loop;
+#  die Buffer-Daten selbst werden über den Shared-Memory-Bereich bereit-
+#  gestellt (max. 16 Buffer-Referenzen à MAX_BLOCK_SIZE Frames). Tensor-
+#  Attribute (Typ 4) akzeptieren statt buffer~ einen Max-`array`-Namen.
+# ---------------------------------------------------------------------------
 
 
 # ---------------------------------------------------------------------------
@@ -1135,7 +1222,44 @@ def main():
                              "all-core thread spread that causes ASIO XRuns)")
     parser.add_argument("--query", action="store_true",
                         help="Inspection mode for mab.info: load the model, print an info block on stdout and exit")
+    # P11: Standalone-Befehle für mab.info (nn_tilde-Parität). Starten einen
+    # kurzen Worker-Lauf ohne Shared Memory / Modell, schreiben das Ergebnis
+    # als stdout-Zeilen (werden von mab_info.cpp auf Outlet 1 ausgegeben).
+    parser.add_argument("--download", nargs='+', metavar="CARD [NAME]",
+                        help="Download a model card from the IRCAM API, print the result and exit")
+    parser.add_argument("--delete", metavar="CARD",
+                        help="Delete a local .ts model, print the result and exit")
+    parser.add_argument("--list", action="store_true",
+                        help="Print local + remote (IRCAM API) available models and exit")
     args = parser.parse_args()
+
+    # P11: Standalone-Befehle VOR der Inferenz/Query ausführen und beenden.
+    if args.download:
+        card = args.download[0]
+        name = args.download[1] if len(args.download) > 1 else None
+        ok, msg = download_model(card, name)
+        print(f"download: {msg}")
+        sys.exit(0 if ok else 1)
+    if args.delete:
+        ok, msg = delete_model(args.delete)
+        print(f"delete: {msg}")
+        sys.exit(0 if ok else 1)
+    if args.list:
+        local = list_local_models()
+        print("Local models:")
+        if local:
+            for fn, path in sorted(local.items()):
+                print(f"  {fn}  ({path})")
+        else:
+            print("  (none)")
+        remote, err = _remote_available_models()
+        print("Remote models (IRCAM API):")
+        if remote:
+            for m in remote:
+                print(f"  {m}")
+        else:
+            print(f"  (unavailable: {err})")
+        sys.exit(0)
 
     # Real-Time-Schutz (AGENTS.md Regel 8, WORKSPACE_AGENT_PROMPT §3.8):
     # Die Inferenz darf sich nie über alle Kerne verteilen und mit dem Audio-
@@ -1231,6 +1355,13 @@ def main():
     # -----------------------------------------------------------------------
     #  Main loop
     # -----------------------------------------------------------------------
+    # Disable automatic GC to avoid multi-millisecond pauses in the inference
+    # loop. Collect manually every N processed blocks instead.
+    gc.disable()
+    gc.collect()  # one clean baseline collection before loop starts
+    _block_counter = 0
+    _GC_EVERY_N_BLOCKS = 100
+
     running = True
 
     while running:
@@ -1384,11 +1515,20 @@ def main():
         
         # Wait for input to be ready (non-blocking check)
         if shm._p_header.is_input_ready:
+            # A1: C++ fills header.input_buffer_index; the ready buffer is the other one.
+            in_idx = 1 - (shm._p_header.input_buffer_index & 1)
+            # C++ drains header.output_buffer_index; write into that same buffer.
+            out_idx = shm._p_header.output_buffer_index & 1
+
             if model is None or active_method not in method_params:
                 # No model / no layout - pass through (bypass)
-                ibuf = shm.get_numpy_input()
-                obuf = shm.get_numpy_output()
-                ci = min(ibuf.shape[0], obuf.shape[0])
+                ibuf = shm.get_numpy_input(in_idx)
+                obuf = shm.get_numpy_output(out_idx)
+                # Phase 5: mc.mab~ publishes the connected per-inlet channel
+                # count; copy exactly those channels through instead of relying
+                # on the (model-less) buffer shape.
+                ci = shm.get_total_input_channels()
+                ci = min(ci, ibuf.shape[0], obuf.shape[0])
                 for ch in range(ci):
                     obuf[ch, :] = ibuf[ch, :]
                 shm._p_header.is_output_ready = True
@@ -1396,17 +1536,37 @@ def main():
             else:
                 ci = method_params[active_method][0]
                 co = method_params[active_method][2]
-                input_block = shm.get_numpy_input(ci)
+                # Phase 5: verify the MC wiring against the model layout and log
+                # a mismatch once (throttled via _mc_warned).
+                connected = shm.get_total_input_channels()
+                if connected != ci and connected != int(shm._p_header.channels_in):
+                    key = "mc_warned"
+                    if getattr(shm, key, False) is False:
+                        print(f"[inference_worker] MC wiring: {connected} channel(s) "
+                              f"connected, model '{active_method}' expects {ci} - "
+                              "unconnected channels are silenced")
+                        setattr(shm, key, True)
+                elif connected == ci and getattr(shm, "mc_warned", False) is True:
+                    setattr(shm, "mc_warned", False)
+                input_block = shm.get_numpy_input(in_idx, ci)
                 output_block = infer_method(
                     model, device, active_method, method_params, input_block)
-                shm.get_numpy_output(co)[:, :] = output_block
-                
+                shm.get_numpy_output(out_idx, co)[:, :] = output_block
+
                 # Signal output is ready
                 shm._p_header.is_output_ready = True
                 shm._p_header.is_input_ready = False
+
+            _block_counter += 1
+            if _block_counter % _GC_EVERY_N_BLOCKS == 0:
+                gc.collect()
         
-        # Small yield to avoid 100% CPU
-        time.sleep(0.001)
+        # A4: Wait for C++ to signal that input is ready, instead of polling.
+        # Use a short timeout so shutdown_flag is checked regularly.
+        if shm._h_input_ready_event:
+            shm.kernel32.WaitForSingleObject(shm._h_input_ready_event, 10)
+        else:
+            time.sleep(0.001)
     
     # -----------------------------------------------------------------------
     #  Cleanup
