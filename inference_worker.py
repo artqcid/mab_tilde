@@ -824,8 +824,96 @@ def compute_layout(method_params: dict, requested_block_size: int):
     return block_size, max_in, max_out
 
 
+class ConvStreamingContext:
+    """Cross-block history buffer for convolutional RAVE models.
+
+    RAVE models exported **without** ``--streaming`` use standard Conv1d with
+    zero-padding instead of ``cached-conv`` registered buffers.  Feeding
+    isolated blocks creates discontinuities at convolution boundaries that
+    amplify through the decoder into **NaN / Inf / overloads** and crash Max's
+    audio engine («Bug 1»).
+
+    This class maintains sliding input-history buffers that are prepended
+    before each inference call, providing the smooth cross-block context that
+    convolution layers require.  It auto-detects whether the model uses
+    convolutions at all; for simple feedforward models it is a transparent
+    no-op.
+    """
+
+    _HISTORY_BLOCKS = 8
+
+    def __init__(self, model, block_size):
+        self._needs_streaming = self._has_conv_layers(model)
+        self._block_size = block_size
+        self._context_size = block_size * self._HISTORY_BLOCKS
+        self._input_history = {}
+
+    @staticmethod
+    def _has_conv_layers(model):
+        has_conv = False
+        has_streaming_buffers = False
+        for name, mod in model.named_modules():
+            if hasattr(mod, 'weight') and mod.weight is not None:
+                if mod.weight.ndim >= 3:
+                    has_conv = True
+            for p_name, p in mod.named_parameters(recurse=False):
+                if p.ndim >= 3:
+                    has_conv = True
+            for b_name, _ in mod.named_buffers(recurse=False):
+                lower = b_name.lower()
+                if 'pad' in lower or 'cache' in lower:
+                    has_streaming_buffers = True
+
+        # Only activate streaming wrapper when the model has convolution
+        # layers WITHOUT built-in cached-conv streaming buffers (Bug 1).
+        return has_conv and not has_streaming_buffers
+
+    @property
+    def active(self):
+        return self._needs_streaming
+
+    def reset(self):
+        self._input_history.clear()
+
+    def prepend_history(self, method, ci, device, tensor):
+        """Prepend input history to *tensor*.
+
+        Returns ``(padded_tensor, save_context)`` where *save_context* is
+        ``None`` when streaming is inactive (no-op), otherwise a tuple to be
+        passed to :meth:`save_history` after inference.
+        """
+        if not self._needs_streaming:
+            return tensor, None
+
+        if method not in self._input_history:
+            B = tensor.shape[0] if tensor.ndim == 3 else 1
+            self._input_history[method] = torch.zeros(
+                B, ci, self._context_size, device=device)
+
+        hist = self._input_history[method]
+        if hist.shape[0] < tensor.shape[0]:
+            hist = hist.expand(tensor.shape[0], -1, -1)
+        else:
+            hist = hist[:tensor.shape[0]]
+
+        padded = torch.cat([hist.to(device), tensor], dim=-1)
+        return padded, (method, padded)
+
+    def save_history(self, context):
+        """Store the tail of the padded input for the next block."""
+        if context is None:
+            return
+        method, padded = context
+        cs = self._context_size
+        self._input_history[method][:padded.shape[0]] = \
+            padded[..., -cs:].detach().cpu()
+
+
 def infer_method(model, device, method: str, method_params: dict,
-                 input_block: np.ndarray) -> np.ndarray:
+                 input_block: np.ndarray,
+                 streaming_context: Optional[ConvStreamingContext] = None,
+                 safety_clip: bool = False
+                 ) -> np.ndarray:
     """
     Run one audio block through the model using nn_tilde semantics.
 
@@ -840,12 +928,25 @@ def infer_method(model, device, method: str, method_params: dict,
     pass (output `(n_batches, channels_out, block_size)`). A 2-D input block
     keeps the original single-batch behaviour (output `(channels_out,
     block_size)`), so existing callers stay unchanged.
+
+    *streaming_context* (optional) provides cross-block input history for
+    convolutional RAVE models that were exported without ``--streaming``,
+    preventing convolution boundary artifacts (Bug 1).
+
+    *safety_clip* (bool) applies hard clipping to ``[-1.0, 1.0]`` after
+    NaN/Inf zeroing.  Required in the real-time Max loop to prevent buffer
+    overflows; disabled by default so unit-tests see raw model output.
     """
     ci, in_ratio, co, out_ratio = method_params[method]
     block_size = input_block.shape[-1]
     batched = input_block.ndim == 3
 
     tensor = torch.from_numpy(np.ascontiguousarray(input_block)).to(device)
+
+    save_ctx = None
+    if streaming_context is not None:
+        tensor, save_ctx = streaming_context.prepend_history(
+            method, ci, device, tensor)
 
     with torch.no_grad():
         if method in ("decode", "prior"):
@@ -859,6 +960,9 @@ def infer_method(model, device, method: str, method_params: dict,
                 tensor = tensor.unsqueeze(0)  # (1, ci, block_size)
             out = getattr(model, method)(tensor)
 
+    if streaming_context is not None:
+        streaming_context.save_history(save_ctx)
+
     out = out.detach().cpu()
     if out.dim() == 2:
         out = out.unsqueeze(0)   # (B, co, frames)
@@ -867,6 +971,14 @@ def infer_method(model, device, method: str, method_params: dict,
 
     # Hold latent/audio frames: repeat each frame output_ratio times
     out = out.repeat_interleave(out_ratio, dim=-1)
+
+    # Trim output tail when history was prepended: the extra samples at the
+    # beginning correspond to the history context; keep only the portion
+    # belonging to the new input block.
+    if save_ctx is not None:
+        expected_new = max(1, int(block_size * out_ratio / in_ratio))
+        if out.size(-1) >= expected_new:
+            out = out[..., -expected_new:]
 
     # Pad or trim to exactly block_size samples
     if out.size(-1) < block_size:
@@ -879,6 +991,16 @@ def infer_method(model, device, method: str, method_params: dict,
     if out.size(1) < co:
         pad = torch.zeros(out.size(0), co - out.size(1), out.size(-1))
         out = torch.cat([out, pad], dim=1)
+
+    # Safety guard (Bug 1): RAVE models can produce NaN/Inf through
+    # convolution boundary artifacts.  Zero out non-finite values to prevent
+    # Max's audio engine from crashing.
+    if not torch.isfinite(out).all():
+        out = torch.where(torch.isfinite(out), out, torch.zeros_like(out))
+
+    # Optional hard clipping to [-1.0, 1.0] for real-time Max safety.
+    if safety_clip:
+        out = torch.clamp(out, -1.0, 1.0)
 
     if batched:
         return out[:, :co, :block_size].numpy().astype(np.float32)  # (B, co, bs)
@@ -1238,10 +1360,40 @@ def _limit_inference_threads(cores):
     return cores
 
 
+def _init_xrun_prevention():
+    """FR1: ASIO XRun-Prävention durch Timer-Resolution + Thread-Priorität.
+
+    1) ``timeBeginPeriod(1)`` setzt die Windows-Timer-Resolution auf 1 ms
+       (Standard: ~15.6 ms).  Ohne diesen Call schläft ``WaitForSingleObject``
+       mit 10 ms-Timeout real ~16 ms.  Mit 1 ms-Resolution wacht der Python-
+       Worker deutlich schneller auf und kann Output-Blöcke pünktlicher liefern.
+
+    2) ``SetThreadPriority(THREAD_PRIORITY_LOWEST)`` stellt sicher, dass der
+       Audio-Thread (Max/ASIO, läuft in einem HIGH/RT-Kontext) den Python-
+       Haupt-Thread auch innerhalb des ``BELOW_NORMAL_PRIORITY_CLASS``-Prozesses
+       jederzeit präemptieren kann.
+    """
+    kernel32 = ctypes.WinDLL('kernel32', use_last_error=True)
+    try:
+        kernel32.timeBeginPeriod.restype = ctypes.c_uint
+        kernel32.timeBeginPeriod.argtypes = [ctypes.c_uint]
+        kernel32.timeBeginPeriod(1)
+        kernel32.SetThreadPriority.restype = ctypes.c_int
+        kernel32.SetThreadPriority.argtypes = [ctypes.c_void_p, ctypes.c_int]
+        kernel32.GetCurrentThread.restype = ctypes.c_void_p
+        kernel32.SetThreadPriority(kernel32.GetCurrentThread(), -2)
+    except Exception:
+        pass
+
+
 def _load_and_configure(model_path: str, use_gpu: bool, active_method: str,
-                        method_params: dict, attrs: RuntimeAttributes, shm):
-    """Load a model, re-validate the method, publish the layout and re-apply
-    the runtime attributes. Used by reload / load / gpu switch."""
+                        method_params: dict, attrs: RuntimeAttributes, shm,
+                        streaming_ctx: Optional[ConvStreamingContext] = None):
+    """Load a model, re-validate the method, publish the layout, re-apply
+    the runtime attributes, and (re-)create the streaming context.
+
+    Used by reload / load / gpu switch.
+    """
     model, device = load_model(model_path, use_gpu)
     new_params = get_method_params(model)
     if new_params and active_method not in new_params:
@@ -1250,7 +1402,14 @@ def _load_and_configure(model_path: str, use_gpu: bool, active_method: str,
     if shm is not None:
         shm.apply_method(active_method, new_params)
     _reapply_attributes(model, attrs)
-    return model, device, new_params, active_method
+
+    block_size, _, _ = compute_layout(new_params, 0)
+    streaming_ctx = ConvStreamingContext(model, max(block_size, 64))
+    if streaming_ctx.active:
+        print(f"[inference_worker] ConvStreamingContext active "
+              f"(history={streaming_ctx._context_size} samples)")
+
+    return model, device, new_params, active_method, streaming_ctx
 
 
 def main():
@@ -1311,6 +1470,9 @@ def main():
             print(f"  (unavailable: {err})")
         sys.exit(0)
 
+    # FR1: ASIO XRun-Prävention – Timer-Resolution + Thread-Priorität
+    _init_xrun_prevention()
+
     # Real-Time-Schutz (AGENTS.md Regel 8, WORKSPACE_AGENT_PROMPT §3.8):
     # Die Inferenz darf sich nie über alle Kerne verteilen und mit dem Audio-
     # Thread kollidieren. Die Kernbegrenzung gilt NUR im CPU-Modus; im GPU-Modus
@@ -1332,6 +1494,7 @@ def main():
     ready_event_name = f"MabReadyEvent_{args.instance_id:08X}"
     
     attrs = RuntimeAttributes()
+    streaming_ctx = None
 
     # -----------------------------------------------------------------------
     #  Load the model FIRST so the shared-memory layout can be sized for the
@@ -1378,6 +1541,13 @@ def main():
         max_channels_in = max_channels_out = args.num_channels
     print(f"[inference_worker] Layout: block_size={block_size}, "
           f"channels_in(max)={max_channels_in}, channels_out(max)={max_channels_out}")
+
+    # Create streaming context for convolutional RAVE models (Bug 1)
+    if model is not None and block_size > 0:
+        streaming_ctx = ConvStreamingContext(model, block_size)
+        if streaming_ctx.active:
+            print(f"[inference_worker] ConvStreamingContext active "
+                  f"(history={streaming_ctx._context_size} samples)")
 
     shm = SharedMemoryManager(
         shm_name=shm_name,
@@ -1450,6 +1620,8 @@ def main():
                         print("[inference_worker] Enable: 0 (bypass)")
                     else:
                         print("[inference_worker] Enable: 1 (active)")
+                        if streaming_ctx is not None:
+                            streaming_ctx.reset()
                 elif cmd == "gpu":
                     # Echter Setter (nn_tilde-Parität P3): Device-Wechsel lädt
                     # das Modell neu; Attribute werden re-applied.
@@ -1460,9 +1632,9 @@ def main():
                         print(f"[inference_worker] GPU mode: {new_gpu}")
                         if new_gpu != old_gpu and model is not None and current_model_path:
                             try:
-                                model, device, method_params, active_method = _load_and_configure(
+                                model, device, method_params, active_method, streaming_ctx = _load_and_configure(
                                     current_model_path, bool(args.gpu), active_method,
-                                    method_params, attrs, shm)
+                                    method_params, attrs, shm, streaming_ctx)
                                 print(f"[inference_worker] Model reloaded on {device}")
                             except Exception as e:
                                 print(f"[inference_worker] GPU switch failed: {e}")
@@ -1474,9 +1646,9 @@ def main():
                     # Reload model from current path
                     if current_model_path and current_model_path.strip():
                         try:
-                            model, device, method_params, active_method = _load_and_configure(
+                            model, device, method_params, active_method, streaming_ctx = _load_and_configure(
                                 current_model_path, bool(args.gpu), active_method,
-                                method_params, attrs, shm)
+                                method_params, attrs, shm, streaming_ctx)
                             print("[inference_worker] Model reloaded successfully")
                         except Exception as e:
                             print(f"[inference_worker] Reload failed: {e}")
@@ -1488,9 +1660,9 @@ def main():
                         new_model_path = cmd_args[0]
                         print(f"[inference_worker] Loading model: {new_model_path}")
                         try:
-                            model, device, method_params, active_method = _load_and_configure(
+                            model, device, method_params, active_method, streaming_ctx = _load_and_configure(
                                 new_model_path, bool(args.gpu), active_method,
-                                method_params, attrs, shm)
+                                method_params, attrs, shm, streaming_ctx)
                             current_model_path = new_model_path
                             print(f"[inference_worker] Model loaded on {device}")
                         except Exception as e:
@@ -1554,6 +1726,8 @@ def main():
                         if method_params and new_method in method_params:
                             active_method = new_method
                             shm.apply_method(active_method, method_params)
+                            if streaming_ctx is not None:
+                                streaming_ctx.reset()
                             print(f"[inference_worker] Method switched: {active_method}")
                         elif method_params:
                             print(f"[inference_worker] Unknown method '{new_method}', "
@@ -1609,7 +1783,8 @@ def main():
                     setattr(shm, "mc_warned", False)
                 input_block = shm.get_numpy_input(in_idx, ci)
                 output_block = infer_method(
-                    model, device, active_method, method_params, input_block)
+                    model, device, active_method, method_params, input_block,
+                    streaming_context=streaming_ctx, safety_clip=True)
                 out_view = shm.get_numpy_output(out_idx, co)
                 # Phase 6: batched inference returns (B, co, bs); strip the
                 # leading singleton batch dim when writing into the classic

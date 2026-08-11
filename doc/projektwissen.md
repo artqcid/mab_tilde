@@ -446,30 +446,21 @@ vollständige Teststrategie. Diese Sektion fasst testrelevante Wissensbausteine
 aus Codeanalyse + Web-Recherche zusammen, die Dev-Agents für die
 Implementierung von T1–T7 benötigen._
 
-### Modell-Inventar & Status (19 TorchScript, 1 ONNX ausgeschlossen)
+### Modell-Inventar & Status (23 TorchScript)
 
-| Modell | Methoden (via inspect) | Latent | Block | RAVE-Typ (vermutet) |
-|--------|------------------------|--------|-------|---------------------|
-| `musicnet.ts` | encode, decode, forward | 16 | 2048 | v2 (Standard) |
-| `vintage.ts` | encode, decode, forward | ? | ? | v2 |
-| `voice-multi-b2048-r48000-z11.ts` | encode, decode, forward | 11 | 2048 | v2 |
-| `afterv2.audio.instr.ts` | decode | ? | 2048 | v2 (decode-only) |
-| `voice_hifitts_b2048_r48000_z16.ts` | unbekannt (z=16) | 16 | 2048 | v2 voice |
-| `voice_jvs_b2048_r44100_z16.ts` | unbekannt (z=16) | 16 | 2048 | v2 voice |
-| `voice_vctk_b2048_r44100_z22.ts` | unbekannt (z=22) | 22 | 2048 | v2 voice |
-| `voice_vocalset_b2048_r48000_z16.ts` | unbekannt (z=16) | 16 | 2048 | v2 voice |
-| `water_pondbrain_b2048_r48000_z16.ts` | unbekannt (z=16) | 16 | 2048 | v2 |
-| `nasa.ts` | unbekannt | ? | ? | v2 |
-| `wheel.ts` | unbekannt | ? | ? | v2 |
-| `thirdModelTest3000Epoche.ts` | unbekannt | ? | ? | train/experiment |
-| `modell_30min_27915e19b0.ts` | unbekannt | ? | ? | train/experiment |
-| `features.ts` | unbekannt (hop=256) | ? | 256 | nn~ scripting example |
-| `effects.ts` | unbekannt | – | ? | nn~ scripting example |
-| `demo_attributes.ts` | forward | – | ? | Test: RAVE-Attribute |
-| `demo_buffers.ts` | unbekannt | – | ? | Test: buffer~-Support |
-| `demo_mc.ts` | unbekannt | – | ? | Test: Multichannel |
-| `wavetable.ts` | forward | – | ? | Test/experiment |
-| `darbouka_onnx.ts` | **AUSGESCHLOSSEN** (ONNX) | – | – | benötigt onnxruntime |
+Stand: 2026-08-11. Alle Modelle in `D:\AI-Models\ts models`. Dynamisch durch
+Tests gescannt; feste Liste in `test/test_model_loading.py` (`EXPECTED`).
+
+| Typ | Modelle |
+|-----|---------|
+| RAVE v2 (encode/decode/forward) | birds_dawnchorus, birds_motherbird, birds_pluma, crozzoli, freesoundloop10k_raspi, humpbacks_pondbrain, marinemammals_pondbrain, mrp_strengjavera, sol_ordinario_fast, voice_hifitts, voice_jvs, voice_vctk, voice_vocalset, voice-multi, water_pondbrain |
+| RAVE v2 + prior | magnets, musicnet, nasa, vintage, wheel |
+| Training/Experiment | modell_30min_27915e19b0, thirdModelTest3000Epoche |
+| Einfach (forward only) | wavetable |
+
+**Block-Size:** 2048 Samples für die meisten RAVE-Modelle; 512 für birds_dawnchorus, modell_30min, sol_ordinario, thirdModelTest3000Epoche, wavetable.
+
+**ONNX-Modelle** werden per `_onnx.ts`-Suffix ausgeschlossen.
 
 **RAVE-Trainings-Kontexte (aus acids-ircam/rave README):**
 - `--streaming`-Flag beim Export → essentiell für Echtzeit (ohne: Clicking-Artefakte)

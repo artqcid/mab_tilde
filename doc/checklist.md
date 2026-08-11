@@ -3,6 +3,53 @@
 _Stand: 2026-08-11. Nur offene Punkte, keine abgeschlossenen Tasks._
 _Einlese-Reihenfolge: checklist.md → code_wiki.md → query_code_wiki → query_code_rag → get_rag_chunk_
 
+## Bugs
+
+- [x] **Bug 1 – RAVE-Modelle (nasa, vintage) crashen Max mit Buffer-Overflow** ✅ **FIXED** (2026-08-11)
+  - **Symptom:** `nasa.ts`, `vintage.ts` und aehnliche konvolutionelle RAVE-Modelle produzieren sofort NaN/Inf-Werte, die Max's Audio-Engine ueberlasten und zum Absturz bringen («bufferoverflow und knackser und dropouts»).
+  - **Ursache:** `infer_method()` hatte keinen NaN/Inf-Guard und kein Output-Clipping. Die Modelle haben zwar interne `cached-conv`-Streaming-Buffer (mit `--streaming` exportiert), koennen aber trotzdem bei bestimmten Eingaben oder Zustandswechseln NaN-Werte erzeugen.
+  - **Fix (inference_worker.py):**
+    - `ConvStreamingContext`-Klasse (Z. 827–900): auto-detektiert konvolutionelle Modelle OHNE interne Streaming-Buffer (3D-Gewichte + `cache.pad`/`pad`-Buffernamen). Nur dann aktiv, wenn das Modell Conv-Layer hat, aber KEINE cached-conv-Buffer — bei `nasa`/`vintage`/`musicnet` derzeit `active=False`.
+    - NaN/Inf-Guard in `infer_method()`: `torch.where(torch.isfinite(out), out, torch.zeros_like(out))` — immer aktiv.
+    - Optionales Hard-Clipping: `safety_clip=True` → `torch.clamp(out, -1.0, 1.0)` — im Main-Loop aktiv, in Tests deaktiviert.
+    - Streaming-Reset bei `method`-Wechsel und `enable 1`.
+    - `_load_and_configure` erzeugt/ersetzt `ConvStreamingContext` bei jedem Modell-Load/Reload.
+
+## Feature Requests
+
+- [x] **FR1 – Timer-Resolution + Python-Thread-Priorität (ASIO XRun-Prävention Stufe 1)** ✅ **DONE** (2026-08-11)
+  - **Ziel:** Reduziert Wake-up-Jitter des Python-Workers von ~16 ms auf ~1 ms und stellt sicher, dass der Audio-Thread auch innerhalb des `BELOW_NORMAL`-Prozesses präemptieren kann.
+  - **Maßnahmen:**
+    1. `timeBeginPeriod(1)` in `_init_xrun_prevention()` (`inference_worker.py:1378-1395`) → Windows-Timer-Resolution von 15.6 ms auf 1 ms
+    2. `SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_LOWEST)` in `_init_xrun_prevention()` → Python-Haupt-Thread priorisiert den Audio-Thread
+  - **Dateien:** `inference_worker.py:1378-1395` (`_init_xrun_prevention`), `inference_worker.py:1467` (Aufruf in `main()`)
+  - **Test:** Alle 19 C++-Tests ✅, alle Python-Tests ✅; XRun-Verifikation in Max (manuel)
+
+- [ ] **FR2 – Triple-Buffering (ASIO XRun-Prävention Stufe 2)**
+  - **Ziel:** Bei langsamer Inferenz hat C++ immer einen fertigen Output-Buffer als Reserve, statt auf den einzigen zu warten.
+  - **Maßnahmen:** 3 Output-Buffer statt 2 in `SharedMemoryManager` → Header-Feld `n_buffers` (2 oder 3), `input_buffer_index`/`output_buffer_index` modulo `n_buffers`.
+  - **Dateien:** `inference_worker.py:122-160` (SharedMemoryManager), `mab_tilde.cpp:56-67` (SharedMemoryHeader), `mab_tilde.cpp:607-647` (perform64)
+  - **Kosten:** +50% Output-SHM (z.B. +32 KB für mono 2048, vernachlässigbar)
+
+- [ ] **FR3 – Memory-Allocator-Stabilisierung (ASIO XRun-Prävention Stufe 2)**
+  - **Ziel:** Verhindert CPU-Spikes durch PyTorch-Auto-Tuning und Allocator-Jitter.
+  - **Maßnahmen:**
+    1. `torch.backends.cudnn.benchmark = False` → deterministisch, kein Auto-Tuning beim ersten Forward
+    2. `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` (GPU) → weniger Fragmentierung
+    3. `os.environ['OMP_WAIT_POLICY'] = 'PASSIVE'` → OpenMP-Threads verbrauchen weniger CPU im Leerlauf
+  - **Dateien:** `inference_worker.py:1341-1358`, `load_model()`
+  - **Achtung:** `cudnn.benchmark=False` kann GPU-Inferenz verlangsamen — nur wenn nötig aktivieren
+
+## Feature Requests (offen)
+
+(siehe oben)
+
+## Bugs (offen)
+
+(keine)
+
+---
+
 ## Max-Runtime-Verifikation
 
 - [ ] **V1 – decode-Layout** `[mab~ musicnet.ts decode 2048]` → 16 latent in, 1 audio out, keine dropouts

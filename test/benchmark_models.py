@@ -16,8 +16,7 @@ Verwendung:
     .venv\\Scripts\\python test/benchmark_models.py --report doc/benchmark_reports.md
     .venv\\Scripts\\python test/benchmark_models.py --report doc/benchmark_reports.md --note "Test nach Fix"
 
-ONNX-Modelle (`*_onnx.ts`) werden mit "nicht unterstuetzt" vermerkt.
-AFTER-v2 (`afterv2.audio.instr.ts`) wird ausgelassen (RAM > 10 GB).
+ONNX-Modelle (`*_onnx.ts`) werden uebersprungen (nur TorchScript unterstuetzt).
 """
 
 import argparse
@@ -46,7 +45,7 @@ from inference_worker import (
 
 MODEL_DIR = r"D:\AI-Models\ts models"
 ONNX_SKIP_SUFFIX = "_onnx.ts"
-SKIP_MODELS = {"afterv2.audio.instr.ts"}
+SKIP_MODELS = set()  # alle Modelle werden getestet (afterv2 entfernt, RAM <10 GB)
 DEFAULT_REPORT = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
     "doc", "benchmark_reports.md")
@@ -274,8 +273,9 @@ def main():
         sys.stdout.flush()
 
     print()
-    print("_ONNX (`darbouka_onnx.ts`) wird nicht unterstuetzt; "
-          "AFTER-v2 (`afterv2.audio.instr.ts`) wegen RAM > 10 GB ausgelassen._")
+    print("_Alle Modelle aus D:\\AI-Models\\ts models. `forward`-Methode, "
+          "%d Warmup + %d Runs._" % (warmup, runs))
+    print()
 
     if args.report:
         run_no = append_run_to_report(args.report, args, rows, notes)

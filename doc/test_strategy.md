@@ -1,7 +1,6 @@
 ﻿# mab~ Teststrategie – Offline/CI-Tests ohne Max Runtime
 
-_Stand: 2026-08-11 (Klarstellung Python-vs-Max-Tests). Erstellt von Architect nach Analyse aller 20 Dateien (19 TorchScript + 1 ONNX) in D:\AI-Models\ts models`, der bestehenden C++-Tests (19), Python-Tests (124)
-und der drei External-Architekturen (mab~, mc.mab~, mcs.mab~)._
+_Stand: 2026-08-11. 23 TorchScript-Modelle in `D:\AI-Models\ts models`. 19 C++-Tests, Python-Tests dynamisch pro Modell generiert._
 
 ---
 
@@ -10,7 +9,7 @@ und der drei External-Architekturen (mab~, mc.mab~, mcs.mab~)._
 Diese Teststrategie definiert, welche Tests **ohne** Max Runtime durchführbar
 sind – d.h. direkt via `pytest` und C++-Unit-Test-EXEs. Ziel ist:
 
-1. **Vollständige Modell-Kompatibilität** prüfen: Werden alle 19 TorchScript-Modelle im
+1. **Vollständige Modell-Kompatibilität** prüfen: Werden alle 23 TorchScript-Modelle im
    Modell-Ordner korrekt geladen? Liefert `mab.info` die richtigen Infos?
 2. **Methoden-Dispatch verifizieren**: Stehen alle Methoden (forward, encode,
    decode, prior) mit korrekten Parameter-Layouts zur Verfügung?
@@ -33,32 +32,38 @@ Python. Nur SHM-Handshake, Ringbuffer-Latenz und DSP-Tick-Timing brauchen Max.
 
 ---
 
-## 2. Modell-Inventar (19 TorchScript + 1 ONNX)
+## 2. Modell-Inventar (23 TorchScript)
 
-| Modell | Größe | Methoden (via inspect) | Latent | Block-Size |
-|--------|-------|------------------------|--------|------------|
-| `darbouka_onnx.ts` | 25 MB | **AUSGESCHLOSSEN** (ONNX, kein TorchScript) | – | – |
-| `afterv2.audio.instr.ts` | 219 MB | **AUSGESCHLOSSEN** (RAM >10 GB, nicht testbar auf 16 GB) | – | – |
-| `demo_attributes.ts` | 8 KB | forward | – | 512 |
-| `demo_buffers.ts` | 11 KB | unbekannt | – | ? |
-| `demo_mc.ts` | 5 KB | unbekannt | – | ? |
-| `effects.ts` | 11 KB | unbekannt | – | ? |
-| `features.ts` | 0.2 MB | unbekannt (hop=256) | ? | 256 |
-| `modell_30min_27915e19b0.ts` | 1.8 MB | unbekannt | ? | ? |
-| `musicnet.ts` | 237 MB | encode, decode, forward | 16 | 2048 |
-| `nasa.ts` | 159 MB | unbekannt | ? | ? |
-| `thirdModelTest3000Epoche.ts` | 49 MB | unbekannt | ? | ? |
-| `vintage.ts` | 460 MB | encode, decode, forward | ? | ? |
-| `voice_hifitts_b2048_r48000_z16.ts` | 164 MB | unbekannt (z=16) | 16 | 2048 |
-| `voice_jvs_b2048_r44100_z16.ts` | 149 MB | unbekannt (z=16) | 16 | 2048 |
-| `voice_vctk_b2048_r44100_z22.ts` | 149 MB | unbekannt (z=22) | 22 | 2048 |
-| `voice_vocalset_b2048_r48000_z16.ts` | 164 MB | unbekannt (z=16) | 16 | 2048 |
-| `voice-multi-b2048-r48000-z11.ts` | 150 MB | encode, decode, forward | 11 | 2048 |
-| `water_pondbrain_b2048_r48000_z16.ts` | 121 MB | unbekannt (z=16) | 16 | 2048 |
-| `wavetable.ts` | 7 KB | forward | – | ? |
-| `wheel.ts` | 160 MB | unbekannt | ? | ? |
+| Modell | Größe | Methoden | ci/co | Block |
+|--------|-------|----------|-------|-------|
+| `birds_dawnchorus_b2048_r48000_z8.ts` | 63.9 MB | encode, decode, forward | 1/8 | 512 |
+| `birds_motherbird_b2048_r48000_z16.ts` | 132.1 MB | encode, decode, forward | 1/16 | 2048 |
+| `birds_pluma_b2048_r48000_z12.ts` | 40.2 MB | encode, decode, forward | 1/12 | 2048 |
+| `crozzoli_bigensemblesmusic_18d.ts` | 142.4 MB | encode, decode, forward | 1/18 | 2048 |
+| `freesoundloop10k_raspi_b2048_r44100_z16.ts` | 22.5 MB | encode, decode, forward | 1/16 | 2048 |
+| `humpbacks_pondbrain_b2048_r48000_z20.ts` | 115.8 MB | encode, decode, forward | 1/20 | 2048 |
+| `magnets_b2048_r48000_z8.ts` | 108.5 MB | encode, decode, forward, prior | 1/8 | 2048 |
+| `marinemammals_pondbrain_b2048_r48000_z20.ts` | 115.8 MB | encode, decode, forward | 1/20 | 2048 |
+| `modell_30min_27915e19b0.ts` | 1.7 MB | encode, decode, forward | 1/2 | 512 |
+| `mrp_strengjavera_b2048_r44100_z16.ts` | 143.1 MB | encode, decode, forward | 1/8 | 2048 |
+| `musicnet.ts` | 226.0 MB | encode, decode, forward, prior | 1/16, 16/1 | 2048 |
+| `nasa.ts` | 151.9 MB | encode, decode, forward, prior | 1/8, 8/1 | 2048 |
+| `sol_ordinario_fast.ts` | 41.1 MB | encode, decode, forward | 1/8 | 512 |
+| `thirdModelTest3000Epoche.ts` | 46.6 MB | encode, decode, forward | 1/16 | 512 |
+| `vintage.ts` | 459.5 MB | encode, decode, forward, prior | 1/16, 2/1 | 2048 |
+| `voice-multi-b2048-r48000-z11.ts` | 143.2 MB | encode, decode, forward | 1/11 | 2048 |
+| `voice_hifitts_b2048_r48000_z16.ts` | 156.3 MB | encode, decode, forward | 1/16 | 2048 |
+| `voice_jvs_b2048_r44100_z16.ts` | 142.4 MB | encode, decode, forward | 1/16 | 2048 |
+| `voice_vctk_b2048_r44100_z22.ts` | 142.4 MB | encode, decode, forward | 1/22 | 2048 |
+| `voice_vocalset_b2048_r48000_z16.ts` | 156.3 MB | encode, decode, forward | 1/16 | 2048 |
+| `water_pondbrain_b2048_r48000_z16.ts` | 115.8 MB | encode, decode, forward | 1/16 | 2048 |
+| `wavetable.ts` | 0.0 MB | forward | 1/1 | 512 |
+| `wheel.ts` | 152.1 MB | encode, decode, forward, prior | 1/1 | 2048 |
 
-**Legende:** `z=N` = Dateiname enthält `_z<N>` (latent_size vermutet).
+_Alle 23 Modelle sind TorchScript (`.ts`), ONNX-Modelle werden per
+`_onnx.ts`-Suffix ausgeschlossen. `ci/co` = channels_in / channels_out
+der `forward`-Methode; bei `encode`/`decode` sind die Werte vertauscht
+(z.B. nasa encode: 1→8, decode: 8→1). Block = max(in_ratio, out_ratio)._
 
 ---
 
@@ -79,7 +84,7 @@ Diese Tests existieren bereits und benötigen keine echten Modelle:
 | `test/test_block_size_extraction.py` | SharedMemoryHeader-Offset-Validierung | ✅ |
 | `test/test_shared_memory_v2.py` | Header v3 + apply_method (7) | ✅ |
 
-### Kategorie B – Modell-Lade-Tests (NEU, 19 TorchScript-Modelle)
+### Kategorie B – Modell-Lade-Tests (NEU, 23 TorchScript-Modelle)
 
 **Ziel:** Jedes Modell im `D:\AI-Models\ts models`-Ordner laden → Methoden
 extrahieren → Layout berechnen – auf CPU UND GPU.
@@ -88,9 +93,9 @@ extrahieren → Layout berechnen – auf CPU UND GPU.
 
 | Testklasse | Tests | Zeit |
 |------------|-------|------|
-| `TestModelLoadingAll` | 19× `test_load_cpu_<name>` → load_model + eval | ~2-5 min CPU |
-| `TestModelLoadingAll` | 19× `test_load_gpu_<name>` → load_model(gpu=True) + eval | ~2-5 min GPU |
-| `TestModelLayoutAll` | 19× `test_layout_<name>` → `get_method_params` + `compute_layout` + Shapes | <1 s |
+| `TestModelLoadingAll` | 23× `test_load_cpu_<name>` → load_model + eval | ~3-6 min CPU |
+| `TestModelLoadingAll` | 23× `test_load_gpu_<name>` → load_model(gpu=True) + eval | ~3-6 min GPU |
+| `TestModelLayoutAll` | 23× `test_layout_<name>` → `get_method_params` + `compute_layout` + Shapes | <1 s |
 
 **GPU-Tests sind `skipIf(not torch.cuda.is_available())` – laufen nur bei
 CUDA-fähiger Hardware.**
@@ -104,9 +109,9 @@ erwartete Felder prüfen.
 
 | Testklasse | Tests | Prüft |
 |------------|-------|-------|
-| `TestQueryAllModels` | 19× → `query_model()` aufrufen | MAB_INFO_BEGIN/END, Modell-Typ, Methoden-Liste, Parameter |
-| `TestInfoBlockStructure` | 19× → Ausgabe parsen | model_path, model_type, block_size, channels_in/out, latent_size, methods, params |
-| `TestInfoDictJson` | 19× → MABJSON-Block validieren | gültiges JSON |
+| `TestQueryAllModels` | 23× → `query_model()` aufrufen | MAB_INFO_BEGIN/END, Modell-Typ, Methoden-Liste, Parameter |
+| `TestInfoBlockStructure` | 23× → Ausgabe parsen | model_path, model_type, block_size, channels_in/out, latent_size, methods, params |
+| `TestInfoDictJson` | 23× → MABJSON-Block validieren | gültiges JSON |
 
 ### Kategorie D – Methoden-Dispatch-Integrationstests (NEU)
 
@@ -300,13 +305,8 @@ Siehe `test/test_worker_launch.cpp:137-153` für das bestehende Muster des
    (237 MB) + weitere → >2 GB Speicher nötig. Tests sollten nacheinander
    geladen werden (nicht parallel) → `gc.collect()` zwischen Tests.
 
-3. **`darbouka_onnx.ts` (ONNX, ausgeschlossen):** Kann NICHT mit
-   `torch.jit.load()` geladen werden. `inference_worker.py:load_model()`
-   unterstützt derzeit ausschließlich `.ts` (TorchScript). ONNX-Support
-   ist ein separates Feature (Phase X, nicht im Scope).
-   → **Entscheidung: `darbouka_onnx.ts` wird in allen neuen Tests explizit
-   ausgeschlossen** (per `_ONNX_SKIP`-Set oder `.endswith('_onnx.ts')`-Filter).
-   Benchmark-Report (T7) enthält Vermerk `ONNX – nicht unterstützt`.
+3. **ONNX-Modelle** werden per `_onnx.ts`-Suffix in `model_files()` ausgeschlossen
+   (nur TorchScript wird unterstützt).
 
 4. **Unbekannte Modelle:** Einige Modelle (`features.ts`, `demo_buffers.ts`,
    etc.) haben keine RAVE-Methoden (`_params`). Tests müssen `get_method_params`
@@ -374,13 +374,10 @@ Aufruf:
 .venv\Scripts\python test/benchmark_models.py --runs 30 --warmup 5
 ```
 
-Befunde aus Testrun 001 (2026-08-11):
-- **GPU-Beschleunigung nur bei grossen RAVE-Modellen** (nasa 0.33x, wheel 0.37x,
-  voice_vocalset 0.46x) — kleine Modelle sind durch CUDA-Overhead langsamer auf GPU.
-- `demo_mc.ts`/`features.ts` haben GPU-inkompatible Operationen (batch-Resize,
-  spektrale Routinen) → als "GPU-Fehler" im Report vermerkt.
-- `darbouka_onnx.ts` (ONNX) und `afterv2.audio.instr.ts` (RAM > 10 GB) sind
-  vom Benchmark ausgeschlossen.
+Befunde aus Testrun 004 (2026-08-11, 23 Modelle):
+- **GPU-Beschleunigung nur bei grossen RAVE-Modellen** (nasa 0.15x, voice_hifitts 0.21x,
+  wheel 0.22x) — kleine Modelle sind durch CUDA-Transfer-Overhead langsamer auf GPU.
+- ONNX-Modelle werden per Suffix-Filter ausgeschlossen.
 
 ---
 

@@ -130,12 +130,12 @@ def _make_input(ci, block_size, sig):
 # ---------------------------------------------------------------------------
 
 # Methoden, die ein Eingangssignal 1:1 (oder invertiert) durchreichen sollen.
-# RAVE-`forward` ist KEIN Passthrough (Autoencoder-Bottleneck, verlustbehaftet)
-# -> nur echte Audio-Effekt-Modelle werden hier geprueft. Nur `effects.ts`
-# enthaelt solche Methoden (verifiziert: thru=1.0, invert=-1.0, add=1.0,
-# polynomial=1.0, saturate=0.999; midside transformiert -> ausgeschlossen).
+# RAVE-`forward` ist KEIN Passthrough (Autoencoder-Bottleneck, verlustbehaftet).
+# `effects.ts` (einziger Kandidat fuer echte Audio-Passthrough-Methoden wie
+# thru/invert/add/polynomial/saturate) wurde aus dem Modell-Ordner entfernt.
+# Ohne Passthrough-Modell werden alle Forward-Tests uebersprungen.
 PASSTHROUGH_METHODS = {"thru", "invert", "add", "polynomial", "saturate"}
-PASSTHROUGH_MODELS = {"effects.ts"}
+PASSTHROUGH_MODELS = set()
 
 
 @unittest.skipUnless(os.path.exists(MODEL_DIR),

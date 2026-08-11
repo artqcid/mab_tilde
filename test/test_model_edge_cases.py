@@ -263,18 +263,18 @@ class TestMissingMethod(unittest.TestCase):
 
 
 # ---------------------------------------------------------------------------
-# RAVE-Attribute set/get (demo_attributes.ts)
+# RAVE-Attribute set/get (nasa.ts)
 # ---------------------------------------------------------------------------
 
-@unittest.skipUnless(os.path.exists(_model_path("demo_attributes.ts")),
-                     "demo_attributes.ts not present")
+@unittest.skipUnless(os.path.exists(_model_path("nasa.ts")),
+                     "nasa.ts not present")
 class TestRaveAttributes(unittest.TestCase):
     """Attribute set/get via RuntimeAttributes/_apply_model_attribute."""
 
     def test_attribute_set_get(self):
         _check_ram("attributes")
-        print("\n--- RaveAttributes :: demo_attributes.ts ---", flush=True)
-        model, device = load_model(_model_path("demo_attributes.ts"),
+        print("\n--- RaveAttributes :: nasa.ts ---", flush=True)
+        model, device = load_model(_model_path("nasa.ts"),
                                    use_gpu=False)
         try:
             ra = RuntimeAttributes()
