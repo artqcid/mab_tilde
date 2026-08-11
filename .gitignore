@@ -43,4 +43,4 @@ Thumbs.db
 # SQLite-RAG-Datenbank (Laufzeit-Artefakt, wird von index_project_code erzeugt)
 mab_rag.db
 mab_rag.db-wal
-mab_rag.db-shm
+mab_rag.db-shmdoc/code_wiki.md
