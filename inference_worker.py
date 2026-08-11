@@ -969,8 +969,10 @@ def infer_method(model, device, method: str, method_params: dict,
     if out.dim() < 3:
         out = out.unsqueeze(-1)
 
-    # Hold latent/audio frames: repeat each frame output_ratio times
-    out = out.repeat_interleave(out_ratio, dim=-1)
+    # Hold latent/audio frames: repeat each frame output_ratio times.
+    # B4 fix: forward produces audio-rate output directly — no interleave needed.
+    if method != "forward":
+        out = out.repeat_interleave(out_ratio, dim=-1)
 
     # Trim output tail when history was prepended: the extra samples at the
     # beginning correspond to the history context; keep only the portion

@@ -65,11 +65,12 @@ _Einlese-Reihenfolge: checklist.md → code_wiki.md → query_code_wiki → quer
   - **Fix:** Auto-Detection in `mab_tilde_new`/`mc_mab_tilde_new`/`mcs_mab_tilde_new`: wenn `argv[1]` ein Symbol ist → `[model method bufsize ...]`; wenn es eine Zahl ist → `[model bufsize ...]` (method entfaellt, defaultet auf `forward`).
   - **Dateien:** `mab_tilde.cpp:380-400` (mab_tilde_new), `mab_tilde.cpp:1231-1256` (mc_mab_tilde_new), `mab_tilde.cpp:1564-1599` (mcs_mab_tilde_new)
 
-- [x] **Bug 4 – forward-Methode crashed Max (nasa, GPU)** ✅ **FIXED** (2026-08-12)
-  - **Symptom:** `mab~ nasa encode 2048 1` funktioniert, `mab~ nasa forward 2048 1` crashed Max bei Signal-Eingang. Worker-Prozess bleibt mit Modell auf GPU aktiv.
-  - **Ursache:** `infer_method()` im Main-Loop (`inference_worker.py:1785`) wird ohne try/except aufgerufen. Ein CUDA-Error / Shape-Mismatch / GPU-OOM in `model.forward()` bringt den Worker zum Absturz, wodurch die C++-Seite korrupte/unfertige SHM-Daten liest → Max crasht. Sekundaer: kein Cleanup des Worker-Prozesses bei Max-Absturz.
-  - **Fix:** try/except um `infer_method()` + Output-Zeroing auf Fehler. Der Worker loggt den Traceback, setzt den Output-Block auf Null und laeuft weiter.
-  - **Dateien:** `inference_worker.py:1784-1800`
+- [x] **Bug 4 – forward-Methode: kein Ton + Max-Crash (nasa, GPU)** ✅ **FIXED** (2026-08-12)
+  - **Symptom:** `mab~ nasa encode 2048 1` funktioniert, `mab~ nasa forward 2048 1` produziert keinen Ton und crashed Max bei Signal-Eingang.
+  - **Ursache 1 (kein Ton):** `infer_method()` wendet `repeat_interleave(out_ratio, dim=-1)` auf ALLE Methoden an. `forward_params` hat `out_ratio=2048`, aber `forward` produziert bereits 2048 Audio-Samples (full encode+decode pipeline). `repeat_interleave` vervielfacht jedes Sample 2048× → Trim auf block_size behält nur Sample 0 → reiner DC-Offset = kein Ton.
+  - **Ursache 2 (Crash):** Evtl. Folge des DC-Offsets in der Audio-Engine + kein try/except um `infer_method()` im Main-Loop.
+  - **Fix:** `if method != "forward": out = out.repeat_interleave(...)` — skip interleaving for methods that already produce audio-rate output. Zusaetzlich try/except im Main-Loop.
+  - **Dateien:** `inference_worker.py:972-975` (repeat_interleave-Skip), `inference_worker.py:1784-1800` (try/except)
 
 ---
 
