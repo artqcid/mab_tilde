@@ -15,6 +15,15 @@ _Einlese-Reihenfolge: checklist.md → code_wiki.md → query_code_wiki → quer
     - Streaming-Reset bei `method`-Wechsel und `enable 1`.
     - `_load_and_configure` erzeugt/ersetzt `ConvStreamingContext` bei jedem Modell-Load/Reload.
 
+- [x] **Bug 2 – Worker startet nicht nach Deploy (Arg-Mismatch C++ ↔ Python)** ✅ **FIXED** (2026-08-11)
+  - **Symptom:** Nach Build+Deploy startet der Python-Worker nicht. `mab_worker.log` bleibt leer. `mab.info dump` funktioniert, `mab~` nicht. "no such object" nach Max-Neustart.
+  - **Ursache:** Die C++-Seite uebergibt seit Phase 6 ein `n_batches`-Argument an Position 5 (`mab_tilde.cpp:777`), aber die deployte `inference_worker.py` im Max-Package (`support\`) war veraltet und kannte das `n_batches`-Arg nicht. Der Parser interpretierte `n_batches=1` als `shm_name` → `invalid int value` → crash vor erstem `print()`.
+  - **Fix:**
+    - `inference_worker.py` muss bei jedem Deploy mit kopiert werden (neben `.mxe64`).
+    - Deploy-Script `deploy.ps1` erstellt (build + copy `.mxe64` + `inference_worker.py`).
+    - VSCode-Task `Deploy to Max 9` in `.vscode/tasks.json`.
+    - In `AGENTS.md` und `projektwissen.md` dokumentiert.
+
 ## Feature Requests
 
 - [x] **FR1 – Timer-Resolution + Python-Thread-Priorität (ASIO XRun-Prävention Stufe 1)** ✅ **DONE** (2026-08-11)

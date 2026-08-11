@@ -43,6 +43,7 @@ Auto-loaded by opencode/Continue. Read `WORKSPACE_AGENT_PROMPT.md` for full proj
 - Main code: `source/projects/mab_tilde/mab_tilde.cpp`, `inference_worker.py`.
 - Checklist: `doc/checklist.md` (offene Tasks).
 - Build: `cmake --preset debug && cmake --build --preset debug` → `build/Debug/mab~.mxe64`.
+- **Deploy:** NUR ueber `deploy.ps1` (oder VSCode-Task `Deploy to Max 9`) — kopiert `.mxe64` **UND** `inference_worker.py` nach `%USERPROFILE%\Documents\Max 9\Packages\mab_tilde\`. Nach Deploy Max neu starten. Bug 2: ohne `inference_worker.py` crasht der Worker wg. Arg-Mismatch.
 - MCP: `mab_mcp_server.py`; registriert in `opencode.json` unter `mcp.mab-rave-assistant` (NICHT `.mcp.json` – das ist nur für VS Code); tools: `index_project_code`, `query_code_rag`, `query_code_wiki`, `get_rag_chunk`, `inspect_rave_model` (im Chat mit Server-Präfix `mab-rave-assistant_*`).
 - Manuelles Wissen: `doc/projektwissen.md` (~200 Z., direkt lesen).
 - Auto-generiertes Wissen: `code_wiki.md` (NUR via MCP abfragen, NIE direkt lesen).

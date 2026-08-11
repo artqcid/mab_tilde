@@ -6,6 +6,18 @@ Wird von Coding-Agents zusammen mit `code_wiki.md` pro Session gelesen._
 
 ---
 
+## Build & Deploy (Bug 2 – kritisch!)
+
+- **Build:** `cmake --preset debug && cmake --build --preset debug` → `build/Debug/`
+- **Deploy:** `.\deploy.ps1` (oder VSCode-Task `Deploy to Max 9`) kopiert:
+  - `build/Debug/*.mxe64` → `%USERPROFILE%\Documents\Max 9\Packages\mab_tilde\externals\`
+  - `inference_worker.py` → `%USERPROFILE%\Documents\Max 9\Packages\mab_tilde\support\`
+  - **NUR .mxe64 deployen reicht NICHT** — C++ und Python teilen sich das argparse-Layout.
+    Bei Version-Mismatch (z.B. C++ kennt `n_batches`-Arg, Python nicht) startet der Worker
+    nicht (Bug 2).
+- **Nach Deploy:** Max 9 neu starten (Externals werden nur beim Start geladen).
+- **Worker-Log:** `%USERPROFILE%\Documents\Max 9\Packages\mab_tilde\support\mab_worker.log`
+
 ## Zentrale Datenstrukturen
 
 ### `t_mab_tilde` (mab_tilde.cpp:68-125) – Haupt-Objekt von `mab~` und `mc.mab~`
