@@ -122,6 +122,9 @@ typedef struct _mab_tilde {
     // A2: periodic crash check timer (main thread, not audio thread)
     t_clock* crash_clock;
 
+    // B5: GPU reload bypass timer (prevents race during async model reload)
+    t_clock* gpu_reload_clock;
+
     // Phase 5: mc.mab~ (Multichannel) support fields
     long is_mc;                // 1 = mc.mab~ mode, 0 = mab~ mode
     long channel_map[16];      // per-inlet channel count (MC mode, max 16 inlets)
@@ -172,6 +175,9 @@ extern "C" {
 
     // A2: crash monitoring on main thread (not in perform64)
     void mab_tilde_check_crash(t_mab_tilde* x);
+
+    // B5: GPU reload bypass clear timer callback
+    void mab_tilde_gpu_reload_done(t_mab_tilde* x);
 
     // Phase 5: mc.mab~ (Multichannel)
     void* mc_mab_tilde_new(t_symbol* s, long argc, t_atom* argv);
@@ -349,7 +355,8 @@ void* mab_tilde_new(t_symbol* s, long argc, t_atom* argv) {
     x->out_pos = 0;
     x->method_pending = 0;
     x->io_qelem = qelem_new(x, (method)mab_tilde_apply_io);
-    x->crash_clock = clock_new(x, (method)mab_tilde_check_crash);
+     x->crash_clock = clock_new(x, (method)mab_tilde_check_crash);
+    x->gpu_reload_clock = clock_new(x, (method)mab_tilde_gpu_reload_done);
 
     // Phase 5: MC fields (mab~ mode: is_mc=0)
     x->is_mc = 0;
@@ -497,6 +504,11 @@ void mab_tilde_free(t_mab_tilde* x) {
         clock_unset(x->crash_clock);
         clock_free(x->crash_clock);
         x->crash_clock = nullptr;
+    }
+    if (x->gpu_reload_clock) {
+        clock_unset(x->gpu_reload_clock);
+        clock_free(x->gpu_reload_clock);
+        x->gpu_reload_clock = nullptr;
     }
 
     dsp_free((t_pxobject*)x);
@@ -748,6 +760,7 @@ void mab_tilde_apply_io(t_mab_tilde* x) {
     mab_tilde_rebuild_io(x, io_in, io_out);
 
     x->method_pending = 0;
+    InterlockedExchange(&x->is_bypass, 0);
     const char* prefix = mab_tilde_prefix(x);
     post("%s: IO layout: %ld inlets, %ld outlets, method=%s (model %ld in / %ld out)",
          prefix, io_in, io_out, x->active_method, model_in, model_out);
@@ -898,14 +911,34 @@ void mab_tilde_enable(t_mab_tilde* x, long flag) {
 
 void mab_tilde_gpu(t_mab_tilde* x, long flag) {
     x->gpu = flag ? 1 : 0;
-    // Echter Setter (nn_tilde-Parität P3): der Worker lädt das Modell auf dem
-    // neuen Device neu und re-applied die Attribute.
+    // B5 fix: async GPU reload via Python must not race with perform64.
+    // Set bypass to stop audio processing while the worker reloads,
+    // then schedule a timer to clear bypass (Python reload takes ~1-3 s).
     char msg_buf[CONTROL_MSG_SIZE];
     snprintf(msg_buf, sizeof(msg_buf), "gpu %d", x->gpu);
     if (mab_enqueue_control(x, msg_buf)) {
-        post("mab~: GPU mode set to %ld (worker reloading model)", flag);
+        x->is_bypass = 1;
+        // Reset active_method_id so perform64 re-detects the
+        // (potentially changed) method layout after the reload.
+        x->active_method_id = 0;
+        clock_fdelay(x->gpu_reload_clock, 3000.0);
+        post("mab~: GPU mode set to %ld (worker reloading model, 3 s bypass)", flag);
     } else {
         post("mab~: GPU mode set to %ld (will apply on next load)", flag);
+    }
+}
+
+void mab_tilde_gpu_reload_done(t_mab_tilde* x) {
+    if (!x->header) return;
+    if (x->header->method_id != x->active_method_id) {
+        // Python wrote new method layout → queue IO rebuild
+        x->method_pending = 1;
+        qelem_set(x->io_qelem);
+    }
+    // Bypass is cleared in mab_tilde_apply_io after IO rebuild,
+    // or here if no rebuild is needed.
+    if (!x->method_pending) {
+        InterlockedExchange(&x->is_bypass, 0);
     }
 }
 
@@ -1205,6 +1238,7 @@ void* mc_mab_tilde_new(t_symbol* s, long argc, t_atom* argv) {
     x->method_pending = 0;
     x->io_qelem = qelem_new(x, (method)mab_tilde_apply_io);
     x->crash_clock = clock_new(x, (method)mab_tilde_check_crash);
+    x->gpu_reload_clock = clock_new(x, (method)mab_tilde_gpu_reload_done);
 
     // Phase 5: MC fields (mc.mab~ mode: is_mc=1)
     x->is_mc = 1;
@@ -1520,6 +1554,7 @@ void* mcs_mab_tilde_new(t_symbol* s, long argc, t_atom* argv) {
     x->method_pending = 0;
     x->io_qelem = qelem_new(x, (method)mab_tilde_apply_io);
     x->crash_clock = clock_new(x, (method)mab_tilde_check_crash);
+    x->gpu_reload_clock = clock_new(x, (method)mab_tilde_gpu_reload_done);
 
     // Phase 6: mcs fields (mcs.mab~ mode: is_mcs=1, is_mc=1)
     x->is_mcs = 1;

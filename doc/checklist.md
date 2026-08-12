@@ -72,6 +72,12 @@ _Einlese-Reihenfolge: checklist.md → code_wiki.md → query_code_wiki → quer
   - **Fix:** `if method != "forward": out = out.repeat_interleave(...)` — skip interleaving for methods that already produce audio-rate output. Zusaetzlich try/except im Main-Loop.
   - **Dateien:** `inference_worker.py:972-975` (repeat_interleave-Skip), `inference_worker.py:1784-1800` (try/except)
 
+- [x] **Bug 5 – GPU-Nachricht crashed Max (bad object)** ✅ **FIXED** (2026-08-12)
+  - **Symptom:** `mab~ nasa forward` (ohne bufsize) + `gpu 1` Message → `object_class_internal: bad object 3c165d80` ×4 → Max crasht.
+  - **Ursache:** `mab_tilde_gpu` startet asynchronen GPU-Reload im Python-Worker, ohne bypass zu setzen. Python schreibt neue `method_id`/`channels_in/out` ins SHM-Header, waehrend `perform64` parallel mit veralteten `x->channels_in/out` Buffer-Strides berechnet → Speicher-Korruption → DSP-Graph zerstoert.
+  - **Fix:** `mab_tilde_gpu` setzt `is_bypass=1` + `active_method_id=0` + `clock_fdelay(gpu_reload_clock, 3s)`. Die Clock-Callback prueft nach 3 s ob das Layout geaendert wurde → `qelem_set` → `mab_tilde_apply_io` rebuilds IO und cleared bypass. Kein SHM-Zugriff waehrend des Reloads.
+  - **Dateien:** `mab_tilde.cpp:911-948` (mab_tilde_gpu + callback), `mab_tilde.cpp:762` (apply_io cleared bypass)
+
 ---
 
 ## Max-Runtime-Verifikation
