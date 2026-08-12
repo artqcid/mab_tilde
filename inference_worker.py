@@ -950,10 +950,9 @@ def infer_method(model, device, method: str, method_params: dict,
 
     with torch.no_grad():
         if method in ("decode", "prior"):
-            if batched:
-                z = tensor[..., -1].unsqueeze(-1)          # (B, ci, 1)
-            else:
-                z = tensor[:, -1].unsqueeze(0).unsqueeze(-1)  # (1, ci, 1)
+            # B4 fix: tensor[:, -1] selected last CHANNEL, not last time sample.
+            # tensor[..., -1:] selects last time sample, keeps dimension.
+            z = tensor[..., -1:]  # (B, ci, 1)
             out = getattr(model, method)(z)
         else:
             if not batched:

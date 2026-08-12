@@ -129,6 +129,8 @@ typedef struct _mab_tilde {
     long is_mc;                // 1 = mc.mab~ mode, 0 = mab~ mode
     long channel_map[16];      // per-inlet channel count (MC mode, max 16 inlets)
     long n_batches;            // fixed output channels from `chans` attribute (0 = auto)
+    long last_io_in;           // B4: last rebuilt inlet count (avoid unnecessary rebuild)
+    long last_io_out;          // B4: last rebuilt outlet count
 
     // Phase 6: mcs.mab~ (Batched Multichannel) support fields
     long is_mcs;               // 1 = mcs.mab~ mode, 0 = mab~/mc.mab~ mode
@@ -362,6 +364,8 @@ void* mab_tilde_new(t_symbol* s, long argc, t_atom* argv) {
     x->is_mc = 0;
     x->n_batches = 0;
     for (long i = 0; i < 16; i++) x->channel_map[i] = 0;
+    x->last_io_in = 1;   // dsp_setup(x,1) + outlet_new in constructor
+    x->last_io_out = 1;
 
     // Parse arguments safely (Optional, exactly like nn_tilde)
 
@@ -748,6 +752,18 @@ void mab_tilde_apply_io(t_mab_tilde* x) {
     // / multichanneloutputs), nicht über die Inlet-Anzahl.
     long io_in = x->is_mcs ? x->mcs_batches : (x->is_mc ? 1 : model_in);
     long io_out = x->is_mcs ? x->mcs_batches : (x->is_mc ? 1 : model_out);
+
+    // B4 fix: skip unnecessary IO rebuild. For methods with the same
+    // inlet/outlet count as the current setup (e.g. forward: 1-in-1-out),
+    // freeing and recreating outlets can corrupt Max's DSP references.
+    if (io_in == x->last_io_in && io_out == x->last_io_out) {
+        x->method_pending = 0;
+        InterlockedExchange(&x->is_bypass, 0);
+        const char* prefix = mab_tilde_prefix(x);
+        post("%s: IO layout unchanged (%ld in / %ld out, method=%s)",
+             prefix, io_in, io_out, x->active_method);
+        return;
+    }
     if (x->is_mc) {
         // Stale per-inlet counts der alten Methode verwerfen; dsp64 publiziert
         // die echten Werte nach dem Rebuild.
@@ -758,6 +774,8 @@ void mab_tilde_apply_io(t_mab_tilde* x) {
     }
 
     mab_tilde_rebuild_io(x, io_in, io_out);
+    x->last_io_in = io_in;
+    x->last_io_out = io_out;
 
     x->method_pending = 0;
     InterlockedExchange(&x->is_bypass, 0);
@@ -1243,6 +1261,8 @@ void* mc_mab_tilde_new(t_symbol* s, long argc, t_atom* argv) {
     x->is_mc = 1;
     x->n_batches = 0;  // 0 = auto-detect from channel_map
     for (long i = 0; i < 16; i++) x->channel_map[i] = 0;
+    x->last_io_in = 1;   // dsp_setup(x,1) + outlet_new in constructor
+    x->last_io_out = 1;
 
     // Parse arguments
     long void_mode = 0;
@@ -1561,6 +1581,8 @@ void* mcs_mab_tilde_new(t_symbol* s, long argc, t_atom* argv) {
     x->mcs_batches = 1;  // 1 = single batch (mc-like behaviour)
     x->n_batches = 0;    // `chans` per-outlet channel count (0 = auto)
     for (long i = 0; i < 16; i++) x->channel_map[i] = 0;
+    x->last_io_in = 1;   // dsp_setup(x,1) + outlet_new in constructor
+    x->last_io_out = 1;
 
     // Parse arguments. mcs.mab~ uses its own order (nn_tilde-Parität P9):
     //   [mcs.mab~ model method n_batches bufsize gpu cores]
