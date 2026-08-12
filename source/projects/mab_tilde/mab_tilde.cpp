@@ -31,13 +31,15 @@ struct ControlRingBuffer {
 };
 
 // Shared memory header structure (C-compatible, no C++ objects).
-// Version 3 adds method-aware metadata (v2) plus the per-inlet MC channel map
-// so C++ can rebuild inlets/outlets dynamically and Python knows how many
-// channels are actually connected to each mc.mab~ inlet.
-// Field order MUST match the Python SharedMemoryHeader exactly.
+// Version 4 replaces the A1 double-buffer flags with a multi-block ring
+// protocol: ring_blocks entries of [max_channels_*][block_size] floats each.
+// The ring block stride is derived from the CONSTANT allocation
+// (max_channels_in/max_channels_out), never from the active method layout
+// (Bug 12 fix - a method switch must not drift C++ away from Python's slot
+// spacing). Field order MUST match the Python SharedMemoryHeader exactly.
 struct SharedMemoryHeader {
     uint32_t magic;           // 0x4D414254 ('MABT')
-    uint32_t version;         // 3
+    uint32_t version;         // 4
     uint32_t block_size;      // samples per audio block (latent held at audio rate)
     uint32_t num_channels;    // legacy channel count (== channels_out)
     uint32_t channels_in;     // active method: input channels
@@ -50,22 +52,24 @@ struct SharedMemoryHeader {
     uint32_t input_offset;    // bytes to input buffer 0
     uint32_t output_offset;   // bytes to output buffer 0
     uint32_t control_offset;  // bytes to control ring buffer
-    uint32_t input_buffer_index;   // A1: index of input buffer C++ is filling (0/1)
-    uint32_t output_buffer_index;  // A1: index of output buffer C++ is draining (0/1)
+    uint32_t ring_blocks;     // v4: number of blocks in the input/output ring (C++ clamps to >=2)
+    uint32_t in_write_head;   // v4: next input block C++ fills (monotonic producer index)
+    uint32_t in_read_tail;    // v4: oldest input block Python has consumed
+    uint32_t out_write_head;  // v4: next output block Python fills (monotonic producer index)
+    uint32_t out_read_tail;   // v4: oldest output block C++ has drained
+    uint32_t max_channels_in;  // v4: constant input rows per ring block (allocation)
+    uint32_t max_channels_out; // v4: constant output rows per ring block (allocation)
     uint32_t channel_map[16]; // Phase 5 (mc.mab~): per-inlet channel counts
-    long is_input_ready;      // atomic flag (volatile)
-    long is_output_ready;     // atomic flag (volatile)
     long is_python_ready;     // atomic flag (volatile)
     long shutdown_flag;       // atomic flag (C++ tells Python to die)
 };
 
 // Compile-time check that both sides agree on the header size.
 // 9x uint32 (36) + method[52] + method_id (4) + 3x uint32 (12) +
-// 2x uint32 (8) + 16x uint32 channel_map (64) + 4x long (16) = 192 bytes.
-static_assert(sizeof(SharedMemoryHeader) == 192,
-              "SharedMemoryHeader v3 must be 192 bytes (sync with Python)");
+// 7x uint32 (28) + 16x uint32 channel_map (64) + 2x long (8) = 204 bytes.
+static_assert(sizeof(SharedMemoryHeader) == 204,
+              "SharedMemoryHeader v4 must be 204 bytes (sync with Python)");
 
-static t_class* mab_tilde_class = nullptr;
 static t_class* mc_mab_tilde_class = nullptr;
 static t_class* mcs_mab_tilde_class = nullptr;
 
@@ -126,22 +130,25 @@ typedef struct _mab_tilde {
     t_clock* gpu_reload_clock;
 
     // Phase 5: mc.mab~ (Multichannel) support fields
-    long is_mc;                // 1 = mc.mab~ mode, 0 = mab~ mode
     long channel_map[16];      // per-inlet channel count (MC mode, max 16 inlets)
     long n_batches;            // fixed output channels from `chans` attribute (0 = auto)
     long last_io_in;           // B4: last rebuilt inlet count (avoid unnecessary rebuild)
     long last_io_out;          // B4: last rebuilt outlet count
 
     // Phase 6: mcs.mab~ (Batched Multichannel) support fields
-    long is_mcs;               // 1 = mcs.mab~ mode, 0 = mab~/mc.mab~ mode
+    long is_mcs;               // 1 = mcs.mab~ mode, 0 = mc.mab~ mode
     long mcs_batches;          // number of batch inlets/outlets (mcs.mab~, 1..16)
+
+    // v4: output ring drain position. -1 = priming (no completed output block
+    // yet -> silence until out_write_head advances past out_read_tail).
+    long drain_block;
 } t_mab_tilde;
 
-// Phase 6: shared prefix helper so all variants post the correct class name.
+// Phase 6: shared prefix helper so both remaining variants post the correct
+// class name (mc.mab~ = 0, mcs.mab~ = 1).
 static const char* mab_tilde_prefix(t_mab_tilde* x) {
     if (x->is_mcs) return "mcs.mab~";
-    if (x->is_mc) return "mc.mab~";
-    return "mab~";
+    return "mc.mab~";
 }
 
 // ============================================================================
@@ -152,12 +159,9 @@ extern "C" {
     void init_worker(t_mab_tilde* x);
     void init_worker_thread(t_mab_tilde* x);
 
-    // Core methods
-    void* mab_tilde_new(t_symbol* s, long argc, t_atom* argv);
-    void mab_tilde_free(t_mab_tilde* x);
+    // Core methods (shared by mc.mab~ and mcs.mab~)
+    void mab_tilde_shared_free(t_mab_tilde* x);
     void mab_tilde_assist(t_mab_tilde* x, void* b, long m, long a, char* s);
-    void mab_tilde_dsp64(t_mab_tilde* x, t_object* dsp64, short* count, double samplerate, long maxvectorsize, long flags);
-    void mab_tilde_perform64(t_mab_tilde* x, t_object* dsp64, double** ins, long numins, double** outs, long numouts, long sampleframes, long flags, void* userparam);
     
     // Phase 1.7 Message Handlers
     void mab_tilde_enable(t_mab_tilde* x, long flag);
@@ -203,8 +207,7 @@ extern "C" {
 }
 
 // ============================================================================
-// Phase 5/6 ext_main: compiled three times via CMake target_compile_definitions.
-// mab~.mxe64:     no define            → registers mab~ class only.
+// Phase 5/6 ext_main: compiled twice via CMake target_compile_definitions.
 // mc.mab~.mxe64:  MC_MAB_TILDE_MODULE  → registers mc.mab~ class only.
 // mcs.mab~.mxe64: MCS_MAB_TILDE_MODULE → registers mcs.mab~ class only.
 // ============================================================================
@@ -212,7 +215,7 @@ extern "C" {
 void ext_main(void* r) {
     t_class* mcs_class = class_new("mcs.mab~",
                                    (method)mcs_mab_tilde_new,
-                                   (method)mab_tilde_free,
+                                   (method)mab_tilde_shared_free,
                                    (long)sizeof(t_mab_tilde),
                                    0L,
                                    A_GIMME,
@@ -228,7 +231,7 @@ void ext_main(void* r) {
     // chans attribute: fixed per-batch output channel count (nn_tilde-Parität P8/P9)
     class_addmethod(mcs_class, (method)mc_mab_tilde_chans, "chans", A_LONG, 0);
 
-    // Shared message handlers (same as mab~ / mc.mab~)
+    // Shared message handlers (same as mc.mab~)
     class_addmethod(mcs_class, (method)mab_tilde_enable, "enable", A_LONG, 0);
     class_addmethod(mcs_class, (method)mab_tilde_gpu, "gpu", A_LONG, 0);
     class_addmethod(mcs_class, (method)mab_tilde_reload, "reload", A_SYM, 0);
@@ -245,11 +248,11 @@ void ext_main(void* r) {
 
     post("mcs.mab~: Batched multichannel external loaded successfully.");
 }
-#elif defined(MC_MAB_TILDE_MODULE)
+#else  // MC_MAB_TILDE_MODULE
 void ext_main(void* r) {
     t_class* mc_class = class_new("mc.mab~",
                                   (method)mc_mab_tilde_new,
-                                  (method)mab_tilde_free,
+                                  (method)mab_tilde_shared_free,
                                   (long)sizeof(t_mab_tilde),
                                   0L,
                                   A_GIMME,
@@ -265,7 +268,7 @@ void ext_main(void* r) {
     // Phase 5: chans attribute (fixed output channel count, nn_tilde-Parität P8)
     class_addmethod(mc_class, (method)mc_mab_tilde_chans, "chans", A_LONG, 0);
 
-    // Shared message handlers (same as mab~)
+    // Shared message handlers (same for mc/mcs)
     class_addmethod(mc_class, (method)mab_tilde_enable, "enable", A_LONG, 0);
     class_addmethod(mc_class, (method)mab_tilde_gpu, "gpu", A_LONG, 0);
     class_addmethod(mc_class, (method)mab_tilde_reload, "reload", A_SYM, 0);
@@ -282,181 +285,9 @@ void ext_main(void* r) {
 
     post("mc.mab~: Multichannel external loaded successfully.");
 }
-#else
-void ext_main(void* r) {
-    t_class* c = class_new("mab~",
-                           (method)mab_tilde_new,
-                           (method)mab_tilde_free,
-                           (long)sizeof(t_mab_tilde),
-                           0L,
-                           A_GIMME,
-                           0);
-
-    class_addmethod(c, (method)mab_tilde_dsp64, "dsp64", A_CANT, 0);
-    class_addmethod(c, (method)mab_tilde_assist, "assist", A_CANT, 0);
-    
-    // Message handlers (Phase 1.7)
-    class_addmethod(c, (method)mab_tilde_enable, "enable", A_LONG, 0);
-    class_addmethod(c, (method)mab_tilde_gpu, "gpu", A_LONG, 0);
-    class_addmethod(c, (method)mab_tilde_reload, "reload", A_SYM, 0);
-    class_addmethod(c, (method)mab_tilde_dump, "dump", 0);
-    class_addmethod(c, (method)mab_tilde_set, "set", A_GIMME, 0);
-    class_addmethod(c, (method)mab_tilde_get, "get", A_SYM, 0);
-    class_addmethod(c, (method)mab_tilde_method, "method", A_GIMME, 0);
-    class_addmethod(c, (method)mab_tilde_load, "load", A_SYM, 0);
-    class_addmethod(c, (method)mab_tilde_anything, "anything", A_GIMME, 0);
-
-    class_dspinit(c);
-    class_register(CLASS_BOX, c);
-    mab_tilde_class = c;
-
-    post("mab~: Native Max SDK external loaded successfully.");
-}
 #endif
 
-void* mab_tilde_new(t_symbol* s, long argc, t_atom* argv) {
-    t_mab_tilde* x = (t_mab_tilde*)object_alloc(mab_tilde_class);
-    if (!x) return nullptr;
-
-    dsp_setup((t_pxobject*)x, 1);
-    outlet_new(x, "signal");
-
-    // Initialize variables (Clean state - No Model loaded initially)
-    x->is_ready = 0;
-    x->is_bypass = 1; 
-    x->num_channels = 1; 
-    
-    x->init_thread = nullptr;
-    x->python_process = nullptr;
-    x->ready_event = nullptr;
-    x->input_ready_event = nullptr;
-    x->hMapFile = nullptr;
-    x->header = nullptr;
-    x->p_input = nullptr;
-    x->p_output = nullptr;
-    x->p_control = nullptr;
-
-    x->model_path[0] = '\0';
-    x->method_name[0] = '\0';
-    x->buffer_size = 512;
-    x->gpu = 0;
-    x->cores = 2;   // Default: 2 PyTorch-Inferenz-Threads (Clamping 1..64)
-    x->control_size = 0;
-    memset(x->control_buffer, 0, sizeof(x->control_buffer));
-
-    // P7 (Vorbereitung): Buffer~-Tracking initialisieren
-    buffer_manager_init(&x->buffer_mgr);
-
-    // Phase 3: method-aware IO state (default 1-in/1-out until the worker
-    // reports the real layout through the shared-memory header)
-    x->active_method[0] = '\0';
-    x->active_method_id = 0;
-    x->channels_in = 1;
-    x->channels_out = 1;
-    x->in_pos = 0;
-    x->out_pos = 0;
-    x->method_pending = 0;
-    x->io_qelem = qelem_new(x, (method)mab_tilde_apply_io);
-     x->crash_clock = clock_new(x, (method)mab_tilde_check_crash);
-    x->gpu_reload_clock = clock_new(x, (method)mab_tilde_gpu_reload_done);
-
-    // Phase 5: MC fields (mab~ mode: is_mc=0)
-    x->is_mc = 0;
-    x->n_batches = 0;
-    for (long i = 0; i < 16; i++) x->channel_map[i] = 0;
-    x->last_io_in = 1;   // dsp_setup(x,1) + outlet_new in constructor
-    x->last_io_out = 1;
-
-    // Parse arguments safely (Optional, exactly like nn_tilde)
-
-    // Void-Modus (nn_tilde-Parität P5): `mab~ void <inlets> <outlets> <bufsize>`
-    // erzeugt einen reinen Passthrough mit N Inlets/Outlets und startet KEINEN
-    // Worker (kein Modell). Puffer-Zeichenketten usw. werden ignoriert.
-    long void_mode = 0;
-    if (argc >= 1) {
-        t_symbol* first = atom_getsym(argv);
-        if (first && first->s_name && strcmp(first->s_name, "void") == 0)
-            void_mode = 1;
-    }
-
-    if (argc >= 1 && !void_mode) {
-        t_symbol* model_sym = atom_getsym(argv);
-        if (model_sym && model_sym->s_name) {
-            strncpy(x->model_path, model_sym->s_name, sizeof(x->model_path) - 1);
-            char resolved[MAX_PATH];
-            if (mab_resolve_model_path(x->model_path, resolved, sizeof(resolved)))
-                strncpy(x->model_path, resolved, sizeof(x->model_path) - 1);
-        }
-    }
-    // B3 fix: auto-detect if user skipped the optional method argument.
-    // If argv[1] is a number, the user wrote e.g. [mab~ model bufsize gpu]
-    // instead of [mab~ model method bufsize gpu]. Shift numeric args by -1.
-    bool has_method = false;
-    if (argc >= 2 && !void_mode) {
-        if (argv[1].a_type != A_LONG && argv[1].a_type != A_FLOAT) {
-            has_method = true;
-        }
-    }
-
-    if (has_method) {
-        t_symbol* method_sym = atom_getsym(argv + 1);
-        if (method_sym && method_sym->s_name) {
-            strncpy(x->method_name, method_sym->s_name, sizeof(x->method_name) - 1);
-        }
-    }
-
-    long off = has_method ? 2 : 1;
-    if (argc > off && !void_mode)     x->buffer_size = atom_getlong(argv + off);
-    if (argc > off+1 && !void_mode)   x->gpu = atom_getlong(argv + off+1);
-    if (argc > off+2 && !void_mode)   x->num_channels = atom_getlong(argv + off+2);
-    if (argc > off+3 && !void_mode) {
-        x->cores = atom_getlong(argv + off+3);
-        if (x->cores < 1) x->cores = 1;
-        if (x->cores > 64) x->cores = 64;
-    }
-
-    if (void_mode) {
-        // mab~ void <inlets> <outlets> <bufsize>
-        long n_in = (argc >= 2) ? atom_getlong(argv + 1) : 1;
-        long n_out = (argc >= 3) ? atom_getlong(argv + 2) : 1;
-        if (argc >= 4) x->buffer_size = atom_getlong(argv + 3);
-        if (n_in < 1) n_in = 1;
-        if (n_out < 1) n_out = 1;
-        if (n_in > MAX_CHANNELS) n_in = MAX_CHANNELS;
-        if (n_out > MAX_CHANNELS) n_out = MAX_CHANNELS;
-        x->channels_in = n_in;
-        x->channels_out = n_out;
-        x->num_channels = n_out;
-        strncpy(x->active_method, "forward", sizeof(x->active_method) - 1);
-        x->active_method[sizeof(x->active_method) - 1] = '\0';
-        x->active_method_id = 0;   // hash("forward") placeholder; void mode uses layout only
-
-        // Inlets/Outlets direkt auf dem Main-Thread einrichten (wir sind in
-        // mab_tilde_new, kein Thread-Kontext-Wechsel nötig).
-        dsp_resize((t_pxobject*)x, n_in);
-        while (x->ob.z_ob.o_outlet) {
-            object_free((t_object*)x->ob.z_ob.o_outlet);
-        }
-        for (long i = 0; i < n_out; i++) {
-            outlet_new((t_object*)x, "signal");
-        }
-        post("mab~: void mode: %ld inlets, %ld outlets, buffer_size=%ld",
-             n_in, n_out, x->buffer_size);
-        return x;
-    }
-
-    // If a model path was provided at creation time, start the worker immediately.
-    // Otherwise, start in "No Model" idle state waiting for a [load] message.
-    if (x->model_path[0] != '\0') {
-        x->init_thread = new std::thread(init_worker_thread, x);
-    } else {
-        post("mab~: Created in 'no model' state. Use [load <model>] to start.");
-    }
-    
-    return x;
-}
-
-void mab_tilde_free(t_mab_tilde* x) {
+void mab_tilde_shared_free(t_mab_tilde* x) {
     // 1. Tell Python to shutdown via shared memory
     if (x->header) {
         InterlockedExchange(&x->header->shutdown_flag, 1);
@@ -542,10 +373,6 @@ void mab_tilde_assist(t_mab_tilde* x, void* b, long m, long a, char* s) {
     }
 }
 
-void mab_tilde_dsp64(t_mab_tilde* x, t_object* dsp64, short* count, double samplerate, long maxvectorsize, long flags) {
-    object_method(dsp64, gensym("dsp_add64"), x, mab_tilde_perform64, 0, NULL);
-}
-
 // A2: crash monitoring runs on the Max main thread (clock callback), not in
 // perform64. This removes the last Win32 syscall from the audio callback.
 void mab_tilde_check_crash(t_mab_tilde* x) {
@@ -593,88 +420,6 @@ void mab_tilde_check_crash(t_mab_tilde* x) {
     clock_fdelay(x->crash_clock, 100.0);
 }
 
-void mab_tilde_perform64(t_mab_tilde* x, t_object* dsp64, double** ins, long numins, double** outs, long numouts, long sampleframes, long flags, void* userparam) {
-    long n = sampleframes;
-    if (n < 0) n = 0;
-
-    // Bypass mode: pass audio through unchanged when not ready (channel-wise
-    // so multi-channel layouts like decode don't collapse to a single channel).
-    if (!x->is_ready || x->is_bypass || !x->header) {
-        long pass = (numins < numouts) ? numins : numouts;
-        for (long ch = 0; ch < numouts; ch++) {
-            double* out = outs[ch];
-            double* in = (ch < pass && ins[ch]) ? ins[ch] : nullptr;
-            for (long i = 0; i < n; i++) out[i] = in ? in[i] : 0.0;
-        }
-        return;
-    }
-
-    const long blk = (long)x->header->block_size;
-    if (blk < 1) {
-        for (long ch = 0; ch < numouts; ch++)
-            for (long i = 0; i < n; i++) outs[ch][i] = 0.0;
-        return;
-    }
-    const long channels_in = x->channels_in;
-    const long channels_out = x->channels_out;
-
-    // Phase 3: method-change detection. Python switches the method by writing
-    // header->method; we must NOT call dsp_resize/outlet_new from the audio
-    // thread, so we queue a qelem that fires mab_tilde_apply_io on the main
-    // thread. Until then the old layout stays valid (it still matches the
-    // currently wired inlets/outlets). A channel-count change (e.g. [load] of
-    // a different model with the same method name) also triggers a rebuild.
-    if (!x->method_pending &&
-        (x->header->method_id != x->active_method_id ||
-         (long)x->header->channels_in != x->channels_in ||
-         (long)x->header->channels_out != x->channels_out)) {
-        x->method_pending = 1;
-        qelem_set(x->io_qelem);
-    }
-
-    const size_t input_buffer_stride = (size_t)channels_in * (size_t)blk;
-    const size_t output_buffer_stride = (size_t)channels_out * (size_t)blk;
-
-    // A1: Double-buffered input. C++ fills the buffer indexed by
-    // header->input_buffer_index; when it is full we hand it over to Python
-    // and immediately start filling the other buffer.
-    if (x->header->is_input_ready == 0) {
-        uint32_t in_idx = x->header->input_buffer_index & 1;
-        float* input_ptr = x->p_input + in_idx * input_buffer_stride;
-        if (block_accumulate_write(input_ptr, channels_in, blk, n,
-                                   ins, numins, x->in_pos)) {
-            // Switch to the other input buffer before signalling readiness so
-            // the next audio tick can keep accumulating while Python infers.
-            x->header->input_buffer_index = 1 - in_idx;
-            InterlockedExchange(&x->header->is_input_ready, 1);
-            // A4: wake Python immediately instead of letting it sleep-poll.
-            if (x->input_ready_event) {
-                SetEvent(x->input_ready_event);
-            }
-        }
-    }
-
-    // A1: Double-buffered output. C++ drains the buffer indexed by
-    // header->output_buffer_index; when it is empty we switch to the other
-    // buffer that Python has (or will) fill next.
-    if (x->header->is_output_ready == 1) {
-        uint32_t out_idx = x->header->output_buffer_index & 1;
-        float* output_ptr = x->p_output + out_idx * output_buffer_stride;
-        if (block_accumulate_read(output_ptr, channels_out, blk, n,
-                                  outs, numouts, x->out_pos)) {
-            InterlockedExchange(&x->header->is_output_ready, 0);
-            x->header->output_buffer_index = 1 - out_idx;
-        }
-    } else {
-        // Python has not produced the next block yet: output silence so no
-        // stale audio is repeated.
-        for (long ch = 0; ch < numouts; ch++) {
-            double* out = outs[ch];
-            for (long i = 0; i < n; i++) out[i] = 0.0;
-        }
-    }
-}
-
 // Phase 3: main-thread IO rebuild. Reads the active method layout from the
 // shared-memory header and resizes inlets (dsp_resize) + recreates signal
 // outlets to match. Never run from the audio thread or the init thread.
@@ -693,27 +438,21 @@ void mab_tilde_rebuild_io(t_mab_tilde* x, long new_in, long new_out) {
     // Rebuild inlets (dsp_resize creates/frees the signal proxies)
     dsp_resize((t_pxobject*)x, new_in);
 
-    // Phase 5: mc.mab~ Inlets müssen Multichannel-Signale zählen können.
-    // Z_MC_INLETS (z_dsp.h) meldet Max, dass das Objekt die Kanalzahl
+    // Phase 5/6: mc.mab~ / mcs.mab~ Inlets müssen Multichannel-Signale zählen
+    // können. Z_MC_INLETS (z_dsp.h) meldet Max, dass das Objekt die Kanalzahl
     // eingehender MC-Signale verarbeitet - ohne diesen Flag liefert Max nur
     // Kanal 1 an ein Standard-Signal-Inlet. Z_NO_INPLACE verhindert
     // In-Place-Bearbeitung (ins == outs). Dieselben Flags setzt die min-api
     // für mc_operator-Klassen (c74_min_operator_vector.h:120-128).
-    if (x->is_mc) {
-        x->ob.z_misc |= Z_NO_INPLACE | Z_MC_INLETS;
-    }
+    x->ob.z_misc |= Z_NO_INPLACE | Z_MC_INLETS;
 
     // Rebuild signal outlets: free the existing chain, then recreate.
-    // Phase 5: mc.mab~ uses "multichannelsignal" outlets instead of "signal".
+    // Phase 5/6: mc.mab~ / mcs.mab~ use "multichannelsignal" outlets.
     while (x->ob.z_ob.o_outlet) {
         object_free((t_object*)x->ob.z_ob.o_outlet);
     }
     for (long i = 0; i < new_out; i++) {
-        if (x->is_mc) {
-            outlet_new((t_object*)x, "multichannelsignal");
-        } else {
-            outlet_new((t_object*)x, "signal");
-        }
+        outlet_new((t_object*)x, "multichannelsignal");
     }
 
     if (box) {
@@ -745,13 +484,16 @@ void mab_tilde_apply_io(t_mab_tilde* x) {
     // verwerfen (verhindert versetzte Frames nach einem Methoden-/Modell-Wechsel).
     x->in_pos = 0;
     x->out_pos = 0;
+    // v4: Ausstehende Output-Ringblöcke der alten Methode sind stale - wieder
+    // primen (drain_block=-1) bis Python neue Blöcke schreibt.
+    x->drain_block = -1;
 
     // Phase 5/6: mc.mab~ hat IMMER genau 1 Multichannel-Inlet + 1 Multichannel-
     // Outlet; mcs.mab~ hat `mcs_batches` Multichannel-Inlets/-Outlets (eines pro
     // Batch). Die Kanalzahl wird über das MC-System transportiert (channel_map
     // / multichanneloutputs), nicht über die Inlet-Anzahl.
-    long io_in = x->is_mcs ? x->mcs_batches : (x->is_mc ? 1 : model_in);
-    long io_out = x->is_mcs ? x->mcs_batches : (x->is_mc ? 1 : model_out);
+    long io_in = x->is_mcs ? x->mcs_batches : 1;
+    long io_out = x->is_mcs ? x->mcs_batches : 1;
 
     // B4 fix: skip unnecessary IO rebuild. For methods with the same
     // inlet/outlet count as the current setup (e.g. forward: 1-in-1-out),
@@ -764,9 +506,9 @@ void mab_tilde_apply_io(t_mab_tilde* x) {
              prefix, io_in, io_out, x->active_method);
         return;
     }
-    if (x->is_mc) {
+    {
         // Stale per-inlet counts der alten Methode verwerfen; dsp64 publiziert
-        // die echten Werte nach dem Rebuild.
+        // die echten Werte nach dem Rebuild (gilt für mc.mab~ und mcs.mab~).
         for (long i = 0; i < MAX_CHANNELS; i++) {
             x->channel_map[i] = 0;
             x->header->channel_map[i] = 0;
@@ -788,7 +530,7 @@ void mab_tilde_apply_io(t_mab_tilde* x) {
 // Worker-Startup
 // ----------------------------------------------------------------------------
 // Der eigentliche Prozess-Launch (venv-Python auflösen, CreateProcessW, Log-
-// /Pipe-Redirect) liegt in worker_launch.cpp und wird von mab~, mab.info,
+// /Pipe-Redirect) liegt in worker_launch.cpp und wird von mab.info,
 // mc.mab~ und mcs.mab~ gemeinsam genutzt.
 // ============================================================================
 
@@ -814,8 +556,8 @@ extern "C" void init_worker(t_mab_tilde* x) {
                         (int)sizeof(shm_name_utf8), NULL, NULL);
 
     char argbuf[2048];
-    // Phase 6: n_batches (nach gpu) wird für mcs.mab~ übergeben; mab~/mc.mab~
-    // senden immer 1 (Python-argparse: model method bufsize gpu n_batches
+    // Phase 6: n_batches (nach gpu) wird für mcs.mab~ übergeben; mc.mab~
+    // sendet immer 1 (Python-argparse: model method bufsize gpu n_batches
     // shm_name instance_id num_channels cores).
     snprintf(argbuf, sizeof(argbuf), "\"%s\" \"%s\" %ld %d %ld \"%s\" %u %ld %ld",
              x->model_path, x->method_name, x->buffer_size,
@@ -850,10 +592,9 @@ extern "C" void init_worker(t_mab_tilde* x) {
                     x->p_output = (float*)((char*)pBuf + header->output_offset);
                     x->p_control = (ControlRingBuffer*)((char*)pBuf + header->control_offset);
 
-                    // A1: double-buffer indices start at 0.
-                    header->input_buffer_index = 0;
-                    header->output_buffer_index = 0;
-
+                    // v4: ring header is initialized by Python (it creates the
+                    // SHM before signalling ready). C++ only opens the mapping;
+                    // do NOT reset ring_blocks / *_head / *_tail here.
                     // Phase 5: MC channel map starts empty; mc_mab_tilde_dsp64
                     // publishes the real per-inlet counts on the next DSP compile.
                     for (long i = 0; i < MAX_CHANNELS; i++) {
@@ -865,6 +606,7 @@ extern "C" void init_worker(t_mab_tilde* x) {
                     // perform64 cannot fire with stale channels_in/out.
                     x->in_pos = 0;
                     x->out_pos = 0;
+                    x->drain_block = -1; // v4: output ring priming until Python writes
                     x->method_pending = 1;
                     qelem_set(x->io_qelem);
                     InterlockedExchange(&x->is_ready, 1);  // Mark as ready
@@ -1206,8 +948,8 @@ void mab_tilde_anything(t_mab_tilde* x, t_symbol* s, long argc, t_atom* argv) {
 // Phase 5: mc.mab~ (Multichannel) Implementation
 // ============================================================================
 
-// mc.mab~ constructor. Shares the same t_mab_tilde struct with mab~ but sets
-// is_mc=1 for multichannel signal inlets/outlets and MC-specific callbacks.
+// mc.mab~ constructor. Shares the same t_mab_tilde struct with mcs.mab~; MC
+// signal inlets/outlets (Z_MC_INLETS) are always on after R1.
 void* mc_mab_tilde_new(t_symbol* s, long argc, t_atom* argv) {
     t_mab_tilde* x = (t_mab_tilde*)object_alloc(mc_mab_tilde_class);
     if (!x) return nullptr;
@@ -1257,12 +999,12 @@ void* mc_mab_tilde_new(t_symbol* s, long argc, t_atom* argv) {
     x->crash_clock = clock_new(x, (method)mab_tilde_check_crash);
     x->gpu_reload_clock = clock_new(x, (method)mab_tilde_gpu_reload_done);
 
-    // Phase 5: MC fields (mc.mab~ mode: is_mc=1)
-    x->is_mc = 1;
+    // Phase 5: MC fields (mc.mab~ mode: is_mcs=0)
     x->n_batches = 0;  // 0 = auto-detect from channel_map
     for (long i = 0; i < 16; i++) x->channel_map[i] = 0;
     x->last_io_in = 1;   // dsp_setup(x,1) + outlet_new in constructor
     x->last_io_out = 1;
+    x->drain_block = -1; // v4: output ring priming until Python writes
 
     // Parse arguments
     long void_mode = 0;
@@ -1356,10 +1098,13 @@ void mc_mab_tilde_dsp64(t_mab_tilde* x, t_object* dsp64, short* count, double sa
 
     long total_in = 0;
     for (long i = 0; i < n_inlets; i++) {
-        long ch = (count && i < n_inlets) ? (long)count[i] : 1;
-        if (ch < 1) ch = 1;
-        if (ch > MAX_CHANNELS) ch = MAX_CHANNELS;
-        x->channel_map[i] = ch;
+        long ch = x->channel_map[i];
+        if (ch < 1) {
+            ch = (count && i < n_inlets) ? (long)count[i] : 0;
+            if (ch < 1) ch = 1;
+            if (ch > MAX_CHANNELS) ch = MAX_CHANNELS;
+            x->channel_map[i] = ch;
+        }
         total_in += ch;
     }
     // Stale entries beyond the current inlet count are cleared so Python sees
@@ -1384,11 +1129,11 @@ void mc_mab_tilde_dsp64(t_mab_tilde* x, t_object* dsp64, short* count, double sa
     object_method(dsp64, gensym("dsp_add64"), x, mc_mab_tilde_perform64, 0, NULL);
 }
 
-// mc.mab~: MC-aware perform function. Uses the same block_accumulator logic
-// as mab~ but with the channel counts from the model layout (x->channels_in /
-// x->channels_out). Missing input channels (fewer connected than the model
-// declares) are zero-padded by block_accumulate_write; extra outlet channels
-// (e.g. `chans` larger than the model output) are silenced below.
+// mc.mab~: MC-aware perform function. Uses the v4 ring protocol with the
+// channel counts from the model layout (x->channels_in / x->channels_out).
+// Missing input channels (fewer connected than the model declares) are
+// zero-padded by block_accumulate_write; extra outlet channels (e.g. `chans`
+// larger than the model output) are silenced below.
 void mc_mab_tilde_perform64(t_mab_tilde* x, t_object* dsp64, double** ins, long numins, double** outs, long numouts, long sampleframes, long flags, void* userparam) {
     long n = sampleframes;
     if (n < 0) n = 0;
@@ -1415,7 +1160,7 @@ void mc_mab_tilde_perform64(t_mab_tilde* x, t_object* dsp64, double** ins, long 
     const long channels_in = x->channels_in;
     const long channels_out = x->channels_out;
 
-    // Method-change detection (same as mab~)
+    // Method-change detection (same for mc/mcs)
     if (!x->method_pending &&
         (x->header->method_id != x->active_method_id ||
          (long)x->header->channels_in != x->channels_in ||
@@ -1424,47 +1169,73 @@ void mc_mab_tilde_perform64(t_mab_tilde* x, t_object* dsp64, double** ins, long 
         qelem_set(x->io_qelem);
     }
 
-    const size_t input_buffer_stride = (size_t)channels_in * (size_t)blk;
-    const size_t output_buffer_stride = (size_t)channels_out * (size_t)blk;
-
-    // A1: Double-buffered input. block_accumulate_write zero-pads rows for
-    // channels that have no connected input (ch >= numins), so the model
-    // always receives a full [channels_in][block_size] block.
-    if (x->header->is_input_ready == 0) {
-        uint32_t in_idx = x->header->input_buffer_index & 1;
-        float* input_ptr = x->p_input + in_idx * input_buffer_stride;
+    // v4 ring protocol (Bug 12 fix): the ring block stride is derived from the
+    // CONSTANT allocation (max_channels_in/out), NOT from the active method
+    // layout (channels_in/out), so a method switch never drifts C++ away from
+    // Python's real slot spacing in shared memory.
+    const size_t input_buffer_stride = (size_t)x->header->max_channels_in * (size_t)blk;
+    {
+        uint32_t ring = x->header->ring_blocks;
+        if (ring < 2) ring = 4;
+        uint32_t in_block = x->header->in_write_head % ring;
+        float* input_ptr = x->p_input + in_block * input_buffer_stride;
         if (block_accumulate_write(input_ptr, channels_in, blk, n,
                                    ins, numins, x->in_pos)) {
-            x->header->input_buffer_index = 1 - in_idx;
-            InterlockedExchange(&x->header->is_input_ready, 1);
+            // Block completed: publish it to Python and advance the ring.
+            x->header->in_write_head++;
+            // If Python is slower than the ring depth, drop the oldest
+            // unconsumed input block (never block the audio thread).
+            if (x->header->in_write_head - x->header->in_read_tail >= ring) {
+                x->header->in_read_tail++;
+            }
+            // A4: wake Python immediately instead of letting it sleep-poll.
             if (x->input_ready_event) {
                 SetEvent(x->input_ready_event);
             }
         }
     }
 
-    // A1: Double-buffered output. Drain only the channels that actually have
-    // outlets (numouts); remaining outlet channels are silenced.
-    if (x->header->is_output_ready == 1) {
-        uint32_t out_idx = x->header->output_buffer_index & 1;
-        float* output_ptr = x->p_output + out_idx * output_buffer_stride;
+    // v4 ring protocol: drain the next completed output block (or silence).
+    const size_t output_buffer_stride = (size_t)x->header->max_channels_out * (size_t)blk;
+    {
+        uint32_t ring = x->header->ring_blocks;
+        if (ring < 2) ring = 4;
+
         long read_ch = channels_out;
         if (read_ch > numouts) read_ch = numouts;
         if (read_ch < 1) read_ch = 1;
+
+        if (x->drain_block < 0) {
+            // Priming: wait until Python has produced at least one block.
+            if (x->header->out_write_head > x->header->out_read_tail) {
+                x->drain_block = (long)(x->header->out_read_tail % ring);
+                x->header->out_read_tail++;
+            } else {
+                // Python has not produced the next block yet: output silence
+                // so no stale audio is repeated.
+                for (long ch = 0; ch < numouts; ch++) {
+                    double* out = outs[ch];
+                    if (!out) continue;
+                    for (long i = 0; i < n; i++) out[i] = 0.0;
+                }
+                return;
+            }
+        }
+
+        uint32_t block_idx = (uint32_t)x->drain_block;
+        float* output_ptr = x->p_output + block_idx * output_buffer_stride;
         if (block_accumulate_read(output_ptr, read_ch, blk, n,
                                   outs, numouts, x->out_pos)) {
-            InterlockedExchange(&x->header->is_output_ready, 0);
-            x->header->output_buffer_index = 1 - out_idx;
+            // Finished draining this block: move to the next pending one.
+            if (x->header->out_read_tail < x->header->out_write_head) {
+                x->drain_block = (long)(x->header->out_read_tail % ring);
+                x->header->out_read_tail++;
+            }
         }
         // Outlets beyond the model's channel count: silence (no stale data).
         for (long ch = read_ch; ch < numouts; ch++) {
             double* out = outs[ch];
             if (!out) continue;
-            for (long i = 0; i < n; i++) out[i] = 0.0;
-        }
-    } else {
-        for (long ch = 0; ch < numouts; ch++) {
-            double* out = outs[ch];
             for (long i = 0; i < n; i++) out[i] = 0.0;
         }
     }
@@ -1526,7 +1297,7 @@ void mc_mab_tilde_chans(t_mab_tilde* x, long n) {
 // `c*B + b` - bewusste Design-Entscheidung (checklist.md 6.0).
 
 // mcs.mab~ constructor. Shares the same t_mab_tilde struct and worker with
-// mab~/mc.mab~; sets is_mcs=1 (and is_mc=1 for MC outlets / Z_MC_INLETS).
+// mc.mab~; sets is_mcs=1 (MC outlets / Z_MC_INLETS are always on after R1).
 void* mcs_mab_tilde_new(t_symbol* s, long argc, t_atom* argv) {
     t_mab_tilde* x = (t_mab_tilde*)object_alloc(mcs_mab_tilde_class);
     if (!x) return nullptr;
@@ -1575,14 +1346,14 @@ void* mcs_mab_tilde_new(t_symbol* s, long argc, t_atom* argv) {
     x->crash_clock = clock_new(x, (method)mab_tilde_check_crash);
     x->gpu_reload_clock = clock_new(x, (method)mab_tilde_gpu_reload_done);
 
-    // Phase 6: mcs fields (mcs.mab~ mode: is_mcs=1, is_mc=1)
+    // Phase 6: mcs fields (mcs.mab~ mode: is_mcs=1)
     x->is_mcs = 1;
-    x->is_mc = 1;
     x->mcs_batches = 1;  // 1 = single batch (mc-like behaviour)
     x->n_batches = 0;    // `chans` per-outlet channel count (0 = auto)
     for (long i = 0; i < 16; i++) x->channel_map[i] = 0;
     x->last_io_in = 1;   // dsp_setup(x,1) + outlet_new in constructor
     x->last_io_out = 1;
+    x->drain_block = -1; // v4: output ring priming until Python writes
 
     // Parse arguments. mcs.mab~ uses its own order (nn_tilde-Parität P9):
     //   [mcs.mab~ model method n_batches bufsize gpu cores]
@@ -1677,10 +1448,13 @@ void mcs_mab_tilde_dsp64(t_mab_tilde* x, t_object* dsp64, short* count, double s
 
     long total_in = 0;
     for (long i = 0; i < n_inlets; i++) {
-        long ch = (count && i < n_inlets) ? (long)count[i] : 1;
-        if (ch < 1) ch = 1;
-        if (ch > MAX_CHANNELS) ch = MAX_CHANNELS;
-        x->channel_map[i] = ch;
+        long ch = x->channel_map[i];
+        if (ch < 1) {
+            ch = (count && i < n_inlets) ? (long)count[i] : 0;
+            if (ch < 1) ch = 1;
+            if (ch > MAX_CHANNELS) ch = MAX_CHANNELS;
+            x->channel_map[i] = ch;
+        }
         total_in += ch;
     }
     // Stale entries beyond the current batch count are cleared.
@@ -1704,7 +1478,8 @@ void mcs_mab_tilde_dsp64(t_mab_tilde* x, t_object* dsp64, short* count, double s
 // mcs.mab~: MC-aware batched perform function. Wires the flat per-inlet
 // channel arrays from Max into the batch-major shared-memory rows `b*ci+c`
 // (input) and back from rows `b*co+c` into the per-batch multichannel outlets
-// (output). Missing input channels are zero-padded; extra outlet channels
+// (output). Uses the v4 ring protocol (Bug 12 fix: constant max_channels_*
+// stride). Missing input channels are zero-padded; extra outlet channels
 // (e.g. `chans` larger than the model output) are silenced.
 void mcs_mab_tilde_perform64(t_mab_tilde* x, t_object* dsp64, double** ins, long numins, double** outs, long numouts, long sampleframes, long flags, void* userparam) {
     long n = sampleframes;
@@ -1738,7 +1513,7 @@ void mcs_mab_tilde_perform64(t_mab_tilde* x, t_object* dsp64, double** ins, long
         return;
     }
 
-    // Method-change detection (same as mab~/mc.mab~)
+    // Method-change detection (same as mc.mab~)
     if (!x->method_pending &&
         (x->header->method_id != x->active_method_id ||
          (long)x->header->channels_in != x->channels_in ||
@@ -1750,17 +1525,22 @@ void mcs_mab_tilde_perform64(t_mab_tilde* x, t_object* dsp64, double** ins, long
     // Phase 6 (6.3): batch-major rows. Input row = b*ci + c, output row = b*co + c.
     const long total_ci = n_batches * ci;
     const long total_co = n_batches * co;
-    const size_t input_buffer_stride = (size_t)total_ci * (size_t)blk;
-    const size_t output_buffer_stride = (size_t)total_co * (size_t)blk;
 
-    // A1: Double-buffered input. Max delivers the connected channels flat
-    // (inlet 0 channels first, then inlet 1, ...), so the wiring below maps
-    // flat index -> (batch, channel). Missing rows (unconnected channels) stay
-    // nullptr and are zero-padded by block_accumulate_write.
-    if (x->header->is_input_ready == 0) {
-        uint32_t in_idx = x->header->input_buffer_index & 1;
-        float* input_ptr = x->p_input + in_idx * input_buffer_stride;
+    // v4 ring protocol (Bug 12 fix): the ring block stride is derived from the
+    // CONSTANT allocation (max_channels_in/out), NOT from the active batch
+    // layout (total_ci/total_co), so a method/batch switch never drifts C++
+    // away from Python's real slot spacing in shared memory.
+    const size_t input_buffer_stride = (size_t)x->header->max_channels_in * (size_t)blk;
+    {
+        uint32_t ring = x->header->ring_blocks;
+        if (ring < 2) ring = 4;
+        uint32_t in_block = x->header->in_write_head % ring;
+        float* input_ptr = x->p_input + in_block * input_buffer_stride;
 
+        // Max delivers the connected channels flat (inlet 0 channels first,
+        // then inlet 1, ...), so the wiring below maps flat index ->
+        // (batch, channel). Missing rows (unconnected channels) stay nullptr
+        // and are zero-padded by block_accumulate_write.
         const double* wired[MAX_CHANNELS * MAX_CHANNELS] = { nullptr };
         long flat = 0;
         for (long b = 0; b < n_batches; b++) {
@@ -1774,24 +1554,55 @@ void mcs_mab_tilde_perform64(t_mab_tilde* x, t_object* dsp64, double** ins, long
 
         if (block_accumulate_write(input_ptr, total_ci, blk, n,
                                    wired, total_ci, x->in_pos)) {
-            x->header->input_buffer_index = 1 - in_idx;
-            InterlockedExchange(&x->header->is_input_ready, 1);
+            // Block completed: publish it to Python and advance the ring.
+            x->header->in_write_head++;
+            // If Python is slower than the ring depth, drop the oldest
+            // unconsumed input block (never block the audio thread).
+            if (x->header->in_write_head - x->header->in_read_tail >= ring) {
+                x->header->in_read_tail++;
+            }
             if (x->input_ready_event) {
                 SetEvent(x->input_ready_event);
             }
         }
     }
 
-    // A1: Double-buffered output. Drain the batch-major rows back into the
-    // per-batch multichannel outlets (outlet b starts at flat b*per_outlet).
-    if (x->header->is_output_ready == 1) {
-        uint32_t out_idx = x->header->output_buffer_index & 1;
-        float* output_ptr = x->p_output + out_idx * output_buffer_stride;
+    // v4 ring protocol: drain the next completed output block (or silence).
+    const size_t output_buffer_stride = (size_t)x->header->max_channels_out * (size_t)blk;
+    {
+        uint32_t ring = x->header->ring_blocks;
+        if (ring < 2) ring = 4;
 
         // Per-outlet channel count as reported by mcs_multichanneloutputs.
         long per_outlet = (x->n_batches > 0) ? x->n_batches : co;
         if (per_outlet < 1) per_outlet = 1;
 
+        long read_ch = total_co;
+        if (read_ch > numouts) read_ch = numouts;
+        if (read_ch < 1) read_ch = 1;
+
+        if (x->drain_block < 0) {
+            // Priming: wait until Python has produced at least one block.
+            if (x->header->out_write_head > x->header->out_read_tail) {
+                x->drain_block = (long)(x->header->out_read_tail % ring);
+                x->header->out_read_tail++;
+            } else {
+                // Python has not produced the next block yet: output silence
+                // so no stale audio is repeated.
+                for (long ch = 0; ch < numouts; ch++) {
+                    double* out = outs[ch];
+                    if (!out) continue;
+                    for (long i = 0; i < n; i++) out[i] = 0.0;
+                }
+                return;
+            }
+        }
+
+        uint32_t block_idx = (uint32_t)x->drain_block;
+        float* output_ptr = x->p_output + block_idx * output_buffer_stride;
+
+        // Drain the batch-major rows back into the per-batch multichannel
+        // outlets (outlet b starts at flat b*per_outlet).
         double* wired_out[MAX_CHANNELS * MAX_CHANNELS] = { nullptr };
         for (long b = 0; b < n_batches; b++) {
             for (long c = 0; c < co; c++) {
@@ -1802,10 +1613,13 @@ void mcs_mab_tilde_perform64(t_mab_tilde* x, t_object* dsp64, double** ins, long
             }
         }
 
-        if (block_accumulate_read(output_ptr, total_co, blk, n,
+        if (block_accumulate_read(output_ptr, read_ch, blk, n,
                                   wired_out, total_co, x->out_pos)) {
-            InterlockedExchange(&x->header->is_output_ready, 0);
-            x->header->output_buffer_index = 1 - out_idx;
+            // Finished draining this block: move to the next pending one.
+            if (x->header->out_read_tail < x->header->out_write_head) {
+                x->drain_block = (long)(x->header->out_read_tail % ring);
+                x->header->out_read_tail++;
+            }
         }
 
         // Outlets beyond the model's channel count per batch: silence
@@ -1817,11 +1631,6 @@ void mcs_mab_tilde_perform64(t_mab_tilde* x, t_object* dsp64, double** ins, long
                     for (long i = 0; i < n; i++) outs[flat_idx][i] = 0.0;
                 }
             }
-        }
-    } else {
-        for (long ch = 0; ch < numouts; ch++) {
-            double* out = outs[ch];
-            for (long i = 0; i < n; i++) out[i] = 0.0;
         }
     }
 }

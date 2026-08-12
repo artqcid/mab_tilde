@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Unit tests for the Phase 5 SharedMemoryHeader v3 (method-aware metadata +
-MC channel_map).
+Unit tests for the SharedMemoryHeader v4 (Bug 11 ring buffer + Bug 12
+max_channels_in/out) - method-aware metadata + MC channel_map.
 
-Verifies that the real ctypes header layout matches the C++ struct (192 bytes,
+Verifies that the real ctypes header layout matches the C++ struct (204 bytes,
 field offsets) and that SharedMemoryManager.apply_method() publishes the active
 method layout (method / channels / ratios / latent size) that C++ reads to
 rebuild inlets and outlets.
@@ -28,8 +28,8 @@ MUSICNET_PARAMS = {
 
 
 class TestHeaderLayoutV2(unittest.TestCase):
-    def test_header_size_is_192(self):
-        self.assertEqual(ctypes.sizeof(SharedMemoryHeader), 192)
+    def test_header_size_is_204(self):
+        self.assertEqual(ctypes.sizeof(SharedMemoryHeader), 204)
 
     def test_field_offsets_match_cpp(self):
         # Field offsets asserted by test_shared_memory_header_compatibility.cpp
@@ -47,20 +47,26 @@ class TestHeaderLayoutV2(unittest.TestCase):
         self.assertEqual(SharedMemoryHeader.input_offset.offset, 92)
         self.assertEqual(SharedMemoryHeader.output_offset.offset, 96)
         self.assertEqual(SharedMemoryHeader.control_offset.offset, 100)
-        self.assertEqual(SharedMemoryHeader.input_buffer_index.offset, 104)
-        self.assertEqual(SharedMemoryHeader.output_buffer_index.offset, 108)
-        # Phase 5: channel_map follows the buffer indices
-        self.assertEqual(SharedMemoryHeader.channel_map.offset, 112)
+        # Bug 11 (ring v4): ring_blocks + 4 ring head/tail counters replace
+        # the old input_buffer_index/output_buffer_index ping-pong indices.
+        self.assertEqual(SharedMemoryHeader.ring_blocks.offset, 104)
+        self.assertEqual(SharedMemoryHeader.in_write_head.offset, 108)
+        self.assertEqual(SharedMemoryHeader.in_read_tail.offset, 112)
+        self.assertEqual(SharedMemoryHeader.out_write_head.offset, 116)
+        self.assertEqual(SharedMemoryHeader.out_read_tail.offset, 120)
+        # Bug 12: constant ring-block channel capacity (max across methods).
+        self.assertEqual(SharedMemoryHeader.max_channels_in.offset, 124)
+        self.assertEqual(SharedMemoryHeader.max_channels_out.offset, 128)
+        # Phase 5: channel_map follows the max-channel fields
+        self.assertEqual(SharedMemoryHeader.channel_map.offset, 132)
         self.assertEqual(ctypes.sizeof(SharedMemoryHeader.channel_map.type),
                          16 * ctypes.sizeof(ctypes.c_uint32))
-        self.assertEqual(SharedMemoryHeader.is_input_ready.offset, 176)
-        self.assertEqual(SharedMemoryHeader.is_output_ready.offset, 180)
-        self.assertEqual(SharedMemoryHeader.is_python_ready.offset, 184)
-        self.assertEqual(SharedMemoryHeader.shutdown_flag.offset, 188)
+        self.assertEqual(SharedMemoryHeader.is_python_ready.offset, 196)
+        self.assertEqual(SharedMemoryHeader.shutdown_flag.offset, 200)
 
     def test_flags_are_c_long(self):
         # Must be c_long, not c_bool: C++ uses `long` + InterlockedExchange
-        self.assertIs(SharedMemoryHeader.is_input_ready.type, ctypes.c_long)
+        self.assertIs(SharedMemoryHeader.is_python_ready.type, ctypes.c_long)
         self.assertIs(SharedMemoryHeader.shutdown_flag.type, ctypes.c_long)
 
 
@@ -120,6 +126,67 @@ class TestApplyMethod(unittest.TestCase):
         mgr = _manager_with_header()
         mgr.apply_method("forward", {})
         self.assertEqual(mgr._p_header.method, b"")
+
+
+class TestRingBlockStrideBug12(unittest.TestCase):
+    """Bug 12 regression: the ring-block byte stride (spacing between
+    consecutive ring slots in the SHM) MUST be derived from the constant
+    max_channels_in/out fields, never from the active channels_in/out that
+    apply_method() overwrites per method.
+
+    Buffers are allocated ONCE at SharedMemoryManager.__init__ time, sized
+    for the maximum channel count across all methods (channels_in/out ctor
+    args below == max, per compute_layout() in main()). Real RAVE/AFTER
+    models typically declare forward=(1,1,1,1) but decode=(z_dim,r,1,1) and
+    encode=(1,r,z_dim,1) - i.e. active channels_out for decode (1) is
+    smaller than the SHM's allocated max_channels_out (z_dim), and it was
+    exactly this active/max mismatch that silently misaligned every ring
+    slot after index 0 (C++ read stale/zero memory), producing one correct
+    output block followed by permanent silence.
+    """
+
+    def test_output_stride_uses_max_not_active_channels(self):
+        mgr = SharedMemoryManager(
+            shm_name="MabSharedMem_Bug12Test",
+            ready_event_name="MabReadyEvent_Bug12Test",
+            block_size=2048, channels_in=16, channels_out=16)
+        mgr._p_header = SharedMemoryHeader()
+        mgr._p_header.max_channels_in = mgr.channels_in
+        mgr._p_header.max_channels_out = mgr.channels_out
+        mgr.apply_method("decode", MUSICNET_PARAMS)  # active co = 1
+        h = mgr._p_header
+
+        # The real per-ring-block byte size Python allocated (what C++ MUST
+        # use as the stride between ring slots).
+        correct_stride = int(h.max_channels_out) * mgr.block_size * 4
+        self.assertEqual(correct_stride, mgr.output_size)
+
+        # Bug 12: this is the WRONG (pre-fix) stride C++ used to compute -
+        # deliberately asserted != correct_stride to document the bug this
+        # test guards against regressing to.
+        buggy_stride = int(h.channels_out) * mgr.block_size * 4
+        self.assertNotEqual(buggy_stride, correct_stride,
+                             "test fixture no longer reproduces the "
+                             "active != max mismatch this guards against")
+        self.assertEqual(correct_stride, mgr.channels_out * mgr.block_size * 4)
+
+    def test_input_stride_uses_max_not_active_channels(self):
+        # decode's active ci (16) happens to equal max_channels_in (16) for
+        # this fixture, so also check "encode" where active ci=1 != max=16.
+        mgr = SharedMemoryManager(
+            shm_name="MabSharedMem_Bug12Test2",
+            ready_event_name="MabReadyEvent_Bug12Test2",
+            block_size=2048, channels_in=16, channels_out=16)
+        mgr._p_header = SharedMemoryHeader()
+        mgr._p_header.max_channels_in = mgr.channels_in
+        mgr._p_header.max_channels_out = mgr.channels_out
+        mgr.apply_method("encode", MUSICNET_PARAMS)  # active ci = 1
+        h = mgr._p_header
+
+        correct_stride = int(h.max_channels_in) * mgr.block_size * 4
+        self.assertEqual(correct_stride, mgr.input_size)
+        buggy_stride = int(h.channels_in) * mgr.block_size * 4
+        self.assertNotEqual(buggy_stride, correct_stride)
 
 
 class TestChannelMapPhase5(unittest.TestCase):

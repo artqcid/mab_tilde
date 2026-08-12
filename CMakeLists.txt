@@ -43,39 +43,8 @@ if(MSVC)
     )
 endif()
 
-# Build the actual Max external (MODULE library)
-add_library(mab_tilde MODULE
-    source/projects/mab_tilde/mab_tilde.cpp
-    source/projects/mab_tilde/worker_launch.cpp
-    source/projects/mab_tilde/max_path_resolve.cpp
-)
-target_include_directories(mab_tilde PRIVATE
-    ${MAX_SDK_DIR}/max-includes
-    ${MAX_SDK_DIR}/msp-includes
-)
-target_link_libraries(mab_tilde PRIVATE
-    ${MAX_SDK_DIR}/max-includes/x64/MaxAPI.lib
-    ${MAX_SDK_DIR}/msp-includes/x64/MaxAudio.lib
-)
-
-if(MSVC)
-    target_compile_definitions(mab_tilde PRIVATE
-        WIN32_LEAN_AND_MEAN
-        NOMINMAX
-        _CRT_SECURE_NO_WARNINGS
-    )
-    # Max-Externals unter Windows müssen die Endung .mxe64 haben und kein 'lib'-Präfix
-    # Der Output-Name muss exakt dem Objektnamen entsprechen (mab~)
-    set_target_properties(mab_tilde PROPERTIES
-        PREFIX ""
-        OUTPUT_NAME "mab~"
-        SUFFIX ".mxe64"
-    )
-endif()
-
-# mc.mab~ -- Multichannel-Variante von mab~ (Phase 5).
-# Wird aus derselben mab_tilde.cpp kompiliert wie mab~, aber mit
-# MC_MAB_TILDE_MODULE, sodass ext_main nur die mc.mab~-Klasse registriert.
+# mc.mab~ -- Multichannel-Variante (Phase 5).
+# Kompiliert mit MC_MAB_TILDE_MODULE → registriert nur mc.mab~-Klasse.
 add_library(mc_mab_tilde MODULE
     source/projects/mab_tilde/mab_tilde.cpp
     source/projects/mab_tilde/worker_launch.cpp
@@ -103,9 +72,8 @@ if(MSVC)
     )
 endif()
 
-# mcs.mab~ -- Batched-Multichannel-Variante von mab~ (Phase 6).
-# Wird aus derselben mab_tilde.cpp kompiliert wie mab~/mc.mab~, aber mit
-# MCS_MAB_TILDE_MODULE, sodass ext_main nur die mcs.mab~-Klasse registriert.
+# mcs.mab~ -- Batched-Multichannel-Variante (Phase 6).
+# Kompiliert mit MCS_MAB_TILDE_MODULE → registriert nur mcs.mab~-Klasse.
 add_library(mcs_mab_tilde MODULE
     source/projects/mab_tilde/mab_tilde.cpp
     source/projects/mab_tilde/worker_launch.cpp

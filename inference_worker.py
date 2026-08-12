@@ -65,33 +65,37 @@ MODEL_API_ROOT = "https://play.forum.ircam.fr/rave-vst-api/"
 class SharedMemoryHeader(ctypes.Structure):
     """Header structure that Python creates and C++ reads.
 
-    Version 3 adds method-aware metadata (channels_in/out, ratios, latent size
-    and the active method name) so C++ can set up dynamic inlets/outlets, plus
-    the per-inlet MC `channel_map` for mc.mab~ (Phase 5).
-    Field order must match the C++ `SharedMemoryHeader` exactly.
+    Version 4 replaces the ping-pong ready flags with an N-block ring buffer
+    (Bug 11). C++ writes into in_write_head (always, no gating); Python
+    consumes from in_read_tail .. in_write_head-1 and produces into
+    out_write_head; C++ drains from out_read_tail .. out_write_head-1.
+    Field order must match the C++ ``SharedMemoryHeader`` exactly.
     """
     _fields_ = [
         ("magic", ctypes.c_uint32),           # Validation signature 'MABT'
-        ("version", ctypes.c_uint32),         # Header version (3)
+        ("version", ctypes.c_uint32),         # Header version (4)
         ("block_size", ctypes.c_uint32),      # Samples per audio block
         ("num_channels", ctypes.c_uint32),    # Legacy channel count
-        ("channels_in", ctypes.c_uint32),     # Method input channels (decode/prior: latent)
-        ("channels_out", ctypes.c_uint32),    # Method output channels (encode: latent)
-        ("latent_size", ctypes.c_uint32),     # Latent dimension of the active method
-        ("input_ratio", ctypes.c_uint32),     # Method input ratio (e.g. RAVE decode: 2048)
-        ("output_ratio", ctypes.c_uint32),    # Method output ratio (e.g. RAVE decode: 1)
-        ("method", ctypes.c_char * 52),       # Active method name: forward/encode/decode/prior
-        ("method_id", ctypes.c_uint32),       # Stable hash of method for atomic C++ compare
-        ("input_offset", ctypes.c_uint32),    # Byte offset to input buffer 0
-        ("output_offset", ctypes.c_uint32),   # Byte offset to output buffer 0
+        ("channels_in", ctypes.c_uint32),     # Method input channels
+        ("channels_out", ctypes.c_uint32),    # Method output channels
+        ("latent_size", ctypes.c_uint32),     # Latent dimension
+        ("input_ratio", ctypes.c_uint32),     # Method input ratio
+        ("output_ratio", ctypes.c_uint32),    # Method output ratio
+        ("method", ctypes.c_char * 52),       # Active method name
+        ("method_id", ctypes.c_uint32),       # Stable hash for atomic C++ compare
+        ("input_offset", ctypes.c_uint32),    # Byte offset to input ring[0]
+        ("output_offset", ctypes.c_uint32),   # Byte offset to output ring[0]
         ("control_offset", ctypes.c_uint32),  # Byte offset to control ring buffer
-        ("input_buffer_index", ctypes.c_uint32),   # A1: C++ fill index (0/1)
-        ("output_buffer_index", ctypes.c_uint32),  # A1: C++ drain index (0/1)
-        ("channel_map", ctypes.c_uint32 * 16),     # Phase 5: per-inlet channel counts (mc.mab~)
-        ("is_input_ready", ctypes.c_long),    # atomic flag (volatile) - must match C++ long
-        ("is_output_ready", ctypes.c_long),   # atomic flag (volatile) - must match C++ long
-        ("is_python_ready", ctypes.c_long),   # atomic flag (volatile) - must match C++ long
-        ("shutdown_flag", ctypes.c_long),     # atomic flag (volatile) - must match C++ long
+        ("ring_blocks", ctypes.c_uint32),     # Number of blocks per ring (default 4)
+        ("in_write_head", ctypes.c_uint32),   # C++ increments when input block complete
+        ("in_read_tail", ctypes.c_uint32),    # Python increments when input block consumed
+        ("out_write_head", ctypes.c_uint32),  # Python increments when output block produced
+        ("out_read_tail", ctypes.c_uint32),   # C++ increments when output block fully drained
+        ("max_channels_in", ctypes.c_uint32),   # SHM ring capacity (input), constant
+        ("max_channels_out", ctypes.c_uint32),  # SHM ring capacity (output), constant
+        ("channel_map", ctypes.c_uint32 * 16),  # Phase 5: per-inlet channel counts
+        ("is_python_ready", ctypes.c_long),   # atomic flag (volatile)
+        ("shutdown_flag", ctypes.c_long),     # atomic flag (volatile)
     ]
 
 # Control ring buffer constants (must match C++)
@@ -150,18 +154,21 @@ class SharedMemoryManager:
         self.n_batches = max(1, int(n_batches))
         
         # Calculate buffer sizes
-        # A1: allocate two input and two output buffers for overlapped I/O.
+        # Bug 11 (ring v4): ring_blocks per side for overlapped I/O.
+        # Default 4 provides 3-block slack for Python latency.
+        self.ring_blocks = 4
         self.header_size = ctypes.sizeof(SharedMemoryHeader)
         self.control_size = ctypes.sizeof(ControlRingBuffer)
-        self.input_size = block_size * channels_in * self.n_batches * 4  # float32 = 4 bytes, one buffer
+        self.input_size = block_size * channels_in * self.n_batches * 4
         self.output_size = block_size * channels_out * self.n_batches * 4
         self.total_size = (self.header_size + self.control_size
-                           + 2 * self.input_size + 2 * self.output_size)
+                           + self.ring_blocks * self.input_size
+                           + self.ring_blocks * self.output_size)
 
         # Offsets
         self.control_offset = self.header_size
         self.input_offset = self.header_size + self.control_size
-        self.output_offset = self.header_size + self.control_size + 2 * self.input_size
+        self.output_offset = self.header_size + self.control_size + self.ring_blocks * self.input_size
         
         # Handles
         self.kernel32 = ctypes.WinDLL('kernel32', use_last_error=True)
@@ -247,7 +254,7 @@ class SharedMemoryManager:
         
         # Initialize header
         self._p_header.magic = MAGIC_NUMBER
-        self._p_header.version = 3
+        self._p_header.version = 4
         self._p_header.block_size = self.block_size
         self._p_header.num_channels = self.channels_out
         self._p_header.channels_in = self.channels_in
@@ -260,10 +267,13 @@ class SharedMemoryManager:
         self._p_header.input_offset = self.input_offset
         self._p_header.output_offset = self.output_offset
         self._p_header.control_offset = self.control_offset
-        self._p_header.input_buffer_index = 0
-        self._p_header.output_buffer_index = 0
-        self._p_header.is_input_ready = False
-        self._p_header.is_output_ready = False
+        self._p_header.ring_blocks = self.ring_blocks
+        self._p_header.in_write_head = 0
+        self._p_header.in_read_tail = 0
+        self._p_header.out_write_head = 0
+        self._p_header.out_read_tail = 0
+        self._p_header.max_channels_in = self.channels_in
+        self._p_header.max_channels_out = self.channels_out
         self._p_header.is_python_ready = False
         
         # Get pointers to input/output buffers
@@ -942,6 +952,8 @@ def infer_method(model, device, method: str, method_params: dict,
     batched = input_block.ndim == 3
 
     tensor = torch.from_numpy(np.ascontiguousarray(input_block)).to(device)
+    if not batched:
+        tensor = tensor.unsqueeze(0)  # (1, ci, block_size)
 
     save_ctx = None
     if streaming_context is not None:
@@ -950,13 +962,9 @@ def infer_method(model, device, method: str, method_params: dict,
 
     with torch.no_grad():
         if method in ("decode", "prior"):
-            # B4 fix: tensor[:, -1] selected last CHANNEL, not last time sample.
-            # tensor[..., -1:] selects last time sample, keeps dimension.
             z = tensor[..., -1:]  # (B, ci, 1)
             out = getattr(model, method)(z)
         else:
-            if not batched:
-                tensor = tensor.unsqueeze(0)  # (1, ci, block_size)
             out = getattr(model, method)(tensor)
 
     if streaming_context is not None:
@@ -977,7 +985,10 @@ def infer_method(model, device, method: str, method_params: dict,
     # beginning correspond to the history context; keep only the portion
     # belonging to the new input block.
     if save_ctx is not None:
-        expected_new = max(1, int(block_size * out_ratio / in_ratio))
+        if method in ("decode", "prior"):
+            expected_new = block_size
+        else:
+            expected_new = max(1, int(block_size * out_ratio / in_ratio))
         if out.size(-1) >= expected_new:
             out = out[..., -expected_new:]
 
@@ -1739,38 +1750,33 @@ def main():
                 else:
                     print(f"[inference_worker] Unknown command: {cmd}")
         
-        # Wait for input to be ready (non-blocking check)
-        if shm._p_header.is_input_ready:
-            # A1: C++ fills header.input_buffer_index; the ready buffer is the other one.
-            in_idx = 1 - (shm._p_header.input_buffer_index & 1)
-            # C++ drains header.output_buffer_index; write into that same buffer.
-            out_idx = shm._p_header.output_buffer_index & 1
+        # Bug 11 (ring v4): consume ALL available input blocks from the ring:
+        # C++ increments in_write_head when a block is complete, Python
+        # increments in_read_tail when a block is consumed.
+        # Process in a tight loop so we never fall behind; if Python is
+        # slower than C++, the overrun handling in C++ drops the oldest.
+        ring = max(int(shm._p_header.ring_blocks), 4)
+
+        while int(shm._p_header.in_read_tail) < int(shm._p_header.in_write_head):
+            in_idx = int(shm._p_header.in_read_tail) % ring
+            out_idx = int(shm._p_header.out_write_head) % ring
 
             if model is None or active_method not in method_params:
                 # No model / no layout - pass through (bypass)
                 ibuf = shm.get_numpy_input(in_idx)
                 obuf = shm.get_numpy_output(out_idx)
                 if shm.n_batches > 1:
-                    # Phase 6: per-batch passthrough (batch b -> batch b)
                     n_ch = min(ibuf.shape[1], obuf.shape[1])
                     for b in range(shm.n_batches):
                         obuf[b, :n_ch, :] = ibuf[b, :n_ch, :]
                 else:
-                    # Phase 5: mc.mab~ publishes the connected per-inlet channel
-                    # count; copy exactly those channels through instead of relying
-                    # on the (model-less) buffer shape.
-                    ci = shm.get_total_input_channels()
-                    ci = min(ci, ibuf.shape[0], obuf.shape[0])
-                    for ch in range(ci):
+                    ci_passthru = shm.get_total_input_channels()
+                    ci_passthru = min(ci_passthru, ibuf.shape[0], obuf.shape[0])
+                    for ch in range(ci_passthru):
                         obuf[ch, :] = ibuf[ch, :]
-                shm._p_header.is_output_ready = True
-                shm._p_header.is_input_ready = False
             else:
                 ci = method_params[active_method][0]
                 co = method_params[active_method][2]
-                # Phase 5/6: verify the MC wiring against the model layout and log
-                # a mismatch once (throttled via _mc_warned). mcs.mab~ expects
-                # n_batches * ci total channels (ci per batch inlet).
                 expected = ci * shm.n_batches if shm.n_batches > 1 else ci
                 connected = shm.get_total_input_channels()
                 if connected != expected and connected != int(shm._p_header.channels_in):
@@ -1788,27 +1794,31 @@ def main():
                         model, device, active_method, method_params, input_block,
                         streaming_context=streaming_ctx, safety_clip=True)
                     out_view = shm.get_numpy_output(out_idx, co)
-                    # Phase 6: batched inference returns (B, co, bs); strip the
-                    # leading singleton batch dim when writing into the classic
-                    # 2-D buffer view (defensive, single-batch mcs).
                     if output_block.ndim == 3 and output_block.shape[0] == 1 \
                             and out_view.ndim == 2:
                         out_view[:, :] = output_block[0]
                     else:
                         out_view[:, :] = output_block
                 except Exception:
-                    # Bug 4: a GPU/driver error, CUDA OOM or unexpected model
-                    # output must NOT crash the worker.  Zero the output block
-                    # so the C++ side gets silence instead of stale/corrupt data.
                     out_view = shm.get_numpy_output(out_idx, co)
                     out_view.fill(0.0)
                     traceback.print_exc()
                     print("[inference_worker] Inference error — output zeroed, "
                           "continuing.", flush=True)
 
-                # Signal output is ready
-                shm._p_header.is_output_ready = True
-                shm._p_header.is_input_ready = False
+            # Input consumed, output produced: advance both ring tails/heads.
+            shm._p_header.in_read_tail = int(shm._p_header.in_read_tail) + 1
+            shm._p_header.out_write_head = int(shm._p_header.out_write_head) + 1
+
+            # Prevent output ring overrun: if out_write_head laps out_read_tail
+            # by a full ring, block until C++ catches up.
+            while int(shm._p_header.out_write_head) - int(shm._p_header.out_read_tail) >= ring:
+                if shm._p_header.shutdown_flag:
+                    running = False
+                    break
+                time.sleep(0.001)
+            if not running:
+                break
 
             _block_counter += 1
             if _block_counter % _GC_EVERY_N_BLOCKS == 0:

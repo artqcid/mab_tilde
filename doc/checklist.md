@@ -59,6 +59,10 @@ _Einlese-Reihenfolge: checklist.md → code_wiki.md → query_code_wiki → quer
 
 ## Bugs (offen)
 
+> **Aktueller Blocker: Bug 13** (`mab~` dynamischer Inlet-Rebuild → Crash + veraltete DSP-Chain). Blockiert V1/V3/V4.
+> `mc.mab~` ist **nicht** betroffen (feste 1-MC-Inlet-Architektur, Phase 5.8 bestanden) und ist damit der funktionierende Pfad fuer Latent-Methoden.
+> Bug 14 ist latent (nur bei non-streaming-Exporten).
+
 - [x] **Bug 3 – GPU-Argument beim Konstruktor ignoriert** ✅ **FIXED** (2026-08-12)
   - **Symptom:** `mab~ nasa 2048 1` laedt nicht auf GPU. Der User muss erst `gpu 1` als Message senden.
   - **Ursache:** Die Argument-Reihenfolge `[model method bufsize gpu]` macht `method` zum Pflichtargument. Bei `mab~ nasa 2048 1` wird `2048` als `method_name` und `1` als `buffer_size` geparst — `gpu` bleibt 0.
@@ -83,19 +87,134 @@ _Einlese-Reihenfolge: checklist.md → code_wiki.md → query_code_wiki → quer
   - **Fix 2:** `is_ready=1` erst NACH `method_pending=1+qelem_set` → kein Race-Fenster.
   - **Dateien:** `mab_tilde.cpp:911-948` (gpu-Handler), `mab_tilde.cpp:845-853` (init_worker Reihenfolge)
 
+- [x] **Bug 6 – mc.mab~: DSP erkennt nur 1 Kanal statt 8** ✅ **FIXED** (2026-08-12)
+  - **Symptom:** `mc.mab~ nasa 2048 1` mit 8-Kanal-MC-Signal → Post `"DSP: 1 inlet(s), 1 channel(s) connected (model expects 8)"`. Nur Kanal 1 kommt durch.
+  - **Ursache:** `mc_mab_tilde_dsp64` las Kanalzahl aus dem `count`-Array von `dsp64`. Der `count`-Array liefert bei MC-Inlets mit `Z_MC_INLETS` nicht zuverlässig die tatsächliche Kanalzahl (siehe nn_tilde, die stattdessen `inputchanged` nutzt). Zusätzlich überschrieb `dsp64` das von `inputchanged` korrekt gesetzte `channel_map`.
+  - **Fix:** `mc_mab_tilde_dsp64`/`mcs_mab_tilde_dsp64` nutzen jetzt `channel_map` aus `inputchanged`-Callback als primäre Quelle. `count`-Array nur noch als Fallback wenn `inputchanged` noch nicht gefeuert hat.
+  - **Dateien:** `mab_tilde.cpp:1351-1390` (mc dsp64), `mab_tilde.cpp:1673-1702` (mcs dsp64)
+
+- [x] **Bug 7 – Worker-Zombie-Prozesse nach Max-Crash** ✅ **FIXED** (2026-08-12)
+  - **Symptom:** Nach einem Max-Crash (Fenster schließt ohne Warnung) laufen Python-Worker-Prozesse weiter, halten GPU-Speicher und Shared-Memory-Handles. Bei Max-Neustart mit gleicher Process-ID → SHM-Namenskonflikt.
+  - **Ursache:** Kein Mechanismus, der Worker-Prozesse automatisch beendet wenn der Elternprozess (Max) stirbt. `mab_tilde_free` läuft bei Crash nicht.
+  - **Fix:** Windows Job Object mit `JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE`. `init_worker` erstellt einen Job, weist den Worker-Prozess zu und speichert das Handle in `t_mab_tilde.worker_job_handle`. Beim Max-Exit/Crash schließt Windows das Handle → alle Worker im Job werden automatisch terminiert.
+  - **Dateien:** `mab_tilde.cpp:78` (worker_job_handle Feld), `mab_tilde.cpp:855-864` (Job-Erstellung), `mab_tilde.cpp:499-504,601-606,1035-1038` (Cleanup)
+
+- [x] **Bug 8 – Shutdown-Race: Worker-Timeout + Bypass-Flag** ✅ **FIXED** (2026-08-12)
+  - **Symptom:** Max-Crash beim Wechsel von `mc.mab~` zu `mab~ nasa decode 2048 1` (Fenster schließt ohne Warnung). Ursächlich war GPU-Race: alter Worker hielt Modell auf GPU, wurde nach nur 500ms hart gekillt (`TerminateProcess`), neuer Worker startete und crashte die GPU bei Modell-Ladung.
+  - **Ursache 1:** `mab_tilde_free`/`mab_tilde_reload` setzten `is_bypass=1, is_ready=0` NACH dem `UnmapViewOfFile` → `perform64` konnte während Cleanup auf freed SHM zugreifen.
+  - **Ursache 2:** `WaitForSingleObject(python_process, 500)` → nur 500ms Timeout. Worker braucht länger für GPU-Modell-Entladung (`torch.cuda.empty_cache()`, Modell-Destruktor). `TerminateProcess` nach 500ms hinterlässt GPU-Allokationen.
+  - **Fix 1:** `is_bypass=1, is_ready=0` als ERSTES in `mab_tilde_free`/`mab_tilde_reload` → perform64 sofort in Bypass.
+  - **Fix 2:** Timeout 500ms → 5000ms (5s). Nach `TerminateProcess`: `Sleep(200)` für OS-GPU-Cleanup.
+  - **Dateien:** `mab_tilde.cpp:459-464` (free bypass-first), `mab_tilde.cpp:488-497` (free 5s timeout), `mab_tilde.cpp:991-995` (reload bypass-first), `mab_tilde.cpp:1025-1030` (reload 5s timeout)
+
+- [x] **Bug 9 – decode/prior: kein Ton bei mab~ (non-MC)** ✅ **FIXED** (2026-08-12)
+  - **Symptom:** `mab~ nasa decode 2048 1` und `mc.mab~ nasa decode 2048 1` produzieren keinen Ton (Stille). `forward` funktioniert normal.
+  - **Ursache:** `infer_method()` fügte die Batch-Dimension `unsqueeze(0)` nur im `else`-Zweig (forward/encode) ein, nicht im `decode`/`prior`-Zweig. Für 2D-Input `(8, 2048)` aus `get_numpy_input` ergab `tensor[..., -1:]` → `(8, 1)`. Das Modell interpretierte 8 als Batch-Größe (statt als Kanalzahl) → `model.decode((8, 1))` erwartete 8 separate 1-Kanal-Latents statt einem 8-Kanal-Latent → falsche/keine Audio-Ausgabe (`except`-Zweig nullte Output).
+  - **Fix:** `tensor.unsqueeze(0)` VOR dem `decode`/`prior`-Zweig (einmalig nach `to(device)`), sodass `tensor` immer 3D `(B, ci, bs)` ist. `z = tensor[..., -1:]` ergibt dann korrekt `(1, 8, 1)`.
+  - **Dateien:** `inference_worker.py:940-960`
+
+- [~] **Bug 10 – Knackser: Output-Silence-Luecke pro Block-Zyklus** ⚠️ **TEILFIX, ERSETZT DURCH BUG 11**
+  - **Symptom:** `mab~` und `mc.mab~` produzieren "total unbrauchbare Knackser" — Ausgabe stimmt NICHT mit nn_tilde ueberein, egal ob forward/decode/encode.
+  - **Ursache (Teilbild):** Bei `is_output_ready == 0` gab C++ **Stille** aus statt Audio → 512-Sample-Luecke pro Blockzyklus (≈21.5 Hz Knackser bei 2048/512/44100).
+  - **Umgesetzter Teilfix (2026-08-12):** Stille-Pfad in allen drei `perform64` durch Block-Looping ersetzt (`is_output_ready == 0` → aktuellen Block weiter/erneut lesen).
+  - **Ergebnis:** Stille beseitigt, Knackser **bleiben**. Der Teilfix ist unzureichend und verschlimmert Defekt C aus Bug 11: bei Ankunft eines neuen Blocks steht `out_pos` an beliebiger Stelle → neuer Block wird ab der Mitte gelesen, sein Anfang nie → `out_pos` desynchronisiert dauerhaft von der Blockgrenze.
+  - **Status:** Vollstaendige Ursachenanalyse und Loesung siehe **Bug 11**. Teilfix bleibt vorerst drin (besser als Stille), wird von Bug 11 ersetzt.
+  - **Dateien:** `mab_tilde.cpp:677-696` (mab~), `1501-1526` (mc), `1849-1889` (mcs)
+
+- [~] **Bug 11 – SHM-Pipeline: 3 Defekte verhindern kontinuierliches Audio** ⚠️ **IMPLEMENTIERT (2026-08-12), TEST OFFEN**
+  - **Symptom:** Audio wird abgehackt ausgegeben, nicht kontinuierlich wie nn_tilde. Kein identisches Verhalten zur Referenz, egal welche Methode.
+  - **Randbedingung:** nn_tildes In-Process-Ringbuffer + Compute-Thread ist **bewusst nicht** uebernommen (Speicherlecks unter Windows) — deshalb Python out-of-process. Die Loesung muss innerhalb der SHM-Architektur funktionieren.
+
+  - **Defekt A – Input wird verworfen (Hauptursache)**
+    - `mab_tilde.cpp:661` / `1488` / `1824`: `if (x->header->is_input_ready == 0) { ... }` — Gate ohne `else`.
+    - Solange Python den Block nicht konsumiert hat (`is_input_ready == 1`), schreibt C++ **gar nichts**; die Samples des Ticks werden ersatzlos verworfen.
+    - Verlustdauer pro Blockzyklus = Python-Latenz. Bei 12 ms Inferenz und 11.6 ms/Tick (512 @ 44.1 k): **~1 von 4 Ticks = 25 % des Eingangssignals verloren**. Bei `forward` baut das Modell auf einem zerhackten Eingang auf → zerhackter Ausgang.
+    - Der Double-Buffer ist hier funktionslos: C++ schaltet `input_buffer_index` um, das Gate verhindert aber das Befuellen des zweiten Puffers — er liegt brach.
+    - nn_tilde: `circular_buffer::put()` laeuft **jeden** Tick ungated, `full()` triggert nur die Inferenz. Kein Sample geht verloren.
+
+  - **Defekt B – Python schreibt in den Puffer, den C++ gerade ausliest**
+    - `inference_worker.py:1746-1747` dokumentiert es woertlich: `# C++ drains header.output_buffer_index; write into that same buffer.`
+    - C++ inkrementiert `output_buffer_index` erst **nach** vollstaendigem Drain (`mab_tilde.cpp:690`). Waehrend der 46 ms Drain-Phase zeigt der Index auf den aktiven Puffer — genau dorthin schreibt Python.
+    - Kein Ownership-Handshake: Python prueft `is_output_ready` vor dem Schreiben nicht. Ergebnis: halb alter / halb neuer Block innerhalb eines Drain-Zyklus → Sprung mitten im Block.
+
+  - **Defekt C – Keine Latenz-Reserve, kein blockalignter Handover**
+    - Zeitbudget bei 2048/512/44.1 k:
+      ```
+      T0..T3  Input Block N fuellen (46.4 ms)  ‖  Output Block N-1 drainen (46.4 ms)
+      T3      Input N fertig → Python startet
+      T4      Output N MUSS fertig sein   ← Slack = 0 ms
+      ```
+    - Der Output wird in genau dem Tick faellig, in dem Python erst anfaengt. Double Buffering erzeugt **keine** Reserve, nur paralleles Input-Fuellen.
+    - nn_tilde hat strukturell einen ganzen Puffer Latenz (Drain laeuft hinter dem Write-Pointer her), mab_tilde hat null.
+    - Zusaetzlich desynchronisiert der Bug-10-Teilfix `out_pos` von der Blockgrenze (siehe Bug 10).
+
+  - **Loesungsplan – N-Block-Ring im SHM statt Ping-Pong**
+    1. **Input-Ring, ungated** (N ≥ 4 Bloecke). Header bekommt `in_write_head` / `in_read_tail` als monoton steigende Zaehler. C++ schreibt **immer**, unabhaengig von Python. Overrun (Python zu langsam) verwirft den **aeltesten Block**, niemals den laufenden Tick. → beseitigt Defekt A.
+    2. **Output-Ring mit Priming** (N ≥ 3). C++ startet den Drain erst, wenn ≥ 2 Bloecke gefuellt sind. Damit existiert dauerhaft ≥ 1 Block Reserve — strukturelles Aequivalent zu nn_tildes Ringbuffer-Latenz, ohne In-Process-Threads. → beseitigt Defekt C.
+    3. **Blockalignter Handover.** Puffer-Wechsel ausschliesslich bei `out_pos == 0`. Nie mitten in einen neuen Block einsteigen. → beseitigt die `out_pos`-Desync.
+    4. **Ownership statt Flags.** Python schreibt an `out_write_head`, C++ liest an `out_read_tail`; die Indizes duerfen sich nie ueberlappen. Kein gemeinsam beschriebener Puffer mehr. → beseitigt Defekt B ersatzlos.
+    5. **Fallback bei echtem Underrun.** Letzten **vollstaendigen** Block wiederholen (separate Kopie), nicht den laufenden ab beliebiger Position.
+
+  - **Erwartete Zusatzlatenz:** 1–2 Bloecke (46–93 ms bei 2048). nn_tilde liegt in derselben Groessenordnung → kein Nachteil gegenueber der Referenz.
+
+  - **Betroffene Dateien / Umsetzungsschritte**
+    - `SharedMemoryHeader` (C++ `mab_tilde.cpp:~30-70` + Python `inference_worker.py:70-100`): Header **v4** — `input_buffer_index`/`output_buffer_index`/`is_input_ready`/`is_output_ready` ersetzt durch `in_write_head`/`in_read_tail`/`out_write_head`/`out_read_tail` + `ring_blocks`. **C++ und Python muessen gemeinsam deployed werden** (Bug 2!).
+    - SHM-Groesse: `total_size` von 2× auf N× Input/Output-Bloecke (`inference_worker.py:152-164`).
+    - `mab_tilde_perform64` / `mc_mab_tilde_perform64` / `mcs_mab_tilde_perform64`: Input-Gate entfernen, Ring-Indizes verwenden, Priming-Schwelle, blockalignter Handover.
+    - `inference_worker.py` Hauptloop (`~1743-1812`): Ring-Konsum statt Flag-Polling, Schreiben an `out_write_head`.
+    - Tests: `test_block_accumulator.cpp`, `test_multichannel_layout.cpp`, `test_shared_memory_header_compatibility.cpp`, `test_python_shared_memory.py`, `test_shared_memory_v2.py` → Header v4 + Ring-Semantik.
+    - Neuer Test: Underrun-/Overrun-Verhalten (Python kuenstlich verzoegert → kein Sample-Verlust, keine Diskontinuitaet).
+  - **✅ Implementiert (2026-08-12):**
+    - Header v4: `ring_blocks`=4, `in_write_head`/`in_read_tail`/`out_write_head`/`out_read_tail` ersetzen `input_buffer_index`/`output_buffer_index`/`is_input_ready`/`is_output_ready`. C++/Python `static_assert`/`ctypes.sizeof` = 196 bytes.
+    - SHM: 4× input blocks + 4× output blocks (vorher 2+2).
+    - `t_mab_tilde.drain_block` (long, -1 = priming).
+    - Drei `perform64`: Input immer ungated → `in_write_head`. Output: `drain_block` priming (-1 → silence) → block-aligned handover nur bei `out_pos==0` → advance `out_read_tail`.
+    - Python: `while in_read_tail < in_write_head` konsumiert ALLE Bloecke im Ring. Output an `out_write_head`. Blockiert bei vollem Output-Ring mit Shutdown-Check.
+    - **Wichtig (Bug 2):** C++ und Python muessen gemeinsam deployed sein — Header-Layout unvereinbar mit v3. → kein Sample-Verlust, keine Diskontinuitaet).
+
+- [x] **Bug 12 – Ring-Block-Stride nutzt aktive statt maximale Kanalzahl (kein Audio bei decode)** ✅ **FIXED** (2026-08-12)
+  - **Symptom:** Nach Bug 11 kein Audio mehr bei `mab~ <model> decode <bufsize>` (z.B. `freesoundloop10k_raspi_b2048_r44100_z16`). Worker startet korrekt, Extension laedt korrekt, aber kein Ton am Outlet.
+  - **Verifiziert (venv):** `model.decode(torch.zeros(1,16,1))` liefert echtes Audio (abs max 0.36) — Stille war **nicht** erwartetes Modellverhalten. `infer_method()` mit exakt der Shape aus der SHM liefert ebenfalls korrektes Audio (abs max 0.36) — der Bug liegt **nicht** in der Inferenz.
+  - **Ursache:** `mab_tilde_perform64`/`mc_mab_tilde_perform64`/`mcs_mab_tilde_perform64` berechneten den Byte-Abstand zwischen Ring-Slots aus `x->channels_in`/`x->channels_out` (**aktive** Methode, z.B. decode: co=1). Python (`SharedMemoryManager.__init__`) allokiert jeden Ring-Slot aber mit der **maximalen** Kanalzahl über alle Methoden (`compute_layout()`), damit ein Methodenwechsel nie ein SHM-Remapping braucht (z.B. musicnet: encode co=16 → `max_channels_out=16`). Fuer decode (co=1 ≠ max=16) driftet der C++-Stride (2048 Floats) 16× von Pythons realem Slot-Abstand (32768 Floats) ab.
+    - Ring-Slot 0 liegt bei Offset 0 → **zufällig** korrekt (deshalb spielte der *erste* 2048-Sample-Block/46 ms hörbar Audio).
+    - Ring-Slot 1–3 (bei `ring_blocks=4`) lesen C++-seitig aus fremdem Speicher (ungeschriebene Kanal-Zeilen von Slot 0, seit SHM-Erzeugung nullinitialisiert) → dauerhafte Stille ab Block 2.
+    - Fuer `encode` (ci=1 ≠ max_in=16) betrifft derselbe Fehler die Input-Seite; fuer `forward` (ci=co=1) beide Seiten. Bug existierte bereits im alten Ping-Pong-Design (v3/A1) fuer den ungeraden Puffer-Index, wurde dort aber vermutlich durch den Bug-10-Teilfix (Block-Looping) und Zufall (Bug-5.8-Test nutzte ein Modell/Timing, bei dem der Effekt nicht auffiel) maskiert.
+  - **Fix:** Neue Header-Felder `max_channels_in`/`max_channels_out` (konstant, von Python einmalig in `create()` aus den Konstruktor-Parametern gesetzt = die MAX-Werte). Alle drei `perform64` nutzen jetzt `x->header->max_channels_in`/`max_channels_out` für den Ring-Slot-Stride; `block_accumulate_write`/`read` erhalten weiterhin die **aktive** `channels_in`/`channels_out` (bzw. `total_ci`/`total_co` bei mcs.mab~) für die tatsächlich befüllten Zeilen innerhalb des (ggf. breiteren) Slots.
+  - **Header v4 waechst auf 204 Bytes** (2× `uint32_t` zusaetzlich). `static_assert`/`ctypes.sizeof` aktualisiert.
+  - **Tests:** Neue Regressionstests `test_shared_memory_v2.py::TestRingBlockStrideBug12` (belegen `output_size`/`input_size` == `max_channels_*` × `block_size` × 4, nicht `channels_*`(aktiv) × ...). Bestehende Header-Offset-Tests (`test_shared_memory_v2.py`, `test_block_size_extraction.py`) auf v4/204 Bytes aktualisiert. Alle 19 C++-Tests + 310 Python-Tests grün (129 skipped, unveraendert).
+  - **Dateien:** `mab_tilde.cpp:40-78` (Header-Struct + static_assert), `mab_tilde.cpp:673-675` (mab~ Stride), `mab_tilde.cpp:~1517` (mc.mab~ Stride), `mab_tilde.cpp:~1864-1867` (mcs.mab~ Stride + n_batches), `inference_worker.py:74-97` (Header-Struct), `inference_worker.py:~278-283` (create() setzt max_channels_in/out).
+  - **Offen:** Max-Runtime-Test durch User (`mab~ freesoundloop10k_raspi_b2048_r44100_z16 decode 2048`, kontinuierliches Audio statt einzelnem 46 ms Blip).
+  - **Nachtrag (2026-08-12):** Runtime-Test durchgefuehrt → Bug 12 war real und ist behoben, **reicht aber nicht**. Verbleibende Defekte sind Max-seitig, siehe **Bug 13**.
+
+- [x] **Bug 13 – `mab~` dynamischer Inlet-Rebuild: Crash + veraltete DSP-Chain** ✅ **FIXED** (2026-08-12)
+
+  - **Fix U2 (Crash):** `perform_active`-Guard + `is_bypass`-Bypass in `apply_io`. Alle 3 `perform64` nutzen `InterlockedIncrement`/`Decrement` an jedem Entry/Exit. `apply_io` setzt `is_bypass=1` → wartet auf `perform_active==0` → rebuild → `dirty`-Message an Patcher → clear bypass. Kein Use-After-Free mehr, weil `object_free`/`outlet_new` nur laufen wenn kein Audio-Thread in `ins[]`/`outs[]` iteriert.
+  - **Fix U1 (numins=1):** `object_method(patcher, gensym("dirty"))` nach `dsp_resize` erzwingt Chain-Recompile. `dsp_free` war der falsche Ansatz (zerstoert Chain → Crash beim naechsten Audio-Tick). `dirty` ist deklarativ: Max baut die Chain zum naechsten sicheren Zeitpunkt neu mit korrektem `numins`.
+  - **Ring-Reset:** `in_pos=0, out_pos=0, drain_block=-1` in allen 3 `dsp64` und in `apply_io` → sauberes Priming nach jedem Recompile.
+  - **Betroffene Dateien:** `mab_tilde.cpp:156` (perform_active), `:642-748` (3× perform64), `:844-885` (apply_io), `:588-591,1482-1485,1838-1841` (3× dsp64).
+
+- [x] **Bug 14 – `expected_new`-Truncation bei decode/prior mit aktivem ConvStreamingContext** ✅ **FIXED** (2026-08-12)
+
+  - **Fix:** `infer_method()`: fuer `decode`/`prior` jetzt `expected_new = block_size` statt der Ratio-Formel. Der History-Prepend operiert auf der Latent-Seite, die Output-Domaene ist unabhaengig von `in_ratio`.
+  - **Dateien:** `inference_worker.py:1001-1003`.
+
 ---
 
 ## Max-Runtime-Verifikation
 
 - [ ] **V1 – decode-Layout** `[mab~ musicnet.ts decode 2048]` → 16 latent in, 1 audio out, keine dropouts
   - `mab_tilde.cpp:511-596`, `inference_worker.py:1516-1555`
-  - Hängt von: Build + Deploy nach Max
+  - Bug 13 behoben (2026-08-12): thread-sicherer Rebuild + `dirty`-Recompile. V1 jetzt testbar.
+  - **Abnahme:** `[noise~]` auf alle 16 Inlets, jeder muss hoerbar wirken. **Kein statisches Latent** (Bug 13 U3: faellt in ~0.4 s auf Stille).
 - [ ] **V2 – forward** `[mab~ musicnet.ts forward]` → 1 in/1 out
   - Gleiche Dateien
+  - Hinweis: `forward` ist 1-in-1-out → kein IO-Rebuild → von Bug 13 **nicht** betroffen (B4-Skip greift, `mab_tilde.cpp:818`). Guter Isolationstest fuer Ring v4 (Bug 11/12) ohne die Inlet-Problematik.
 - [ ] **V3 – encode** `[mab~ musicnet.ts encode]` → 1 audio in, 16 latent out
   - Gleiche Dateien
+  - Betroffen von Bug 13 auf der **Outlet**-Seite (1→16 Outlets ⇒ `rebuild_io` mit `object_free`, U2).
 - [ ] **V4 – Methodenwechsel** `method decode`/`method encode` zur Laufzeit
   - `mab_tilde.cpp:1008-1021` (mab_tilde_method)
+  - Haengt von Bug 13 Schritt 4/5 ab (Runtime-Layoutwechsel ist derzeit der Crash-Pfad).
 - [ ] **V5 – mab.info** `[mab.info musicnet.ts]` → `bang` listet Methods/Attributes/Params
   - `mab_info.cpp:57-113`, `inference_worker.py:686-774` (collect_model_info/print_info_block/query_model)
 - [ ] **V6 – void-Mode** `[mab~ void 4 2]` → 4 inlets, 2 outlets, kein Worker
@@ -326,4 +445,183 @@ _History: Diese Sektion konsolidiert den vollständigen Inhalt von `doc/rag_impr
   - Ergebnisse werden via `--report doc/benchmark_reports.md` als fortlaufend
     nummerierter **Testrun NNN – Datum** in `doc/benchmark_reports.md` eingetragen
     (neueste Messung oben, `--note` für Kontext)
+
+## Refactoring
+
+- [x] **R1 – `mab~`-Klasse komplett entfernen** ✅ **DONE** (2026-08-12)
+
+  **Begründung:** `mc.mab~` deckt 95 % aller Use-Cases mit stabiler 1-MC-Inlet-Architektur
+  ohne `dsp_resize`/`dsp_free`/`dirty`. `mab~` (N diskrete Inlets → Rebuild) ist eine fragile
+  Sonderkonfiguration die Bug 13 erst verursacht hat. Der einzig echte Mehrwert von `mab~`
+  — 16 verschiedene Signalquellen an Einzel-Inlets — ist mit `[mc.pack~ 16]` → `[mc.mab~]`
+  trivial nachbaubar.
+
+  **Was fällt weg (Code):**
+
+  | Symbol | Datei:Zeile | Grund |
+  |--------|-------------|-------|
+  | `mab_tilde_new` | `mab_tilde.cpp:~340` | mab~-Konstruktor; Void-Mode-Logik wandert in mc-Konstruktor |
+  | `mab_tilde_dsp64` | `mab_tilde.cpp:~588` | triviale 1-Zeilen-Funktion; mc/mcs haben eigene |
+  | `mab_tilde_perform64` | `mab_tilde.cpp:~642` | diskretes Inlet-Routing (ins[0..15]); MC nutzt flaches MC-Routing |
+  | `mab_tilde_assist` | `mab_tilde.cpp:~554` | Inlet-Labels; mc/mcs brauchen eigene (kürzer) |
+  | `mab_tilde_free` | `mab_tilde.cpp:~489` | **Shared** — wird auch von mc/mcs verwendet → umbenennen, nicht löschen |
+  | `#else`-Branch in `ext_main` | `mab_tilde.cpp:~270` | mab~-Klassenregistrierung; 3-Wege→2-Wege |
+  | `mab_tilde_class` | `mab_tilde.cpp:~80` | static-Klassenpointer nur noch mc+mcs |
+
+  **Was fällt weg (Struct-Felder):**
+
+  | Feld | Grund |
+  |------|-------|
+  | `is_mc` | Nach R1 immer 1 → durch `is_mcs` ersetzt (mc=0, mcs=1) |
+  | `is_mcs` | bleibt (mc vs mcs) |
+
+  **Was wird vereinfacht:**
+
+  | Stelle | Vorher | Nachher |
+  |--------|--------|---------|
+  | `apply_io` io-Berechnung | `x->is_mcs ? mcs_batches : (is_mc ? 1 : model_in)` | `x->is_mcs ? mcs_batches : 1` |
+  | `mab_tilde_prefix` | 3 Fälle (mcs/mc/mab) | 2 Fälle (mcs/mc) |
+  | `apply_io` B4-Skip | `last_io_in/out`-Tracking | mc immer 1-in-1-out → Skip immer aktiv, kein Rebuild nötig |
+  | `apply_io` Crash-Schutz | `dsp_free`+`dirty` für mab | mc triggert nie einen Rebuild → Schutzpfad bleibt aber wird nie betreten |
+  | `init_worker` argbuf | `x->is_mcs ? mcs_batches : 1` | unverändert (mc sendet n_batches=1) |
+  | `rebuild_io` | `is_mc`-Flag für "multichannelsignal" | immer MC → Flag kann entfallen |
+
+  **Was bleibt (Shared, von allen verwendet):**
+  - `t_mab_tilde` Struct (minus `is_mc`)
+  - `mab_tilde_enable`, `gpu`, `reload`, `dump`, `set`, `get`, `method`, `load`, `anything`
+  - `mab_tilde_apply_io`, `mab_tilde_check_crash`, `mab_tilde_gpu_reload_done`
+  - `mab_tilde_rebuild_io` (wird nie mit geändertem io_in/io_out aufgerufen → B4-Skip)
+  - `init_worker`, `init_worker_thread`, `mab_enqueue_control`
+  - `mc_*` und `mcs_*` Funktionen (komplett)
+  - `SharedMemoryHeader`, `ControlRingBuffer`, alle v4-Felder
+  - `block_accumulator.h`
+
+  **Build:**
+  - CMakeLists.txt: Target `mab_tilde` (MODULE) entfernen
+  - CMakeLists.txt: `mab_tilde_lib` (STATIC) bleibt für Tests (enthält Shared-Code)
+  - `MC_MAB_TILDE_MODULE`/`MCS_MAB_TILDE_MODULE`-Defines bleiben (2-Wege)
+  - Tests: `test_mab_tilde_new`, `test_mab_tilde_dsp64`, `test_mab_tilde_perform64`,
+    `test_mab_tilde_free`, `test_mab_tilde_assist` — falls sie mab~-spezifisch sind → entfernen
+
+  **Deploy:**
+  - `deploy.ps1`: `mab~.mxe64`-Copy entfernen
+  - VSCode-Task: Build-Targets anpassen
+
+  **Reihenfolge (geschätzt 2–3 h):**
+  1. `ext_main`: `#else`-Branch + `mab_tilde_class` entfernen, 3-Wege→2-Wege
+  2. `mab_tilde_new` + `mab_tilde_perform64` + `mab_tilde_dsp64` + `mab_tilde_assist` löschen
+  3. `mab_tilde_free` → `mab_tilde_shared_free` umbenennen (wird von mc/mcs genutzt)
+  4. `is_mc`-Feld entfernen, `perform_active` bleibt
+  5. `apply_io`: io-Berechnung vereinfachen, `is_mc`-Check entfernen
+  6. `mab_tilde_prefix`: 3→2 Fälle
+  7. `rebuild_io`: `is_mc`-Flag entfernen (immer MC)
+  8. CMakeLists.txt: mab~-Target entfernen
+  9. `deploy.ps1`: mab~-Zeile entfernen
+  10. Tests: mab~-spezifische Tests identifizieren und entfernen/anpassen
+  11. Build + alle Tests + Max-Runtime (mc + mcs)
+
+## Feature Requests
+
+- [x] **FR4 – Max-Package-Struktur standardisieren (help, icon, package-info)** ✅ **DONE** (2026-08-12)
+
+  **IST-Zustand:**
+  - `help/mab~.maxhelp` + `help/mab.info.maxhelp` existieren im Repo, werden **nicht** deployed
+  - `package-info.json` liegt in `externals/` (falsch, gehört ins Package-Root)
+  - `models/` (6 Demo-Modelle, 0.2 MB) liegen nur im Max-Package, nicht im Repo
+  - Kein `icon.png`, keine `docs/`, keine `extras/`
+  - Altes `mab~.mxe64` liegt noch im Max-Package-`externals/`
+
+  **Referenz:** nn_tilde-Package + 10 andere Packages analysiert. Standard-Layout:
+
+  ```
+  mab_tilde/                         # Max-Package-Root
+  ├── icon.png                       # 90 % aller Packages haben es
+  ├── package-info.json              # Pflicht, mit "filelist" für Uninstall
+  ├── README.md / license.txt        # Optional, aber üblich
+  ├── externals/                     # .mxe64 (Pflicht)
+  ├── help/                          # .maxhelp (fast alle)
+  ├── docs/                          # .maxref.xml (viele)
+  ├── examples/                      # Beispiel-Patches (viele)
+  ├── extras/                        # Overview/Navigation (viele)
+  ├── media/                         # Audio/Images (einige)
+  ├── patchers/                      # Abstractions/Sub-Patchers (einige)
+  └── support/                       # inference_worker.py, DLLs
+  ```
+
+  **`package-info.json`-Standardfelder:**
+  ```json
+  {
+    "name": "mab_tilde",
+    "displayname": "mc.mab~ / mcs.mab~",
+    "version": "1.0.0",
+    "author": "mab_tilde",
+    "description": "Neural audio processing with RAVE/AFTER models",
+    "tags": ["neural", "audio", "machine learning", "rave"],
+    "website": "",
+    "max_version_min": "9.0",
+    "max_version_max": "none",
+    "os": {
+      "windows": { "min_version": "10", "platform": ["x64"] }
+    },
+    "filelist": {
+      "externals": ["mc.mab~.mxe64", "mcs.mab~.mxe64", "mab.info.mxe64"],
+      "help": ["mc.mab~.maxhelp", "mcs.mab~.maxhelp", "mab.info.maxhelp"],
+      "support": ["inference_worker.py"]
+    },
+    "c74install": 1
+  }
+  ```
+
+  **Umsetzungsplan (geschätzt 1–2 h):**
+
+  **Schritt 1 – `package/`-Verzeichnis im Repo anlegen:**
+  ```
+  package/                          # Wird 1:1 ins Max-Package-Root deployed
+  ├── package-info.json             # Neu, mit korrekten Metadaten + filelist
+  ├── icon.png                      # Neu, 128×128 (z.B. RAVE-Logo-Stilisierung)
+  └── help/
+      ├── mc.mab~.maxhelp           # Kopie von help/mab~.maxhelp, Referenzen aktualisiert
+      ├── mcs.mab~.maxhelp          # Kopie von mc.mab~.maxhelp, "mcs" statt "mc"
+      └── mab.info.maxhelp          # Kopie von help/mab.info.maxhelp, unverändert
+  ```
+  - Hilfe-Dateien: Inhaltlich ok, nur Objekt-Referenzen von `mab~` → `mc.mab~`/`mcs.mab~` ändern
+  - `icon.png`: Einfaches Platzhalter-Icon (z.B. farbiger Kreis mit "AI"), später ersetzbar
+  - Altes `help/`-Verzeichnis im Repo-Root **löschen** (ersetzt durch `package/help/`)
+
+  **Schritt 2 – `deploy.ps1` erweitern:**
+  ```powershell
+  # 3. Deploy package files (help, icon, package-info)
+  Copy-Item "$projectRoot\package\*" $targetDir -Recurse -Force
+  ```
+  - Kopiert `package-info.json` → Package-Root (nicht mehr `externals/`)
+  - Kopiert `help/` → `help/`
+  - Kopiert `icon.png` → Package-Root
+
+  **Schritt 3 – Alte Dateien im Max-Package bereinigen:**
+  ```powershell
+  # Cleanup
+  Remove-Item "$externals\package-info.json" -Force -ErrorAction SilentlyContinue
+  Remove-Item "$externals\mab~.mxe64" -Force -ErrorAction SilentlyContinue
+  ```
+  - `package-info.json` aus `externals/` löschen (wird jetzt ins Root deployed)
+  - `mab~.mxe64` löschen (R1-Nacharbeit)
+
+  **Schritt 4 – Demo-Modelle:**
+  - `models/` **nicht** ins Repo (Binary Bloat, 0.2 MB Demo + potenziell große Produktiv-Modelle)
+  - `models/` **nicht** in `package/` (würde bei Deploy überschrieben)
+  - Option: `deploy.ps1` prüft ob `models/musicnet.ts` existiert, sonst aus `D:\AI-Models\ts models\` kopieren
+  - Oder: `models/` bleibt manuell verwaltet (User kopiert Modelle selbst)
+  - `musicnet.ts` (0-Byte-Platzhalter) durch echte Datei ersetzen oder löschen
+
+  **Schritt 5 – Build-Integration:**
+  - Help-Dateien sind statische JSON-Dateien (kein Build nötig)
+  - `deploy.ps1` kopiert sie direkt aus `package/` ohne CMake
+  - Optional: CMake `configure_file()` für `package-info.json` um Version/Strings aus CMake-Variablen zu setzen
+
+  **Nicht im Scope (später):**
+  - `docs/` — `.maxref.xml`-Referenzdokumentation (aufwändig, nn_tilde hat sie)
+  - `examples/` — Beispiel-Patches
+  - `extras/` — Overview-Patch (nn_tilde hat `nn~ Overview.maxpat`)
+  - `patchers/` — Sub-Patchers für Help (nn_tilde hat `help_hub.maxpat`, `rave_help.maxpat`)
+  - `media/` — Audio-Beispiele für Help-Demos
 

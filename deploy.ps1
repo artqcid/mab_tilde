@@ -1,11 +1,10 @@
-# deploy.ps1 -- Build + Deploy mab~ nach Max 9
+# deploy.ps1 -- Build + Deploy mc.mab~ / mcs.mab~ nach Max 9
 #
 # Usage: .\deploy.ps1 [-NoBuild] [-Target <Max8|Max9>]
 #
-# Kopiert .mxe64 + inference_worker.py ins Max-Package.
-# WICHTIG: inference_worker.py MUSS mit deployt werden (Bug 2 --
-# C++ und Python teilen sich das argparse-Layout, bei Version-Mismatch
-# startet der Worker nicht).
+# Kopiert .mxe64 + inference_worker.py + package/ (help, icon, package-info)
+# ins Max-Package. WICHTIG: inference_worker.py MUSS mit deployt werden
+# (Bug 2 -- C++ und Python teilen sich das argparse-Layout).
 
 param(
     [switch]$NoBuild,
@@ -34,7 +33,7 @@ $support = "$targetDir\support"
 New-Item -ItemType Directory -Path $externals -Force | Out-Null
 New-Item -ItemType Directory -Path $support -Force | Out-Null
 
-$mxes = @("mab~.mxe64", "mc.mab~.mxe64", "mcs.mab~.mxe64", "mab.info.mxe64")
+$mxes = @("mc.mab~.mxe64", "mcs.mab~.mxe64", "mab.info.mxe64")
 Write-Host "=== Deploying .mxe64 to $externals ===" -ForegroundColor Cyan
 foreach ($mxe in $mxes) {
     $src = "$buildDir\$mxe"
@@ -56,14 +55,38 @@ if (Test-Path $worker) {
     throw "inference_worker.py not found in project root"
 }
 
-# 4. Clean __pycache__ (verhindert stale .pyc)
+# 4. Deploy package files (help, icon, package-info.json → package root)
+$packageSrc = "$projectRoot\package"
+if (Test-Path $packageSrc) {
+    Write-Host "=== Deploying package files to $targetDir ===" -ForegroundColor Cyan
+    Copy-Item "$packageSrc\*" $targetDir -Recurse -Force
+    Write-Host "  help/ (3 maxhelp files)" -ForegroundColor Green
+    Write-Host "  package-info.json" -ForegroundColor Green
+}
+else {
+    Write-Host "  WARNING: package/ directory not found" -ForegroundColor Yellow
+}
+
+# 4b. Cleanup legacy files from old mab~ deployments
+$oldMxe = "$externals\mab~.mxe64"
+if (Test-Path $oldMxe) {
+    Remove-Item $oldMxe -Force
+    Write-Host "  Removed legacy mab~.mxe64" -ForegroundColor DarkGray
+}
+$oldPkgInfo = "$externals\package-info.json"
+if (Test-Path $oldPkgInfo) {
+    Remove-Item $oldPkgInfo -Force
+    Write-Host "  Removed package-info.json from externals/ (now in package root)" -ForegroundColor DarkGray
+}
+
+# 5. Clean __pycache__ (verhindert stale .pyc)
 $pyc = "$support\__pycache__"
 if (Test-Path $pyc) {
     Remove-Item $pyc -Recurse -Force
     Write-Host "  __pycache__ removed" -ForegroundColor DarkGray
 }
 
-# 5. Set MAB_PROJECT_DIR env var + create venv junction (GPU/CUDA support)
+# 6. Set MAB_PROJECT_DIR env var + create venv junction (GPU/CUDA support)
 Write-Host "=== Environment setup ===" -ForegroundColor Cyan
 $oldEnv = [Environment]::GetEnvironmentVariable("MAB_PROJECT_DIR", "User")
 if ($oldEnv -ne $projectRoot) {

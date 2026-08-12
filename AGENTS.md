@@ -4,18 +4,13 @@ Auto-loaded by opencode/Continue. Read `WORKSPACE_AGENT_PROMPT.md` for full proj
 
 ## Status
 
-- **Current:** Offline-Tests T1–T7 ✅ (23 TorchScript-Modelle, 19 C++-Tests, CPU+GPU, kein Crash). Phase 6 implementiert (mcs.mab~ Batched Multichannel). Bug 1+2 gefixt. Offen: Max-Runtime-Test 6.4, Max-Runtime-V1–V6, FR2+FR3.
-  - Phase 3: Method-aware processing (Header v2, latent inlets/outlets, `block_accumulator`, `infer_method` dispatch).
-  - Phase 4: `mab.info` model inspector.
-  - Phase 4.5: ASIO XRun prevention (`BELOW_NORMAL_PRIORITY_CLASS` + core affinity).
-  - Phase 4.6: nn_tilde parity P1–P6.
-  - Phase 5: mc.mab~ Multichannel — Header v3 (`channel_map`), 1-in-1-out MC-IO, `Z_MC_INLETS`-Flag, `chans`-Attribut, Max-verifiziert (5.8 ✅).
-  - Phase 6: mcs.mab~ Batched Multichannel — `mcs_batches`-Inlets/-Outlets, batch-major SHM `[B×ci×bs]` (C++ `b*ci+c`), batched `infer_method` `(B,ci,bs)`, Arg-Order `[model method n_batches bufsize gpu cores]` (6.4 Max-Test offen).
-  - Bug 1: NaN/Inf-Guard + safety_clip in `infer_method()` (crashte Max bei RAVE-Modellen). ✅
-  - Bug 2: Deploy-Skript + venv-Junction + MAB_PROJECT_DIR (Worker startete nicht, GPU nicht verfügbar). ✅
-  - FR1: `timeBeginPeriod(1)` + `SetThreadPriority(LOWEST)` (ASIO XRun-Prävention). ✅
-  - CUDA: torch 2.12.0.dev+cu128 installiert (Python 3.14 Nightly), RTX 3060 6 GB.
-  - Test-Suite: T1–T7 fertig (Modell-Laden, mab.info, Inferenz-Dispatch, Audio-Qualität, Edge-Cases, ctest-Integration, Benchmark-Report).
+- **Kein Blocker.** Alle Bugs (1–14) gefixt. `mab~`-Klasse entfernt (R1).
+- **Current:** Nur noch `mc.mab~` und `mcs.mab~`. 19 C++-Tests + 289 Python-Tests ✅.
+  - Phase 5: mc.mab~ Multichannel — Header v4, 1-in-1-out MC-IO, `Z_MC_INLETS`, `chans`, Max-verifiziert (5.8 ✅).
+  - Phase 6: mcs.mab~ Batched Multichannel — `mcs_batches`, batch-major SHM, Max-Test offen.
+  - Bug 13: thread-sicherer IO-Rebuild (`perform_active`-Guard + `dsp_free` + `dirty`). ✅
+  - Bug 14: `expected_new`-Fix fuer decode/prior. ✅
+  - R1: `mab~`-Klasse entfernt, nur noch `mc.mab~` / `mcs.mab~`. ✅
 
 ## Workflow (verpflichtend)
 
@@ -43,7 +38,7 @@ Auto-loaded by opencode/Continue. Read `WORKSPACE_AGENT_PROMPT.md` for full proj
 
 - Main code: `source/projects/mab_tilde/mab_tilde.cpp`, `inference_worker.py`.
 - Checklist: `doc/checklist.md` (offene Tasks).
-- Build: `cmake --preset debug && cmake --build --preset debug` → `build/Debug/mab~.mxe64`.
+- Build: `cmake --preset debug && cmake --build --preset debug` → `build/Debug/mc.mab~.mxe64` + `mcs.mab~.mxe64`.
 - **Deploy:** NUR ueber `deploy.ps1` (oder VSCode-Task `Deploy to Max 9`) — kopiert `.mxe64` **UND** `inference_worker.py` nach `%USERPROFILE%\Documents\Max 9\Packages\mab_tilde\`. Nach Deploy Max neu starten. Bug 2: ohne `inference_worker.py` crasht der Worker wg. Arg-Mismatch.
 - MCP: `mab_mcp_server.py`; registriert in `opencode.json` unter `mcp.mab-rave-assistant` (NICHT `.mcp.json` – das ist nur für VS Code); tools: `index_project_code`, `query_code_rag`, `query_code_wiki`, `get_rag_chunk`, `inspect_rave_model` (im Chat mit Server-Präfix `mab-rave-assistant_*`).
 - Manuelles Wissen: `doc/projektwissen.md` (~200 Z., direkt lesen).

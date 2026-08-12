@@ -1,0 +1,25 @@
+{
+    "name": "mab_tilde",
+    "displayname": "mc.mab~ / mcs.mab~",
+    "version": "1.0.0",
+    "author": "mab_tilde",
+    "description": "Neural audio processing with RAVE/AFTER TorchScript models. mc.mab~ for multichannel signals, mcs.mab~ for batched multichannel.",
+    "tags": ["neural", "audio", "machine learning", "rave", "torchscript"],
+    "website": "",
+    "extends": "",
+    "extensible": 1,
+    "max_version_min": "9.0",
+    "max_version_max": "none",
+    "os": {
+        "windows": {
+            "min_version": "10",
+            "platform": ["x64"]
+        }
+    },
+    "filelist": {
+        "externals": ["mc.mab~.mxe64", "mcs.mab~.mxe64", "mab.info.mxe64"],
+        "help": ["mc.mab~.maxhelp", "mcs.mab~.maxhelp", "mab.info.maxhelp"],
+        "support": ["inference_worker.py"]
+    },
+    "c74install": 1
+}

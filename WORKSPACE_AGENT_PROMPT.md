@@ -6,13 +6,13 @@
 
 ## 1. Objects
 
-### `mab~`
-- Args: `[mab~ model.ts (method) (buffer_size) (gpu) (num_channels) (cores)]`
-- Default method: `forward`
-- Method-aware IO via Header v2: `{method}_params = [channels_in, ratio_in, channels_out, ratio_out]`. IO rebuild via `mab_tilde_apply_io` on Max main thread (`t_qelem`).
-
 ### `mc.mab~` / `mcs.mab~`
-- Phase 5/6. Not implemented yet.
+- Phase 5/6 (R1: the legacy `mab~` mono class was removed).
+- `mc.mab~`: 1 multichannel inlet/outlet, per-inlet channel map via `channel_map[16]`, `chans` attribute for fixed per-outlet channel count.
+- `mcs.mab~`: `mcs_batches` multichannel batch inlets/outlets (nn_tilde-Parität P9), batch-major SHM rows.
+- Shared-memory protocol is **Header v4** (204 bytes): multi-block ring (`ring_blocks`, `in_write_head`/`in_read_tail`, `out_write_head`/`out_read_tail`, `max_channels_in/out`).
+- Args: `[mc.mab~ model.ts (method) (buffer_size) (gpu) (num_channels) (cores)]`, `[mcs.mab~ model.ts (method) n_batches (buffer_size) (gpu) (cores)]`.
+- Method-aware IO via Header: `{method}_params = [channels_in, ratio_in, channels_out, ratio_out]`. IO rebuild via `mab_tilde_apply_io` on Max main thread (`t_qelem`).
 
 ### `mab.info`
 - Process-isolated model inspector. 1 inlet, 5 outlets.
@@ -24,7 +24,7 @@
 
 ## 3. Architecture rules
 
-1. **Non-blocking startup.** `mab_tilde_new` never blocks Max main thread. Spawn worker in detached thread; object starts in bypass mode.
+1. **Non-blocking startup.** The `mc.mab~`/`mcs.mab~` constructors never block the Max main thread. Spawn worker in detached thread; object starts in bypass mode.
 2. **`enable 0` / bypass / DSP off never kills the Python process.** PyTorch restart is too slow.
 3. **Clean shutdown.** Destructor: send shutdown flag, wait max 500ms, force-kill if needed, unmap/close handles.
 4. **Crash recovery.** Monitor worker handle. If worker dies, switch to bypass and print error. `reload` restarts worker.
@@ -40,7 +40,7 @@
 Native Max SDK build (no min-devkit):
 - Includes: `source/min-api/max-sdk-base/c74support/{max-includes,msp-includes}`
 - Libs: `MaxAPI.lib`, `MaxAudio.lib`
-- Output: `mab~.mxe64`
+- Output: `mc.mab~.mxe64`, `mcs.mab~.mxe64`, `mab.info.mxe64`
 
 ```powershell
 Remove-Item -Recurse -Force build
@@ -50,7 +50,7 @@ cmake --build --preset debug
 
 **Deploy to Max 9 (Max closed):**
 ```powershell
-Copy-Item build\Debug\mab~.mxe64 "$env:USERPROFILE\Documents\Max 9\Packages\mab_tilde\externals\"
+Copy-Item build\Debug\mc.mab~.mxe64, build\Debug\mcs.mab~.mxe64 "$env:USERPROFILE\Documents\Max 9\Packages\mab_tilde\externals\"
 Copy-Item inference_worker.py "$env:USERPROFILE\Documents\Max 9\Packages\mab_tilde\support\"
 New-Item -ItemType Junction -Path "$env:USERPROFILE\Documents\Max 9\Packages\mab_tilde\support\.venv" `
           -Target "$env:USERPROFILE\Documents\GitHub\artqcid\ai-projects\mab_tilde\.venv"
@@ -60,7 +60,7 @@ Worker resolution (not hardcoded): `resolve_worker_dir()` checks `MAB_PROJECT_DI
 
 **Troubleshooting:**
 - Use `0L` not `CLASS_NOFLOAT`; `long` not `std::atomic<bool>` in C structs; `__declspec(dllexport)`; callbacks in `extern "C"`.
-- Output name must be `mab~`.
+- Output names must be `mc.mab~`, `mcs.mab~`.
 - Pin generator: `"Visual Studio 18 2026" -A x64` via `CMakePresets.json`.
 
 ## 5. Python env

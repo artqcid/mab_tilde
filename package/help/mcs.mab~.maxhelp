@@ -22,7 +22,7 @@
       {
         "box": {
           "maxclass": "comment",
-          "text": "mab~ - RAVE / AFTER TorchScript inference",
+          "text": "mcs.mab~ - RAVE / AFTER TorchScript inference",
           "id": "obj-title",
           "numinlets": 1,
           "numoutlets": 0,
@@ -33,7 +33,7 @@
       {
         "box": {
           "maxclass": "comment",
-          "text": "Args: [mab~ model.ts (method) (buffer_size) (gpu) (num_channels) (cores)]",
+          "text": "Args: [mcs.mab~ model.ts (method) (buffer_size) (gpu) (num_channels) (cores)]",
           "id": "obj-args",
           "numinlets": 1,
           "numoutlets": 0,
@@ -43,7 +43,7 @@
       {
         "box": {
           "maxclass": "newobj",
-          "text": "mab~ model.ts forward 512 0 1 2",
+          "text": "mcs.mab~ model.ts forward 512 0 1 2",
           "id": "obj-mab",
           "numinlets": 1,
           "numoutlets": 1,
@@ -192,7 +192,7 @@
       {
         "box": {
           "maxclass": "comment",
-          "text": "Void mode: mab~ void <inlets> <outlets> <bufsize>",
+          "text": "Void mode: mcs.mab~ void <inlets> <outlets> <bufsize>",
           "id": "obj-void-note",
           "numinlets": 1,
           "numoutlets": 0,

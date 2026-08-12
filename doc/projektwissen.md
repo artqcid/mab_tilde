@@ -31,6 +31,7 @@ typedef struct _mab_tilde {
     // Threading & Prozess
     std::thread* init_thread;   // Hintergrund-Thread für Worker-Start
     HANDLE python_process;      // Handle des Python-Worker-Prozesses
+    HANDLE worker_job_handle;   // Job Object: killt Worker automatisch bei Max-Crash (Bug 7)
     HANDLE ready_event;         // "MabReadyEvent_{instance_id}" – Python signalisiert Bereitschaft
     HANDLE input_ready_event;   // "MabInputReadyEvent_{instance_id}" – C++ signalisiert neue Input-Daten (A4)
     HANDLE hMapFile;            // Windows Shared Memory Handle
@@ -68,18 +69,21 @@ typedef struct _mab_tilde {
     t_qelem* io_qelem;          // Qelem für mab_tilde_apply_io (IO-Rebuild auf Main-Thread)
     t_clock* crash_clock;       // periodischer Crash-Check (100ms, Main-Thread, A2)
     
-    // Phase 5: mc.mab~ (Multichannel) support fields
-    long is_mc;                // 1 = mc.mab~ mode, 0 = mab~ mode
+    // Phase 5/6: MC + Batched MC fields (mab~-Klasse entfernt, R1)
     long channel_map[16];      // per-inlet channel count (MC mode, max 16 inlets)
     long n_batches;            // fixed output channels from `chans` attribute (0 = auto)
+    long last_io_in;           // B4: last rebuilt inlet count
+    long last_io_out;          // B4: last rebuilt outlet count
+    long drain_block;          // output ring index, -1 during priming (Bug 11)
+    long perform_active;       // audio thread guard (Bug 13)
 
-    // Phase 6: mcs.mab~ (Batched Multichannel) support fields
-    long is_mcs;               // 1 = mcs.mab~ mode, 0 = mab~/mc.mab~ mode
+    // Phase 6: mcs.mab~ (Batched Multichannel)
+    long is_mcs;               // 1 = mcs.mab~ mode, 0 = mc.mab~ mode
     long mcs_batches;          // number of batch inlets/outlets (mcs.mab~, 1..16)
 } t_mab_tilde;
 ```
 
-**Prefix-Helper:** `mab_tilde_prefix(x)` → `"mcs.mab~"` / `"mc.mab~"` / `"mab~"` je nach `is_mcs`/`is_mc` (für alle `post()`-Aufrufe).
+**Prefix-Helper:** `mab_tilde_prefix(x)` → `"mcs.mab~"` / `"mc.mab~"` je nach `is_mcs`.
 
 **Lebenszyklus:**
 1. `mab_tilde_new` → allokiert, setzt bypass=1, startet `init_worker_thread` (detached)
@@ -128,18 +132,13 @@ Max Message → mab_info_download/delete/print → mab_info_run_command() (Main-
     → Erfolg: Zeilen auf Outlet 1 (path) | Fehler: object_error (kein Crash)
 ```
 
-### `SharedMemoryHeader` v3 (mab_tilde.cpp:38-67, inference_worker.py:61-95)
+### `SharedMemoryHeader` v4 (mab_tilde.cpp:42-70, inference_worker.py:65-97) — 204 bytes
 
-192 Bytes, Feld-Reihenfolge muss C++ ↔ Python exakt übereinstimmen.
-Layout: 9×uint32(36) + method[52] + method_id(4) + 3×uint32(12) + 2×uint32(8) +
-`channel_map[16]`(64) + 4×long(16).
+Feld-Reihenfolge muss C++ ↔ Python exakt uebereinstimmen.
 
-Felder: magic, version(3), block_size, num_channels, channels_in, channels_out,
-latent_size, input_ratio, output_ratio, method[52], method_id, input_offset,
-output_offset, control_offset, input_buffer_index, output_buffer_index,
-**channel_map[16]** (Phase 5: Kanäle pro mc.mab~-Inlet, Offsets 112–175),
-is_input_ready(176), is_output_ready(180), is_python_ready(184),
-shutdown_flag(188).
+Ring-Semantik (Bug 11): `ring_blocks`=4, `in_write_head`/`in_read_tail`/`out_write_head`/`out_read_tail` ersetzen die v3-Ping-Pong-Flags. Input immer ungated, Output mit Priming + blockalignem Handover.
+
+Ring-Slot-Stride (Bug 12): `max_channels_in`/`max_channels_out` sind konstant (einmalig von Python in `create()` gesetzt = Maximum über alle Methoden, `compute_layout()`). `channels_in`/`channels_out` sind die **aktive** Methode und aendern sich bei jedem `[method]`-Wechsel — sie duerfen NIEMALS fuer den Byte-Abstand zwischen Ring-Slots verwendet werden (nur fuer die Zeilenzahl in `block_accumulate_write`/`read`), sonst driften alle Ring-Slots ausser Index 0 auseinander (ein Modell wie RAVE mit `decode` co=1 aber `encode` co=16 → Stride-Faktor 16 falsch → 1 korrekter Block, danach Stille).
 
 ### `ControlRingBuffer` (mab_tilde.cpp:24-28, inference_worker.py:95-101)
 
@@ -172,6 +171,21 @@ struct WorkerModelInfo {
 **Kritische Regel:** `dsp_resize` + `outlet_new`/`object_free` NUR auf dem Max Main Thread!
 Audio-Thread scheduled IO-Rebuilds via `qelem_set(x->io_qelem)`.
 
+### Job Object – Worker-Zombie-Prävention (Bug 7)
+
+- `init_worker` (`mab_tilde.cpp:855-864`): erstellt `CreateJobObjectW` mit `JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE`, weist Worker via `AssignProcessToJobObject` zu.
+- Handle liegt in `t_mab_tilde.worker_job_handle`.
+- **Max-Crash/Exit:** Windows schließt alle Prozess-Handles → Job-Handle geschlossen → OS killt Worker automatisch.
+- **Normales Free/Reload:** Handle wird zusammen mit `python_process` geschlossen (Worker ist da bereits per `shutdown_flag` + 5s-Timeout beendet).
+
+### MC-Kanalerkennung (Bug 6)
+
+- `mc_mab_tilde_dsp64`/`mcs_mab_tilde_dsp64`: primäre Kanalquelle = `channel_map` aus `inputchanged`-Callback (nn_tilde-Parität). `count`-Array aus `dsp64` nur als Fallback.
+
+### decode/prior Batch-Dimension (Bug 9)
+
+- `infer_method()` (`inference_worker.py:940-960`): `tensor.unsqueeze(0)` wird jetzt VOR der Methoden-Dispatch ausgeführt (nicht nur im `else`-Zweig). Für 2D-Input `(ci, bs)` aus `get_numpy_input` (mab~ non-MC) wird das Tensor damit immer zu `(1, ci, bs)`, bevor `[..., -1:]` das letzte Zeit-Sample `(1, ci, 1)` extrahiert. Ohne diesen Fix wurde `model.decode((ci, 1))` mit ci als Batch-Dimension aufgerufen → falsche Ausgabe.
+
 ---
 
 ## Message-Flows
@@ -193,18 +207,27 @@ bypass=0, is_ready=1, qelem_set(io_qelem)
 mab_tilde_apply_io() → dsp_resize + outlet_new → IO steht
 ```
 
-### Audio-Durchsatz (pro DSP-Tick)
+### Audio-Durchsatz (pro DSP-Tick) — Ring v4 (Bug 11)
+
 ```
-    ↓ Audio Thread (perform64)
-block_accumulate_write(double→float) → p_input
-InterlockedExchange(&header->is_input_ready, 1)
-SetEvent(input_ready_event)  // weckt Python (A4)
+    ↓ Audio Thread (perform64) – jeder Tick, UNGATED
+in_write_head Block füllen (block_accumulate_write)
+wenn Block voll: in_write_head++, SetEvent(input_ready_event)
+    ↓ Audio Thread (parallel)
+wenn drain_block < 0: priming (silence) bis out_write_head > out_read_tail
+out_read_tail Block drainen (block_accumulate_read) → outs[]
+wenn Block leer UND out_read_tail < out_write_head: out_read_tail++
     ↓ Python Worker
-WaitForSingleObject(input_ready_event) → infer_method() → Modell-Forward
-Ergebnis in p_output → InterlockedExchange(&header->is_output_ready, 1)
-    ↓ Audio Thread (nächster Tick oder async)
-block_accumulate_read(float→double) → outs[]
+während in_read_tail < in_write_head:
+    in_read_tail Block lesen → infer_method()
+    Ergebnis in out_write_head Block schreiben → out_write_head++
+    in_read_tail++
 ```
+
+### ⚠️ Bekannte Pipeline-Defekte (Bug 11 — behoben in v4)
+
+Die Defekte A/B/C der v3-Pipeline sind durch den Ring-basierten Header v4
+behoben. Details: `doc/checklist.md` Bug 11.
 
 ### Message-Weiterleitung (set/get/method/reload/anything)
 ```
@@ -237,7 +260,6 @@ ControlRingBuffer.dequeue() → Nachricht parsen → Aktion ausführen
 
 | Target | Typ | Output | Quellen |
 |--------|-----|--------|---------|
-| `mab_tilde` | MODULE | `mab~.mxe64` | mab_tilde.cpp, worker_launch.cpp, max_path_resolve.cpp |
 | `mab_tilde_lib` | STATIC | (nur für Tests) | Gleiche Quellen |
 | `mc_mab_tilde` | MODULE | `mc.mab~.mxe64` | mab_tilde.cpp (mit `MC_MAB_TILDE_MODULE`), worker_launch.cpp, max_path_resolve.cpp |
 | `mcs_mab_tilde` | MODULE | `mcs.mab~.mxe64` | mab_tilde.cpp (mit `MCS_MAB_TILDE_MODULE`), worker_launch.cpp, max_path_resolve.cpp |
@@ -245,7 +267,10 @@ ControlRingBuffer.dequeue() → Nachricht parsen → Aktion ausführen
 | `test_worker_launch` | EXE | build/Debug/test_worker_launch.exe | test_worker_launch.cpp + worker_launch.cpp |
 | 18 weitere Tests | EXE | build/Debug/test_*.exe | Jeweils test/test_*.cpp |
 
-**Phase 5/6 – Mehrfachkompilierung:** `mc.mab~.mxe64` und `mcs.mab~.mxe64` werden aus der **gleichen** `mab_tilde.cpp` kompiliert wie `mab~.mxe64`, aber mit `target_compile_definitions(... PRIVATE MC_MAB_TILDE_MODULE)` bzw. `MCS_MAB_TILDE_MODULE`. Der `#if defined(MCS_MAB_TILDE_MODULE) / #elif defined(MC_MAB_TILDE_MODULE) / #else`-Block in `ext_main` registriert dann nur die jeweilige Klasse.
+**Mehrfachkompilierung:** `mc.mab~.mxe64` und `mcs.mab~.mxe64` werden aus der
+gleichen `mab_tilde.cpp` kompiliert, mit `target_compile_definitions(... PRIVATE
+MC_MAB_TILDE_MODULE)` bzw. `MCS_MAB_TILDE_MODULE`. `ext_main` registriert dann
+nur die jeweilige Klasse (2-Wege: `#if MCS / #elif MC / #endif`).
 
 **Build-Befehle:**
 ```powershell
@@ -255,12 +280,10 @@ cmake --build --preset debug  # Kompilieren (Output: build/Debug/mab~.mxe64)
 
 **Deploy nach Max 9:**
 ```powershell
-Copy-Item build\Debug\mab~.mxe64 "$env:USERPROFILE\Documents\Max 9\Packages\mab_tilde\externals\"
-Copy-Item build\Debug\mc.mab~.mxe64 "$env:USERPROFILE\Documents\Max 9\Packages\mab_tilde\externals\"
-Copy-Item build\Debug\mcs.mab~.mxe64 "$env:USERPROFILE\Documents\Max 9\Packages\mab_tilde\externals\"
-Copy-Item build\Debug\mab.info.mxe64 "$env:USERPROFILE\Documents\Max 9\Packages\mab_tilde\externals\"
-Copy-Item inference_worker.py "$env:USERPROFILE\Documents\Max 9\Packages\mab_tilde\support\"
+.\deploy.ps1   # Build + Kopiert .mxe64, inference_worker.py, package/ → Max-Package
 ```
+- `package/`-Verzeichnis enthält `package-info.json` + `help/*.maxhelp` und wird 1:1 ins Max-Package-Root deployed.
+- Altes `mab~.mxe64` und `externals/package-info.json` werden beim Deploy automatisch gelöscht.
 
 ---
 
@@ -268,8 +291,10 @@ Copy-Item inference_worker.py "$env:USERPROFILE\Documents\Max 9\Packages\mab_til
 
 | Datei | Zweck | Sprache |
 |-------|-------|---------|
-| `mab_tilde.cpp` | Haupt-External `mab~`: Max-API, DSP, IPC, Messages | C++ |
+| `mab_tilde.cpp` | Haupt-External: Max-API, DSP, IPC, Messages (mc.mab~/mcs.mab~) | C++ |
 | `mab_info.cpp` | Modell-Inspektor `mab.info`: Query-Mode, Dict-Output | C++ |
+| `package/` | Max-Package-Dateien (package-info.json, help/*.maxhelp) | JSON |
+| `deploy.ps1` | Build + Deploy-Skript (kopiert .mxe64, .py, package/) | PowerShell |
 | `worker_launch.cpp/.h` | Shared: Python-Prozess-Start, venv-Auflösung, Info-Block-Parsing | C++ |
 | `max_path_resolve.cpp/.h` | Shared: Modell-Pfad-Auflösung (relativ + Max-Suchpfad) | C++ |
 | `block_accumulator.h` | Header-only: SIMD float↔double + Block-Akkumulation | C++ |
