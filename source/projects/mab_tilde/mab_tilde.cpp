@@ -843,14 +843,13 @@ extern "C" void init_worker(t_mab_tilde* x) {
                     }
                     
                     InterlockedExchange(&x->is_bypass, 0); // Disable bypass
-                    InterlockedExchange(&x->is_ready, 1);  // Mark as ready
-                    // Phase 3: schedule the method-aware inlets/outlets on the
-                    // Max main thread (dsp_resize/outlet_new must not run on
-                    // this background thread). qelem_set is thread-safe.
+                    // Schedule IO rebuild BEFORE marking ready so
+                    // perform64 cannot fire with stale channels_in/out.
                     x->in_pos = 0;
                     x->out_pos = 0;
                     x->method_pending = 1;
                     qelem_set(x->io_qelem);
+                    InterlockedExchange(&x->is_ready, 1);  // Mark as ready
                     // A2: start periodic crash monitoring on main thread.
                     clock_fdelay(x->crash_clock, 100.0);
                     post("%s: Python worker ready, shared memory mapped successfully.", prefix);
