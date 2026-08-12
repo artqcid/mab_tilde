@@ -65,18 +65,23 @@ _Einlese-Reihenfolge: checklist.md → code_wiki.md → query_code_wiki → quer
   - **Fix:** Auto-Detection in `mab_tilde_new`/`mc_mab_tilde_new`/`mcs_mab_tilde_new`: wenn `argv[1]` ein Symbol ist → `[model method bufsize ...]`; wenn es eine Zahl ist → `[model bufsize ...]` (method entfaellt, defaultet auf `forward`).
   - **Dateien:** `mab_tilde.cpp:380-400` (mab_tilde_new), `mab_tilde.cpp:1231-1256` (mc_mab_tilde_new), `mab_tilde.cpp:1564-1599` (mcs_mab_tilde_new)
 
-- [x] **Bug 4 – forward-Methode: kein Ton + Max-Crash (nasa, GPU)** ✅ **FIXED** (2026-08-12)
-  - **Symptom:** `mab~ nasa encode 2048 1` funktioniert, `mab~ nasa forward 2048 1` produziert keinen Ton und crashed Max bei Signal-Eingang.
-  - **Ursache 1 (kein Ton):** `infer_method()` wendet `repeat_interleave(out_ratio, dim=-1)` auf ALLE Methoden an. `forward_params` hat `out_ratio=2048`, aber `forward` produziert bereits 2048 Audio-Samples (full encode+decode pipeline). `repeat_interleave` vervielfacht jedes Sample 2048× → Trim auf block_size behält nur Sample 0 → reiner DC-Offset = kein Ton.
-  - **Ursache 2 (Crash):** Evtl. Folge des DC-Offsets in der Audio-Engine + kein try/except um `infer_method()` im Main-Loop.
-  - **Fix:** `if method != "forward": out = out.repeat_interleave(...)` — skip interleaving for methods that already produce audio-rate output. Zusaetzlich try/except im Main-Loop.
-  - **Dateien:** `inference_worker.py:972-975` (repeat_interleave-Skip), `inference_worker.py:1784-1800` (try/except)
+- [x] **Bug 4 – forward/decode: kein Ton + Crash (nasa, GPU)** ✅ **FIXED** (2026-08-12)
+  - **Symptom:** `mab~ nasa decode 2048 1` produziert keinen Ton. `mab~ nasa forward 2048 1` crashed Max bei Signal-Eingang. Python-Worker bleibt am Leben.
+  - **Modell-Params (nasa):** `decode=(8,2048,1,1)`, `encode=(1,1,8,2048)`, `forward=(1,1,1,1)`, `prior=(1,2048,8,2048)`.
+  - **Ursache decode:** `infer_method()`: `tensor[:, -1]` auf Shape `(1,8,2048)` selektierte Kanal 7 (2048 Samples), nicht letztes Zeit-Sample. `model.decode()` bekam `(1,1,2048,1)` statt `(1,8,1)` → RuntimeError → try/except → Output genullt → Stille.
+  - **Ursache forward:** `forward_params=(1,1,1,1)` → Python produziert korrektes Audio. Crash war C++: `apply_io` rief `mab_tilde_rebuild_io(1,1)` obwohl Konstruktor bereits 1-in-1-out eingerichtet hatte. `object_free`/`outlet_new` auf selber Outlet-Position → DSP-Referenz korrumpiert → `bad object`.
+  - **Fix decode:** `tensor[..., -1:]` ersetzt `tensor[:, -1]` → korrektes Shape `(B, ci, 1)`.
+  - **Fix forward:** `apply_io` tracked `last_io_in`/`last_io_out` — skipped `mab_tilde_rebuild_io` wenn IO unverändert.
+  - **Dateien:** `inference_worker.py:952-956` (decode Fix), `mab_tilde.cpp:749-763` (apply_io Skip)
 
-- [x] **Bug 5 – GPU-Nachricht crashed Max (bad object)** ✅ **FIXED** (2026-08-12)
-  - **Symptom:** `mab~ nasa forward` (ohne bufsize) + `gpu 1` Message → `object_class_internal: bad object 3c165d80` ×4 → Max crasht.
-  - **Ursache:** `mab_tilde_gpu` startet asynchronen GPU-Reload im Python-Worker, ohne bypass zu setzen. Python schreibt neue `method_id`/`channels_in/out` ins SHM-Header, waehrend `perform64` parallel mit veralteten `x->channels_in/out` Buffer-Strides berechnet → Speicher-Korruption → DSP-Graph zerstoert.
-  - **Fix:** `mab_tilde_gpu` setzt `is_bypass=1` + `active_method_id=0` + `clock_fdelay(gpu_reload_clock, 3s)`. Die Clock-Callback prueft nach 3 s ob das Layout geaendert wurde → `qelem_set` → `mab_tilde_apply_io` rebuilds IO und cleared bypass. Kein SHM-Zugriff waehrend des Reloads.
-  - **Dateien:** `mab_tilde.cpp:911-948` (mab_tilde_gpu + callback), `mab_tilde.cpp:762` (apply_io cleared bypass)
+- [x] **Bug 5 – GPU-Nachricht + Init-Race (bad object)** ✅ **FIXED** (2026-08-12)
+  - **Symptom 1:** `gpu 1` Message während Audio läuft → `object_class_internal: bad object` ×4 → Max crasht.
+  - **Symptom 2:** `mab~ nasa decode 2048 1` (GPU-Direktstart) → gleicher Fehler.
+  - **Ursache 1:** `mab_tilde_gpu` startete async GPU-Reload ohne bypass. Python schrieb `method_id`/`channels_in/out` ins SHM während `perform64` parallel lief → Buffer-Stride-Mismatch → DSP-Korruption.
+  - **Ursache 2:** `init_worker` setzte `is_ready=1` VOR `method_pending=1+qelem_set`. `perform64` konnte in diesem Fenster mit `is_ready=1` aber veralteten `x->channels_in/out` feuern.
+  - **Fix 1:** `gpu`-Handler setzt `is_bypass=1` + `active_method_id=0` + `clock_fdelay(gpu_reload_clock, 3s)`. Clock-Callback cleared bypass nach Reload. `apply_io` cleared bypass nach IO-Rebuild.
+  - **Fix 2:** `is_ready=1` erst NACH `method_pending=1+qelem_set` → kein Race-Fenster.
+  - **Dateien:** `mab_tilde.cpp:911-948` (gpu-Handler), `mab_tilde.cpp:845-853` (init_worker Reihenfolge)
 
 ---
 
