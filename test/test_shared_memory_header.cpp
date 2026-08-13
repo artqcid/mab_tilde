@@ -23,7 +23,7 @@ struct SharedMemoryHeader {
     uint32_t control_offset;  // bytes to control ring buffer
     uint32_t input_buffer_index;   // A1: index of input buffer C++ is filling (0/1)
     uint32_t output_buffer_index;  // A1: index of output buffer C++ is draining (0/1)
-    uint32_t channel_map[16]; // Phase 5 (mc.mab~): per-inlet channel counts
+    uint32_t channel_map[32]; // Phase 5 (mc.mab~): per-inlet channel counts
     long is_input_ready;      // atomic flag (volatile)
     long is_output_ready;     // atomic flag (volatile)
     long is_python_ready;     // atomic flag (volatile)
@@ -31,8 +31,8 @@ struct SharedMemoryHeader {
 };
 
 int main() {
-    // Test 1: Verify struct size matches the contract (192 bytes, header v3)
-    assert(sizeof(SharedMemoryHeader) == 192);
+    // Test 1: Verify struct size matches the contract (256 bytes, header v3 + 32ch)
+    assert(sizeof(SharedMemoryHeader) == 256);
     
     // Test 2: Verify magic number constant
     uint32_t expected_magic = 0x4D414254; // 'MABT'
@@ -80,6 +80,7 @@ int main() {
     assert(header.channel_map[0] == 16);
     assert(header.channel_map[3] == 2);
     assert(header.channel_map[15] == 0);
+    assert(header.channel_map[31] == 0);
     
     return 0;
 }

@@ -71,7 +71,7 @@ typedef struct _mab_tilde {
     t_clock* crash_clock;       // periodischer Crash-Check (100ms, Main-Thread, A2)
     
     // Phase 5/6: MC + Batched MC fields (mab~-Klasse entfernt, R1)
-    long channel_map[16];      // per-inlet channel count (MC mode, max 16 inlets)
+    long channel_map[32];      // per-inlet channel count (MC mode, max 32 inlets)
     long n_batches;            // fixed output channels from `chans` attribute (0 = auto)
     long last_io_in;           // B4: last rebuilt inlet count
     long last_io_out;          // B4: last rebuilt outlet count
@@ -80,7 +80,7 @@ typedef struct _mab_tilde {
 
     // Phase 6: mcs.mab~ (Batched Multichannel)
     long is_mcs;               // 1 = mcs.mab~ mode, 0 = mc.mab~ mode
-    long mcs_batches;          // number of batch inlets/outlets (mcs.mab~, 1..16)
+    long mcs_batches;          // number of batch inlets/outlets (mcs.mab~, 1..32)
 } t_mab_tilde;
 ```
 
@@ -380,9 +380,9 @@ zurücksetzt).
 - `is_mc = 1` → `mab_tilde_rebuild_io` erzeugt `"multichannelsignal"`-Outlets statt `"signal"`
 - MC-Callbacks: `multichanneloutputs` (Frage nach Output-Kanalzahl pro Outlet-Index) und
   `inputchanged` (Benachrichtigung über Kanalzahl-Änderung an Inlet-Index)
-- `channel_map[16]` pro Inlet: `mc_mab_tilde_dsp64` liest die `count[]`-Werte aus Max'
+- `channel_map[32]` pro Inlet: `mc_mab_tilde_dsp64` liest die `count[]`-Werte aus Max'
   MC-System, `mc_inputchanged` aktualisiert sie zur Laufzeit; beide publizieren die
-  Map in den `SharedMemoryHeader` (Header **v3**, Phase 5 / 5.3)
+  Map in den `SharedMemoryHeader` (Header **v4**, Phase 5 / 5.3)
 - `chans <n>`-Attribut: fixe Output-Kanalzahl in `n_batches` (0 = auto aus Modell-Layout)
 
 **Kanal-Mismatch-Handling (5.5):**
@@ -451,8 +451,7 @@ Output: [n_batches × channels_out × block_size] Zeile = b*co + c
   `(n_batches, ci, bs)` / `(n_batches, co, bs)`; `infer_method` macht einen
   einzigen Batched-Forward `(B, ci, bs) → (B, co, bs)` (2D-Input bleibt
   unverändert `(ci, bs) → (co, bs)`)
-- Header v3 unverändert: `channel_map[16]` = Batch-Map (max. 16 Batches),
-  192-Byte-static_assert bleibt
+- Header v4: `channel_map[32]` = Batch-Map (max. 32 Batches), 268-Byte-static_assert
 
 **Worker-Args:** `init_worker`-argbuf: `model method bufsize gpu n_batches
 shm_name instance_id num_channels cores` (mab~/mc.mab~ senden `n_batches=1`).

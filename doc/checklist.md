@@ -111,6 +111,19 @@ _Einlese-Reihenfolge: checklist.md → code_wiki.md → query_code_wiki → quer
   - Build + alle 22 C++-Test-EXEs grün, `test_python_shared_memory.py` 13/13 grün
   - **Offen:** Max-Runtime-Verifikation (2× mc.mab~ gleichzeitig im Patch) — kein Deploy durchgeführt
 
+- [x] **FR6 – MAX_CHANNELS 16 → 32 (Modelle mit >16 Latent-Kanälen)** ✅ **DONE** (2026-08-13)
+
+  - **Symptom:** Modelle mit mehr als 16 Latent-Kanälen (z.B. `crozzoli_bigensemblesmusic_18d.ts`, 18 Kanäle) werden bei `decode`/`encode` still gedrosselt: C++ clamt `model_in/out` auf `MAX_CHANNELS=16` (`mab_tilde.cpp`), `channel_map[16]` kann nur 16 MC-Kanäle transportieren → 2 Latent-Kanäle gehen verloren, Rekonstruktion unvollständig.
+  - **Ursache:** `#define MAX_CHANNELS 16` + `channel_map[16]` (Header **und** `t_mab_tilde`-Struct) + `range(16)`-Loops in Python (`read_channel_map`/`get_total_input_channels`) begrenzen die MC-Kanalzahl hart auf 16.
+  - **Änderung:**
+    - `mab_tilde.cpp`: `MAX_CHANNELS` → 32; `channel_map[16]` → `[32]` (Header + Struct); alle hartkodierten `16`-Loops/-Bounds (`mc_inputchanged`, `mcs_inputchanged`, Init-Loops, `chans`-Clamp `MAX_CHANNELS*16` → `MAX_CHANNELS*MAX_CHANNELS`) auf `MAX_CHANNELS` umgestellt.
+    - `inference_worker.py`: `channel_map` ctypes `*16` → `*32`; `range(16)` → `range(32)` in `read_channel_map`/`get_total_input_channels`.
+    - **Header v4 wächst auf 268 Bytes** (channel_map 128 statt 64). `static_assert`/`ctypes.sizeof` aktualisiert.
+    - Test-Mirrors (8 C++ + 2 Python) auf 32/268 nachgezogen; Boundary-Tests (`channel_map[31]`, out-of-range index 32, Kanal-Clamp) angepasst.
+  - **Dateien:** `mab_tilde.cpp:21,62-71,134,475-476,1055,1309,1319,1331,1407`, `inference_worker.py:96,393,407`, Tests.
+  - **Test:** Build + alle 22 C++-Tests grün; 40 Python-SHM/Header-Tests grün. Max-Runtime-Verifikation (18-Kanal-Modell) offen, **kein Deploy** durchgeführt.
+  - **Achtung:** C++ und Python müssen **gemeinsam deployed** werden (Header-Layout unvereinbar mit 204-Byte-v4).
+
 ## Feature Requests (offen)
 
 (siehe oben)

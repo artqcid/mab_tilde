@@ -18,7 +18,7 @@
 #include "buffer_manager.h"
 
 // Constants for shared memory sizing
-#define MAX_CHANNELS 16
+#define MAX_CHANNELS 32
 #define MAX_BLOCK_SIZE 4096
 #define CONTROL_RING_SIZE 256
 #define CONTROL_MSG_SIZE 256
@@ -59,16 +59,16 @@ struct SharedMemoryHeader {
     uint32_t out_read_tail;   // v4: oldest output block C++ has drained
     uint32_t max_channels_in;  // v4: constant input rows per ring block (allocation)
     uint32_t max_channels_out; // v4: constant output rows per ring block (allocation)
-    uint32_t channel_map[16]; // Phase 5 (mc.mab~): per-inlet channel counts
+    uint32_t channel_map[32]; // Phase 5 (mc.mab~): per-inlet channel counts
     long is_python_ready;     // atomic flag (volatile)
     long shutdown_flag;       // atomic flag (C++ tells Python to die)
 };
 
 // Compile-time check that both sides agree on the header size.
 // 9x uint32 (36) + method[52] + method_id (4) + 3x uint32 (12) +
-// 7x uint32 (28) + 16x uint32 channel_map (64) + 2x long (8) = 204 bytes.
-static_assert(sizeof(SharedMemoryHeader) == 204,
-              "SharedMemoryHeader v4 must be 204 bytes (sync with Python)");
+// 7x uint32 (28) + 32x uint32 channel_map (128) + 2x long (8) = 268 bytes.
+static_assert(sizeof(SharedMemoryHeader) == 268,
+              "SharedMemoryHeader v4 must be 268 bytes (sync with Python)");
 
 static t_class* mc_mab_tilde_class = nullptr;
 static t_class* mcs_mab_tilde_class = nullptr;
@@ -131,14 +131,14 @@ typedef struct _mab_tilde {
     t_clock* gpu_reload_clock;
 
     // Phase 5: mc.mab~ (Multichannel) support fields
-    long channel_map[16];      // per-inlet channel count (MC mode, max 16 inlets)
+    long channel_map[32];      // per-inlet channel count (MC mode, max 32 inlets)
     long n_batches;            // fixed output channels from `chans` attribute (0 = auto)
     long last_io_in;           // B4: last rebuilt inlet count (avoid unnecessary rebuild)
     long last_io_out;          // B4: last rebuilt outlet count
 
     // Phase 6: mcs.mab~ (Batched Multichannel) support fields
     long is_mcs;               // 1 = mcs.mab~ mode, 0 = mc.mab~ mode
-    long mcs_batches;          // number of batch inlets/outlets (mcs.mab~, 1..16)
+    long mcs_batches;          // number of batch inlets/outlets (mcs.mab~, 1..MAX_CHANNELS)
 
     // v4: output ring drain position. -1 = priming (no completed output block
     // yet -> silence until out_write_head advances past out_read_tail).
@@ -1052,7 +1052,7 @@ void* mc_mab_tilde_new(t_symbol* s, long argc, t_atom* argv) {
 
     // Phase 5: MC fields (mc.mab~ mode: is_mcs=0)
     x->n_batches = 0;  // 0 = auto-detect from channel_map
-    for (long i = 0; i < 16; i++) x->channel_map[i] = 0;
+    for (long i = 0; i < MAX_CHANNELS; i++) x->channel_map[i] = 0;
     x->last_io_in = 1;   // dsp_setup(x,1) + outlet_new in constructor
     x->last_io_out = 1;
     x->drain_block = -1; // v4: output ring priming until Python writes
@@ -1306,7 +1306,7 @@ long mc_multichanneloutputs(t_mab_tilde* x, long index, long count) {
 // changes. Updates the channel_map entry for this inlet index and publishes
 // it to the worker (Phase 5, 5.3). x->channels_in (model layout) is untouched.
 long mc_inputchanged(t_mab_tilde* x, long index, long count) {
-    if (index < 0 || index >= 16) return 0;
+    if (index < 0 || index >= MAX_CHANNELS) return 0;
     if (count < 1) count = 1;
     if (count > MAX_CHANNELS) count = MAX_CHANNELS;
 
@@ -1316,7 +1316,7 @@ long mc_inputchanged(t_mab_tilde* x, long index, long count) {
             x->header->channel_map[index] = (uint32_t)count;
         }
         long total = 0;
-        for (long i = 0; i < 16; i++) total += x->channel_map[i];
+        for (long i = 0; i < MAX_CHANNELS; i++) total += x->channel_map[i];
         post("mc.mab~: inlet %ld channel count changed to %ld (total in=%ld)",
              index, count, total);
     }
@@ -1328,7 +1328,7 @@ long mc_inputchanged(t_mab_tilde* x, long index, long count) {
 // from the model layout. Shared by mc.mab~ and mcs.mab~.
 void mc_mab_tilde_chans(t_mab_tilde* x, long n) {
     if (n < 0) n = 0;
-    if (n > MAX_CHANNELS * 16) n = MAX_CHANNELS * 16;
+    if (n > MAX_CHANNELS * MAX_CHANNELS) n = MAX_CHANNELS * MAX_CHANNELS;
     x->n_batches = n;
     post("%s: chans set to %ld", mab_tilde_prefix(x), n);
 }
@@ -1404,7 +1404,7 @@ void* mcs_mab_tilde_new(t_symbol* s, long argc, t_atom* argv) {
     x->is_mcs = 1;
     x->mcs_batches = 1;  // 1 = single batch (mc-like behaviour)
     x->n_batches = 0;    // `chans` per-outlet channel count (0 = auto)
-    for (long i = 0; i < 16; i++) x->channel_map[i] = 0;
+    for (long i = 0; i < MAX_CHANNELS; i++) x->channel_map[i] = 0;
     x->last_io_in = 1;   // dsp_setup(x,1) + outlet_new in constructor
     x->last_io_out = 1;
     x->drain_block = -1; // v4: output ring priming until Python writes

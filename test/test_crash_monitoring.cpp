@@ -26,7 +26,7 @@ struct SharedMemoryHeader {
     uint32_t control_offset;  // bytes to control ring buffer
     uint32_t input_buffer_index;   // A1: index of input buffer C++ is filling (0/1)
     uint32_t output_buffer_index;  // A1: index of output buffer C++ is draining (0/1)
-    uint32_t channel_map[16]; // Phase 5 (mc.mab~): per-inlet channel counts
+    uint32_t channel_map[32]; // Phase 5 (mc.mab~): per-inlet channel counts
     long is_input_ready;      // atomic flag (volatile)
     long is_output_ready;     // atomic flag (volatile)
     long is_python_ready;     // atomic flag (volatile)

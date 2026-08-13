@@ -75,7 +75,7 @@ class TestSharedMemoryHeaderPython(unittest.TestCase):
         # method[52], method_id, input_offset, output_offset, control_offset,
         # ring_blocks, in_write_head, in_read_tail, out_write_head,
         # out_read_tail, max_channels_in, max_channels_out,
-        # channel_map[16] (Phase 5), is_python_ready, shutdown_flag
+        # channel_map[32] (Phase 5), is_python_ready, shutdown_flag
         self.assertEqual(len(SharedMemoryHeader._fields_), 24)
     
     def test_header_has_method_fields(self):
@@ -89,7 +89,7 @@ class TestSharedMemoryHeaderPython(unittest.TestCase):
     def test_header_size(self):
         """Test that the header size matches C++ (204 bytes, header v4)."""
         import ctypes
-        self.assertEqual(ctypes.sizeof(SharedMemoryHeader), 204)
+        self.assertEqual(ctypes.sizeof(SharedMemoryHeader), 268)
     
     def test_header_offsets_match_cpp(self):
         """Test that field offsets match the C++ layout."""
@@ -115,8 +115,8 @@ class TestSharedMemoryHeaderPython(unittest.TestCase):
         self.assertEqual(SharedMemoryHeader.max_channels_in.offset, 124)
         self.assertEqual(SharedMemoryHeader.max_channels_out.offset, 128)
         self.assertEqual(SharedMemoryHeader.channel_map.offset, 132)
-        self.assertEqual(SharedMemoryHeader.is_python_ready.offset, 196)
-        self.assertEqual(SharedMemoryHeader.shutdown_flag.offset, 200)
+        self.assertEqual(SharedMemoryHeader.is_python_ready.offset, 260)
+        self.assertEqual(SharedMemoryHeader.shutdown_flag.offset, 264)
 
 
 class TestControlRingBuffer(unittest.TestCase):

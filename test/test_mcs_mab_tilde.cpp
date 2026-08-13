@@ -23,7 +23,7 @@
 
 #include "../source/projects/mab_tilde/block_accumulator.h"
 
-static const long MAX_CHANNELS = 16;
+static const long MAX_CHANNELS = 32;
 static const long BLOCK = 2048;
 
 // ---- SharedMemoryHeader (v3) - must mirror mab_tilde.cpp:38-67 ----
@@ -44,14 +44,14 @@ struct SharedMemoryHeader {
     uint32_t control_offset;
     uint32_t input_buffer_index;
     uint32_t output_buffer_index;
-    uint32_t channel_map[16];
+    uint32_t channel_map[32];
     long is_input_ready;
     long is_output_ready;
     long is_python_ready;
     long shutdown_flag;
 };
-static_assert(sizeof(SharedMemoryHeader) == 192,
-              "header v3 must be 192 bytes (sync with mab_tilde.cpp)");
+static_assert(sizeof(SharedMemoryHeader) == 256,
+              "header v3 must be 256 bytes (sync with mab_tilde.cpp)");
 
 // ---- Minimal t_mab_tilde subset used by the mcs helpers ----
 struct McsState {
@@ -61,7 +61,7 @@ struct McsState {
     long channels_out;     // model layout (header-driven, per batch)
     long mcs_batches;      // number of batch inlets/outlets
     long n_batches;        // `chans` attribute (per-outlet channels, 0 = auto)
-    long channel_map[16];
+    long channel_map[32];
     SharedMemoryHeader* header;
 };
 
@@ -381,7 +381,7 @@ static void test_inputchanged_updates_map_and_header() {
     assert(h.channel_map[3] == 8);
 
     // out-of-range index is ignored
-    assert(mcs_inputchanged(&x, 16, 4) == 0);
+    assert(mcs_inputchanged(&x, 32, 4) == 0);
     assert(mcs_inputchanged(&x, -1, 4) == 0);
     printf("  OK\n");
 }

@@ -30,7 +30,7 @@ struct SharedMemoryHeader {
     uint32_t control_offset;  // bytes to control ring buffer
     uint32_t input_buffer_index;   // A1: index of input buffer C++ is filling (0/1)
     uint32_t output_buffer_index;  // A1: index of output buffer C++ is draining (0/1)
-    uint32_t channel_map[16]; // Phase 5 (mc.mab~): per-inlet channel counts
+    uint32_t channel_map[32]; // Phase 5 (mc.mab~): per-inlet channel counts
     long is_input_ready;      // atomic flag (volatile)
     long is_output_ready;     // atomic flag (volatile)
     long is_python_ready;     // atomic flag (volatile)
@@ -101,17 +101,17 @@ void test_field_offsets() {
     assert(offset_input_buffer_index == 104);
     assert(offset_output_buffer_index == 108);
 
-    // Phase 5: channel_map[16] (uint32) right after the buffer indices
+    // Phase 5: channel_map[32] (uint32) right after the buffer indices
     size_t offset_channel_map = offsetof(SharedMemoryHeader, channel_map);
     printf("  channel_map offset: %zu\n", offset_channel_map);
     assert(offset_channel_map == 112);
-    assert(sizeof(SharedMemoryHeader().channel_map) == 16 * sizeof(uint32_t));
+    assert(sizeof(SharedMemoryHeader().channel_map) == 32 * sizeof(uint32_t));
 
     // long fields (4 bytes each on Windows MSVC) follow channel_map
-    assert(offset_is_input_ready == 176);
-    assert(offset_is_output_ready == 180);
-    assert(offset_is_python_ready == 184);
-    assert(offset_shutdown_flag == 188);
+    assert(offset_is_input_ready == 240);
+    assert(offset_is_output_ready == 244);
+    assert(offset_is_python_ready == 248);
+    assert(offset_shutdown_flag == 252);
 
     printf("  All field offsets verified!\n");
 }
@@ -122,13 +122,13 @@ void test_struct_size() {
 
     size_t expected_size = 9 * sizeof(uint32_t) + 52 + sizeof(uint32_t)
                            + 3 * sizeof(uint32_t) + 2 * sizeof(uint32_t)
-                           + 16 * sizeof(uint32_t)   // channel_map (Phase 5)
+                           + 32 * sizeof(uint32_t)   // channel_map (Phase 5)
                            + 4 * sizeof(long);
 
     printf("  Expected size: %zu\n", expected_size);
     printf("  Actual size: %zu\n", sizeof(SharedMemoryHeader));
 
-    assert(sizeof(SharedMemoryHeader) == 192);
+    assert(sizeof(SharedMemoryHeader) == 256);
     assert(sizeof(SharedMemoryHeader) == expected_size);
     printf("  Struct size verified!\n");
 }

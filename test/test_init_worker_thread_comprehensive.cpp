@@ -253,7 +253,7 @@ struct SharedMemoryHeader {
     uint32_t control_offset;  // bytes to control ring buffer
     uint32_t input_buffer_index;   // A1: index of input buffer C++ is filling (0/1)
     uint32_t output_buffer_index;  // A1: index of output buffer C++ is draining (0/1)
-    uint32_t channel_map[16]; // Phase 5 (mc.mab~): per-inlet channel counts
+    uint32_t channel_map[32]; // Phase 5 (mc.mab~): per-inlet channel counts
     long is_input_ready;      // atomic flag (volatile)
     long is_output_ready;     // atomic flag (volatile)
     long is_python_ready;     // atomic flag (volatile)
@@ -290,7 +290,7 @@ typedef struct _mab_tilde {
 
 #define MAGIC_NUMBER 0x4D414254  // 'MABT'
 #define DEFAULT_BUFFER_SIZE 512
-#define MAX_CHANNELS 16
+#define MAX_CHANNELS 32
 
 // ============================================================================
 // Test 1: SharedMemoryHeader Structure Layout
@@ -445,14 +445,14 @@ void test_channel_count_validation() {
     int num_channels = 1;
     assert(num_channels >= 1 && num_channels <= MAX_CHANNELS);
     
-    num_channels = 16;
+    num_channels = MAX_CHANNELS;
     assert(num_channels >= 1 && num_channels <= MAX_CHANNELS);
     
     // Test: Invalid channel counts
     num_channels = 0;
     assert(!(num_channels >= 1 && num_channels <= MAX_CHANNELS));
     
-    num_channels = 17;
+    num_channels = MAX_CHANNELS + 1;
     assert(!(num_channels >= 1 && num_channels <= MAX_CHANNELS));
 }
 

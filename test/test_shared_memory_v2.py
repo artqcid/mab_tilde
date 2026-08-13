@@ -29,7 +29,7 @@ MUSICNET_PARAMS = {
 
 class TestHeaderLayoutV2(unittest.TestCase):
     def test_header_size_is_204(self):
-        self.assertEqual(ctypes.sizeof(SharedMemoryHeader), 204)
+        self.assertEqual(ctypes.sizeof(SharedMemoryHeader), 268)
 
     def test_field_offsets_match_cpp(self):
         # Field offsets asserted by test_shared_memory_header_compatibility.cpp
@@ -60,9 +60,9 @@ class TestHeaderLayoutV2(unittest.TestCase):
         # Phase 5: channel_map follows the max-channel fields
         self.assertEqual(SharedMemoryHeader.channel_map.offset, 132)
         self.assertEqual(ctypes.sizeof(SharedMemoryHeader.channel_map.type),
-                         16 * ctypes.sizeof(ctypes.c_uint32))
-        self.assertEqual(SharedMemoryHeader.is_python_ready.offset, 196)
-        self.assertEqual(SharedMemoryHeader.shutdown_flag.offset, 200)
+                         32 * ctypes.sizeof(ctypes.c_uint32))
+        self.assertEqual(SharedMemoryHeader.is_python_ready.offset, 260)
+        self.assertEqual(SharedMemoryHeader.shutdown_flag.offset, 264)
 
     def test_flags_are_c_long(self):
         # Must be c_long, not c_bool: C++ uses `long` + InterlockedExchange

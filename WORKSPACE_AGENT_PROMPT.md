@@ -8,7 +8,7 @@
 
 ### `mc.mab~` / `mcs.mab~`
 - Phase 5/6 (R1: the legacy `mab~` mono class was removed).
-- `mc.mab~`: 1 multichannel inlet/outlet, per-inlet channel map via `channel_map[16]`, `chans` attribute for fixed per-outlet channel count.
+- `mc.mab~`: 1 multichannel inlet/outlet, per-inlet channel map via `channel_map[32]`, `chans` attribute for fixed per-outlet channel count.
 - `mcs.mab~`: `mcs_batches` multichannel batch inlets/outlets (nn_tilde-Parität P9), batch-major SHM rows.
 - Shared-memory protocol is **Header v4** (204 bytes): multi-block ring (`ring_blocks`, `in_write_head`/`in_read_tail`, `out_write_head`/`out_read_tail`, `max_channels_in/out`).
 - Args: `[mc.mab~ model.ts (method) (buffer_size) (gpu) (num_channels) (cores)]`, `[mcs.mab~ model.ts (method) n_batches (buffer_size) (gpu) (cores)]`.

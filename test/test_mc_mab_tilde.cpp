@@ -20,7 +20,7 @@
 
 #include "../source/projects/mab_tilde/block_accumulator.h"
 
-static const long MAX_CHANNELS = 16;
+static const long MAX_CHANNELS = 32;
 static const long BLOCK = 2048;
 
 // ---- SharedMemoryHeader (v3) - must mirror mab_tilde.cpp:36-67 ----
@@ -41,14 +41,14 @@ struct SharedMemoryHeader {
     uint32_t control_offset;
     uint32_t input_buffer_index;
     uint32_t output_buffer_index;
-    uint32_t channel_map[16];
+    uint32_t channel_map[32];
     long is_input_ready;
     long is_output_ready;
     long is_python_ready;
     long shutdown_flag;
 };
-static_assert(sizeof(SharedMemoryHeader) == 192,
-              "header v3 must be 192 bytes (sync with mab_tilde.cpp)");
+static_assert(sizeof(SharedMemoryHeader) == 256,
+              "header v3 must be 256 bytes (sync with mab_tilde.cpp)");
 
 // ---- Minimal t_mab_tilde subset used by the MC helpers ----
 struct McState {
@@ -56,7 +56,7 @@ struct McState {
     long channels_in;      // model layout (header-driven)
     long channels_out;     // model layout (header-driven)
     long n_batches;        // `chans` attribute (0 = auto)
-    long channel_map[16];
+    long channel_map[32];
     SharedMemoryHeader* header;
 };
 

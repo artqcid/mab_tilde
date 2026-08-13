@@ -93,7 +93,7 @@ class SharedMemoryHeader(ctypes.Structure):
         ("out_read_tail", ctypes.c_uint32),   # C++ increments when output block fully drained
         ("max_channels_in", ctypes.c_uint32),   # SHM ring capacity (input), constant
         ("max_channels_out", ctypes.c_uint32),  # SHM ring capacity (output), constant
-        ("channel_map", ctypes.c_uint32 * 16),  # Phase 5: per-inlet channel counts
+        ("channel_map", ctypes.c_uint32 * 32),  # Phase 5: per-inlet channel counts
         ("is_python_ready", ctypes.c_long),   # atomic flag (volatile)
         ("shutdown_flag", ctypes.c_long),     # atomic flag (volatile)
     ]
@@ -390,7 +390,7 @@ class SharedMemoryManager:
         Empty in mab~ (mono) mode where C++ never writes channel_map.
         """
         out = []
-        for i in range(16):
+        for i in range(32):
             v = int(self._p_header.channel_map[i])
             if v <= 0:
                 continue
@@ -404,7 +404,7 @@ class SharedMemoryManager:
         (mono mode, or before the first dsp64 call).
         """
         total = 0
-        for i in range(16):
+        for i in range(32):
             v = int(self._p_header.channel_map[i])
             if v > 0:
                 total += v
