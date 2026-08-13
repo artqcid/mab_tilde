@@ -594,9 +594,37 @@ extern "C" void init_worker(t_mab_tilde* x) {
 
     // Wait for Python to signal the ready event.
     // Läuft im Hintergrund-Thread (init_worker_thread) -> kein OS-Lock im
-    // Audio-Thread. 10 s, weil der erste PyTorch-Import Sekunden dauern kann.
-    DWORD waitResult = WaitForSingleObject(x->ready_event, 10000); 
-    if (waitResult == WAIT_OBJECT_0) {
+    // Audio-Thread. Robustes Warten: Poll in 100 ms-Schritten bis 120 s. Der
+    // erste PyTorch-Import + Laden eines grossen Modells kann auf kaltem System
+    // (leerer Datei-Cache, Defender-Scan) > 10 s dauern. Bricht sofort ab,
+    // wenn der Worker-Prozess vor dem Ready-Signal stirbt (statt den vollen
+    // Timeout zu blockieren).
+    const DWORD READY_TIMEOUT_MS = 120000; // 2 Minuten Gesamt-Timeout (kalter Start)
+    const DWORD READY_POLL_MS    = 100;    // Poll-Intervall
+
+    bool worker_ready = false;
+    bool worker_died  = false;
+    bool cold_start_warned = false;
+    DWORD exit_code = 0;
+
+    for (DWORD elapsed = 0; elapsed < READY_TIMEOUT_MS; elapsed += READY_POLL_MS) {
+        DWORD waitResult = WaitForSingleObject(x->ready_event, READY_POLL_MS);
+        if (waitResult == WAIT_OBJECT_0) {
+            worker_ready = true;
+            break;
+        }
+        if (GetExitCodeProcess(x->python_process, &exit_code) &&
+            exit_code != STILL_ACTIVE) {
+            worker_died = true;
+            break;
+        }
+        if (!cold_start_warned && elapsed >= 10000) {
+            cold_start_warned = true;
+            post("%s: Worker still starting (cold start / model load) - please wait...", prefix);
+        }
+    }
+
+    if (worker_ready) {
         x->hMapFile = OpenFileMappingW(FILE_MAP_ALL_ACCESS, FALSE, shm_name);
         if (x->hMapFile) {
             void* pBuf = MapViewOfFile(x->hMapFile, FILE_MAP_ALL_ACCESS, 0, 0, 0);
@@ -639,6 +667,9 @@ extern "C" void init_worker(t_mab_tilde* x) {
         } else {
             post("%s error: Failed to open shared memory mapping.", prefix);
         }
+    } else if (worker_died) {
+        post("%s error: Python worker exited before signalling ready (exit code %lu). Check mab_worker.log for details.",
+             prefix, (unsigned long)exit_code);
     } else {
         post("%s error: Timeout waiting for Python worker. Check mab_worker.log for details.", prefix);
     }

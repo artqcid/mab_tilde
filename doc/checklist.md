@@ -256,6 +256,13 @@ _Einlese-Reihenfolge: checklist.md → code_wiki.md → query_code_wiki → quer
   - **Fix:** `infer_method()`: fuer `decode`/`prior` jetzt `expected_new = block_size` statt der Ratio-Formel. Der History-Prepend operiert auf der Latent-Seite, die Output-Domaene ist unabhaengig von `in_ratio`.
   - **Dateien:** `inference_worker.py:1001-1003`.
 
+- [x] **Bug 15 – Worker-Timeout beim ersten (kalten) Load** ✅ **FIXED** (2026-08-13)
+  - **Symptom:** Erster Patch-Load wirft `Timeout waiting for Python worker`. Nach Schliessen + erneutem Oeffnen des Patches funktioniert es. Betroffen v.a. grosse Modelle (z.B. `thirdModelTest3000Epoche.ts`, 48 MB).
+  - **Ursache:** Ready-Event wird vom Worker erst NACH `import torch` + `load_model()` gesetzt (`inference_worker.py:1581`). `init_worker` wartete hart 10 s (`WaitForSingleObject(ready_event, 10000)`). Kalter Start (leerer Datei-Cache, erster PyTorch-Import, Windows-Defender-Scan der frischen `.mxe64`/`.py`/`.ts`) summiert > 10 s; zweiter Load ist warm → < 10 s.
+  - **Fix (mab_tilde.cpp:595-673):** Robustes Warten statt eines einzelnen `WaitForSingleObject`: Poll alle 100 ms bis 120 s Gesamt-Timeout; bricht sofort ab, wenn der Worker-Prozess vor dem Ready-Signal stirbt (`GetExitCodeProcess` → Exit-Code wird geloggt); Info-`post()` nach 10 s (`"Worker still starting (cold start / model load) - please wait..."`).
+  - **Dateien:** `mab_tilde.cpp:595-673` (`init_worker`).
+  - **Test:** Build + alle 22 C++-Tests gruen. Max-Runtime-Verifikation (kalter Erst-Load) offen.
+
 ---
 
 ## Max-Runtime-Verifikation

@@ -77,12 +77,12 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\mab_mcp_server.py:1366` (function) [mab_4cb2fc2c4141]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\MCP_README.md:19` (section) [mab_fc2102a2bbc8]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\MCP_README.md:58` (section) [mab_a423382915c6]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:15` (section) [mab_634e17f3172a]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\nn_tilde_parity.md:1` (section) [mab_1f73bf38e83c]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\nn_tilde_parity.md:8` (section) [mab_5205d3d98c6a]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\nn_tilde_parity.md:119` (section) [mab_3e72bacab4f4]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\nn_tilde_parity.md:127` (section) [mab_7671415bab00]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\nn_tilde_reference.md:100` (section) [mab_6f34fd6630b6]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\nn_tilde_reference.md:366` (section) [mab_f5fe9e8a1099]
 - `Workflow (verpflichtend)` (section, Zeilen 15-36) - ## Workflow (verpflichtend)
 - `Quick facts` (section, Zeilen 37-47) - ## Quick facts
 - `Global rules` (section, Zeilen 48-50) - ## Global rules
@@ -97,7 +97,7 @@ Symbole:
 - `Verwendung` (section, Zeilen 11-12) - ## Verwendung
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:115` (section) [mab_b15d84b8687f]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\benchmark_models.py:1` (module) [mab_a7c897b974b4]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:314` (section) [mab_f514145ceddc]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:315` (section) [mab_3925523b9fae]
 - `Manueller Start` (section, Zeilen 13-18) - ### Manueller Start
 - `Über opencode (empfohlen)` (section, Zeilen 19-45) - ### Über opencode (empfohlen)
 - `Über VS Code MCP Integration` (section, Zeilen 46-51) - ### Über VS Code MCP Integration
@@ -128,15 +128,15 @@ Symbole:
 - ``mc.mab~` / `mcs.mab~`` (section, Zeilen 9-16) - ### `mc.mab~` / `mcs.mab~`
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\AGENTS.md:5` (section) [mab_5cfc914521d5]
 - ``mab.info`` (section, Zeilen 17-20) - ### `mab.info`
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:5` (section) [mab_90ceaccb3d33]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:15` (section) [mab_634e17f3172a]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:61` (section) [mab_a3d5c012fd4e]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:72` (section) [mab_43f0307a86f7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\nn_tilde_parity.md:8` (section) [mab_5205d3d98c6a]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\nn_tilde_parity.md:95` (section) [mab_75a0185783ea]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\nn_tilde_parity.md:119` (section) [mab_3e72bacab4f4]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\test_strategy.md:7` (section) [mab_c20350073d38]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:290` (section) [mab_f3559d541134]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:5` (section) [mab_90ceaccb3d33]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:15` (section) [mab_634e17f3172a]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:62` (section) [mab_0dfce5b70ffb]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:73` (section) [mab_d7f839e4cdec]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:291` (section) [mab_ac958322276b]
 - `2. Messages` (section, Zeilen 21-24) - ## 2. Messages
 - `3. Architecture rules` (section, Zeilen 25-35) - ## 3. Architecture rules
 - `4. Build` (section, Zeilen 36-65) - ## 4. Build
@@ -166,26 +166,26 @@ Symbole:
 - `mab~ – Offene Tasks` (section, Zeilen 1-5) - # mab~ – Offene Tasks
 - `Bugs` (section, Zeilen 6-30) - ## Bugs
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\AGENTS.md:5` (section) [mab_5cfc914521d5]
-- `Feature Requests` (section, Zeilen 31-55) - ## Feature Requests
-- `Feature Requests (offen)` (section, Zeilen 56-59) - ## Feature Requests (offen)
-- `Bugs (offen)` (section, Zeilen 60-202) - ## Bugs (offen)
-- `Max-Runtime-Verifikation` (section, Zeilen 203-222) - ## Max-Runtime-Verifikation
-- `Parity-Luecken (nn_tilde)` (section, Zeilen 223-237) - ## Parity-Luecken (nn_tilde)
-- `Phase 5 – mc.mab~ (Multichannel)` (section, Zeilen 238-239) - ## Phase 5 – mc.mab~ (Multichannel)
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:354` (section) [mab_ebefecf14a7b]
-- `✅ Abgeschlossen` (section, Zeilen 240-281) - ### ✅ Abgeschlossen
-- `Phase 6 – mcs.mab~ (Batched Multichannel)` (section, Zeilen 282-283) - ## Phase 6 – mcs.mab~ (Batched Multichannel)
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:417` (section) [mab_3a4dacdd7522]
-- `✅ Implementiert (2026-08-11)` (section, Zeilen 284-317) - ### ✅ Implementiert (2026-08-11)
-- `RAG/MCP-Verbesserungen` (section, Zeilen 318-319) - ## RAG/MCP-Verbesserungen
-- `Abgeschlossen (implementiert in Schritt 1–6 von rag_improvements.md)` (section, Zeilen 320-343) - ### Abgeschlossen (implementiert in Schritt 1–6 von rag_improvements.md)
-- `Offen (niedrige bis mittlere Priorität)` (section, Zeilen 344-353) - ### Offen (niedrige bis mittlere Priorität)
-- `Abgeschlossen (R5, R3, R6, R7 in diesem Durchlauf)` (section, Zeilen 354-365) - ### Abgeschlossen (R5, R3, R6, R7 in diesem Durchlauf)
-- `Offene OpenCode-Konfiguration` (section, Zeilen 366-376) - ### Offene OpenCode-Konfiguration
-- `Offline-Tests (ohne Max Runtime) – siehe doc/test_strategy.md` (section, Zeilen 377-378) - ## Offline-Tests (ohne Max Runtime) – siehe doc/test_strategy.md
-- `✅ Abgeschlossen` (section, Zeilen 379-448) - ### ✅ Abgeschlossen
-- `Refactoring` (section, Zeilen 449-522) - ## Refactoring
-- `Feature Requests` (section, Zeilen 523-628) - ## Feature Requests
+- `Feature Requests` (section, Zeilen 31-113) - ## Feature Requests
+- `Feature Requests (offen)` (section, Zeilen 114-117) - ## Feature Requests (offen)
+- `Bugs (offen)` (section, Zeilen 118-267) - ## Bugs (offen)
+- `Max-Runtime-Verifikation` (section, Zeilen 268-287) - ## Max-Runtime-Verifikation
+- `Parity-Luecken (nn_tilde)` (section, Zeilen 288-302) - ## Parity-Luecken (nn_tilde)
+- `Phase 5 – mc.mab~ (Multichannel)` (section, Zeilen 303-304) - ## Phase 5 – mc.mab~ (Multichannel)
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:355` (section) [mab_d6b68c3dcd96]
+- `✅ Abgeschlossen` (section, Zeilen 305-346) - ### ✅ Abgeschlossen
+- `Phase 6 – mcs.mab~ (Batched Multichannel)` (section, Zeilen 347-348) - ## Phase 6 – mcs.mab~ (Batched Multichannel)
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:418` (section) [mab_11f476e0203f]
+- `✅ Implementiert (2026-08-11)` (section, Zeilen 349-382) - ### ✅ Implementiert (2026-08-11)
+- `RAG/MCP-Verbesserungen` (section, Zeilen 383-384) - ## RAG/MCP-Verbesserungen
+- `Abgeschlossen (implementiert in Schritt 1–6 von rag_improvements.md)` (section, Zeilen 385-408) - ### Abgeschlossen (implementiert in Schritt 1–6 von rag_improvements.md)
+- `Offen (niedrige bis mittlere Priorität)` (section, Zeilen 409-418) - ### Offen (niedrige bis mittlere Priorität)
+- `Abgeschlossen (R5, R3, R6, R7 in diesem Durchlauf)` (section, Zeilen 419-430) - ### Abgeschlossen (R5, R3, R6, R7 in diesem Durchlauf)
+- `Offene OpenCode-Konfiguration` (section, Zeilen 431-441) - ### Offene OpenCode-Konfiguration
+- `Offline-Tests (ohne Max Runtime) – siehe doc/test_strategy.md` (section, Zeilen 442-443) - ## Offline-Tests (ohne Max Runtime) – siehe doc/test_strategy.md
+- `✅ Abgeschlossen` (section, Zeilen 444-513) - ### ✅ Abgeschlossen
+- `Refactoring` (section, Zeilen 514-587) - ## Refactoring
+- `Feature Requests` (section, Zeilen 588-693) - ## Feature Requests
 
 ## C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md
 
@@ -197,19 +197,19 @@ Symbole:
 - `2. Implemented Phases (History)` (section, Zeilen 15-29) - ## 2. Implemented Phases (History)
 - `3. Architecture Decisions` (section, Zeilen 30-31) - ## 3. Architecture Decisions
 - `3.1 Process Isolation` (section, Zeilen 32-37) - ### 3.1 Process Isolation
-- `3.2 Lock-Free IPC` (section, Zeilen 38-43) - ### 3.2 Lock-Free IPC
-- `3.3 Async Initialization` (section, Zeilen 44-48) - ### 3.3 Async Initialization
-- `3.4 RT Safety` (section, Zeilen 49-55) - ### 3.4 RT Safety
-- `3.5 Method-Aware IO (Header v2)` (section, Zeilen 56-60) - ### 3.5 Method-Aware IO (Header v2)
-- `4. Comparison with nn_tilde` (section, Zeilen 61-71) - ## 4. Comparison with nn_tilde
-- `5. Success Criteria` (section, Zeilen 72-80) - ## 5. Success Criteria
-- `6. Audio Performance Analysis (Phase 3 / Header v2)` (section, Zeilen 81-82) - ## 6. Audio Performance Analysis (Phase 3 / Header v2)
-- `6.1 Latency Budget` (section, Zeilen 83-94) - ### 6.1 Latency Budget
-- `6.2 DSP Tick Operations (perform64)` (section, Zeilen 95-104) - ### 6.2 DSP Tick Operations (perform64)
-- `6.3 Buffering Model` (section, Zeilen 105-109) - ### 6.3 Buffering Model
-- `6.4 Worst-Case Scenarios` (section, Zeilen 110-118) - ### 6.4 Worst-Case Scenarios
-- `7. Architecture Improvement History` (section, Zeilen 119-122) - ## 7. Architecture Improvement History
-- `Completed (A1–A11)` (section, Zeilen 123-137) - ### Completed (A1–A11)
+- `3.2 Lock-Free IPC` (section, Zeilen 38-44) - ### 3.2 Lock-Free IPC
+- `3.3 Async Initialization` (section, Zeilen 45-49) - ### 3.3 Async Initialization
+- `3.4 RT Safety` (section, Zeilen 50-56) - ### 3.4 RT Safety
+- `3.5 Method-Aware IO (Header v2)` (section, Zeilen 57-61) - ### 3.5 Method-Aware IO (Header v2)
+- `4. Comparison with nn_tilde` (section, Zeilen 62-72) - ## 4. Comparison with nn_tilde
+- `5. Success Criteria` (section, Zeilen 73-81) - ## 5. Success Criteria
+- `6. Audio Performance Analysis (Phase 3 / Header v2)` (section, Zeilen 82-83) - ## 6. Audio Performance Analysis (Phase 3 / Header v2)
+- `6.1 Latency Budget` (section, Zeilen 84-95) - ### 6.1 Latency Budget
+- `6.2 DSP Tick Operations (perform64)` (section, Zeilen 96-105) - ### 6.2 DSP Tick Operations (perform64)
+- `6.3 Buffering Model` (section, Zeilen 106-110) - ### 6.3 Buffering Model
+- `6.4 Worst-Case Scenarios` (section, Zeilen 111-119) - ### 6.4 Worst-Case Scenarios
+- `7. Architecture Improvement History` (section, Zeilen 120-123) - ## 7. Architecture Improvement History
+- `Completed (A1–A11)` (section, Zeilen 124-138) - ### Completed (A1–A11)
 
 ## C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\nn_tilde_parity.md
 
@@ -281,12 +281,12 @@ Symbole:
 - `Zentrale Datenstrukturen` (section, Zeilen 21-22) - ## Zentrale Datenstrukturen
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\wiki_audit_2026-08-11.md:15` (section) [mab_664c6595d3ba]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\wiki_audit_2026-08-11.md:168` (section) [mab_ba8e93b19c7f]
-- ``t_mab_tilde` (mab_tilde.cpp:68-125) – Haupt-Objekt von `mab~` und `mc.mab~`` (section, Zeilen 23-93) - ### `t_mab_tilde` (mab_tilde.cpp:68-125) – Haupt-Objekt von `mab~` und `mc.mab~`
-- ``t_mab_info` (mab_info.cpp:29-51) – mab.info Modell-Inspektor` (section, Zeilen 94-134) - ### `t_mab_info` (mab_info.cpp:29-51) – mab.info Modell-Inspektor
-- ``SharedMemoryHeader` v4 (mab_tilde.cpp:42-70, inference_worker.py:65-97) — 204 bytes` (section, Zeilen 135-142) - ### `SharedMemoryHeader` v4 (mab_tilde.cpp:42-70, inference_worker.py:65-97) — 204 bytes
-- ``ControlRingBuffer` (mab_tilde.cpp:24-28, inference_worker.py:95-101)` (section, Zeilen 143-147) - ### `ControlRingBuffer` (mab_tilde.cpp:24-28, inference_worker.py:95-101)
-- ``WorkerModelInfo` (worker_launch.h:24-37)` (section, Zeilen 148-160) - ### `WorkerModelInfo` (worker_launch.h:24-37)
-- `Threading-Modell` (section, Zeilen 161-173) - ## Threading-Modell
+- ``t_mab_tilde` (mab_tilde.cpp:68-125) – Haupt-Objekt von `mab~` und `mc.mab~`` (section, Zeilen 23-94) - ### `t_mab_tilde` (mab_tilde.cpp:68-125) – Haupt-Objekt von `mab~` und `mc.mab~`
+- ``t_mab_info` (mab_info.cpp:29-51) – mab.info Modell-Inspektor` (section, Zeilen 95-135) - ### `t_mab_info` (mab_info.cpp:29-51) – mab.info Modell-Inspektor
+- ``SharedMemoryHeader` v4 (mab_tilde.cpp:42-70, inference_worker.py:65-97) — 204 bytes` (section, Zeilen 136-143) - ### `SharedMemoryHeader` v4 (mab_tilde.cpp:42-70, inference_worker.py:65-97) — 204 bytes
+- ``ControlRingBuffer` (mab_tilde.cpp:24-28, inference_worker.py:95-101)` (section, Zeilen 144-148) - ### `ControlRingBuffer` (mab_tilde.cpp:24-28, inference_worker.py:95-101)
+- ``WorkerModelInfo` (worker_launch.h:24-37)` (section, Zeilen 149-161) - ### `WorkerModelInfo` (worker_launch.h:24-37)
+- `Threading-Modell` (section, Zeilen 162-174) - ## Threading-Modell
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\mab_mcp_server.py:557` (class) [mab_098a2d6b3756]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\mab_mcp_server.py:1088` (method) [mab_f2112ab07112]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\nn_tilde_reference.md:353` (section) [mab_912336da49b7]
@@ -294,15 +294,15 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\wiki_audit_2026-08-11.md:169` (section) [mab_df4dd2b7980c]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\wiki_audit_2026-08-11.md:194` (section) [mab_8e123af67371]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\WORKSPACE_AGENT_PROMPT.md:74` (section) [mab_5a38cfc04320]
-- `Job Object – Worker-Zombie-Prävention (Bug 7)` (section, Zeilen 174-180) - ### Job Object – Worker-Zombie-Prävention (Bug 7)
-- `MC-Kanalerkennung (Bug 6)` (section, Zeilen 181-184) - ### MC-Kanalerkennung (Bug 6)
-- `decode/prior Batch-Dimension (Bug 9)` (section, Zeilen 185-190) - ### decode/prior Batch-Dimension (Bug 9)
-- `Message-Flows` (section, Zeilen 191-192) - ## Message-Flows
-- `Modell-Initialisierung` (section, Zeilen 193-209) - ### Modell-Initialisierung
-- `Audio-Durchsatz (pro DSP-Tick) — Ring v4 (Bug 11)` (section, Zeilen 210-226) - ### Audio-Durchsatz (pro DSP-Tick) — Ring v4 (Bug 11)
-- `⚠️ Bekannte Pipeline-Defekte (Bug 11 — behoben in v4)` (section, Zeilen 227-231) - ### ⚠️ Bekannte Pipeline-Defekte (Bug 11 — behoben in v4)
-- `Message-Weiterleitung (set/get/method/reload/anything)` (section, Zeilen 232-242) - ### Message-Weiterleitung (set/get/method/reload/anything)
-- `Konstanten` (section, Zeilen 243-258) - ## Konstanten
+- `Job Object – Worker-Zombie-Prävention (Bug 7)` (section, Zeilen 175-181) - ### Job Object – Worker-Zombie-Prävention (Bug 7)
+- `MC-Kanalerkennung (Bug 6)` (section, Zeilen 182-185) - ### MC-Kanalerkennung (Bug 6)
+- `decode/prior Batch-Dimension (Bug 9)` (section, Zeilen 186-191) - ### decode/prior Batch-Dimension (Bug 9)
+- `Message-Flows` (section, Zeilen 192-193) - ## Message-Flows
+- `Modell-Initialisierung` (section, Zeilen 194-210) - ### Modell-Initialisierung
+- `Audio-Durchsatz (pro DSP-Tick) — Ring v4 (Bug 11)` (section, Zeilen 211-227) - ### Audio-Durchsatz (pro DSP-Tick) — Ring v4 (Bug 11)
+- `⚠️ Bekannte Pipeline-Defekte (Bug 11 — behoben in v4)` (section, Zeilen 228-232) - ### ⚠️ Bekannte Pipeline-Defekte (Bug 11 — behoben in v4)
+- `Message-Weiterleitung (set/get/method/reload/anything)` (section, Zeilen 233-243) - ### Message-Weiterleitung (set/get/method/reload/anything)
+- `Konstanten` (section, Zeilen 244-259) - ## Konstanten
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\mab_mcp_server.py:277` (function) [mab_5a566f6e86b6]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\mab_mcp_server.py:557` (class) [mab_098a2d6b3756]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\mab_mcp_server.py:1088` (method) [mab_f2112ab07112]
@@ -313,44 +313,44 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\wiki_audit_2026-08-11.md:115` (section) [mab_023c9777ef93]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\wiki_audit_2026-08-11.md:157` (section) [mab_0abce1aabf91]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\wiki_audit_2026-08-11.md:171` (section) [mab_9def669c60e7]
-- `Build-Targets (CMakeLists.txt)` (section, Zeilen 259-289) - ## Build-Targets (CMakeLists.txt)
-- `Datei-Zweck-Übersicht (nur Projektcode, kein SDK)` (section, Zeilen 290-313) - ## Datei-Zweck-Übersicht (nur Projektcode, kein SDK)
-- `Max-SDK-Referenz (kompakt)` (section, Zeilen 314-342) - ## Max-SDK-Referenz (kompakt)
-- `Architektur-Entscheidungen (aus mab_dev_architecture.md)` (section, Zeilen 343-353) - ## Architektur-Entscheidungen (aus mab_dev_architecture.md)
-- `Phase 5 – mc.mab~ (Multichannel)` (section, Zeilen 354-355) - ## Phase 5 – mc.mab~ (Multichannel)
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:238` (section) [mab_f72f22f2043f]
-- `Design` (section, Zeilen 356-394) - ### Design
+- `Build-Targets (CMakeLists.txt)` (section, Zeilen 260-290) - ## Build-Targets (CMakeLists.txt)
+- `Datei-Zweck-Übersicht (nur Projektcode, kein SDK)` (section, Zeilen 291-314) - ## Datei-Zweck-Übersicht (nur Projektcode, kein SDK)
+- `Max-SDK-Referenz (kompakt)` (section, Zeilen 315-343) - ## Max-SDK-Referenz (kompakt)
+- `Architektur-Entscheidungen (aus mab_dev_architecture.md)` (section, Zeilen 344-354) - ## Architektur-Entscheidungen (aus mab_dev_architecture.md)
+- `Phase 5 – mc.mab~ (Multichannel)` (section, Zeilen 355-356) - ## Phase 5 – mc.mab~ (Multichannel)
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:303` (section) [mab_143af82bc7e5]
+- `Design` (section, Zeilen 357-395) - ### Design
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\nn_tilde_parity.md:67` (section) [mab_5e8e6d126476]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:60` (section) [mab_2ed8f254f455]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:284` (section) [mab_1529be7d259f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:1284` (module) [mab_f66d0615488f]
-- `MC-Funktionsübersicht (mab_tilde.cpp)` (section, Zeilen 395-406) - ### MC-Funktionsübersicht (mab_tilde.cpp)
-- `Threading-Regeln (Phase 5)` (section, Zeilen 407-416) - ### Threading-Regeln (Phase 5)
-- `Phase 6 – mcs.mab~ (Batched Multichannel)` (section, Zeilen 417-418) - ## Phase 6 – mcs.mab~ (Batched Multichannel)
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:282` (section) [mab_83546e315589]
-- `Design` (section, Zeilen 419-458) - ### Design
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:1335` (module) [mab_5650c0fb67e6]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:118` (section) [mab_0862f74eaaa5]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:349` (section) [mab_e895bcefe5e1]
+- `MC-Funktionsübersicht (mab_tilde.cpp)` (section, Zeilen 396-407) - ### MC-Funktionsübersicht (mab_tilde.cpp)
+- `Threading-Regeln (Phase 5)` (section, Zeilen 408-417) - ### Threading-Regeln (Phase 5)
+- `Phase 6 – mcs.mab~ (Batched Multichannel)` (section, Zeilen 418-419) - ## Phase 6 – mcs.mab~ (Batched Multichannel)
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:347` (section) [mab_651d19301f03]
+- `Design` (section, Zeilen 420-459) - ### Design
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\nn_tilde_parity.md:67` (section) [mab_5e8e6d126476]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:60` (section) [mab_2ed8f254f455]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:284` (section) [mab_1529be7d259f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:1284` (module) [mab_f66d0615488f]
-- `mcs-Funktionsübersicht (mab_tilde.cpp)` (section, Zeilen 459-470) - ### mcs-Funktionsübersicht (mab_tilde.cpp)
-- `Threading-Regeln (Phase 6)` (section, Zeilen 471-478) - ### Threading-Regeln (Phase 6)
-- `Testing – Offline-Tests (ohne Max Runtime)` (section, Zeilen 479-485) - ## Testing – Offline-Tests (ohne Max Runtime)
-- `Modell-Inventar & Status (23 TorchScript)` (section, Zeilen 486-507) - ### Modell-Inventar & Status (23 TorchScript)
-- `nn_tilde-Parität: Testrelevante Messages & Attribute` (section, Zeilen 508-528) - ### nn_tilde-Parität: Testrelevante Messages & Attribute
-- `Python-Funktionen für Testing (inference_worker.py)` (section, Zeilen 529-561) - ### Python-Funktionen für Testing (inference_worker.py)
-- `RAVE-Methoden-Parameter-Konvention` (section, Zeilen 562-575) - ### RAVE-Methoden-Parameter-Konvention
-- `decode: input (ci, bs) → z = input[:, -1:] → model(z) → output` (section, Zeilen 576-576) - # decode: input (ci, bs) → z = input[:, -1:] → model(z) → output
-- `prior:  input (ci, bs) → z = input[:, -1:] → model(z) → output` (section, Zeilen 577-582) - # prior:  input (ci, bs) → z = input[:, -1:] → model(z) → output
-- `Test-Ausführung (Lokal, ohne Max)` (section, Zeilen 583-585) - ### Test-Ausführung (Lokal, ohne Max)
-- `Alle Python-Tests:` (section, Zeilen 586-588) - # Alle Python-Tests:
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:1335` (module) [mab_5650c0fb67e6]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:118` (section) [mab_0862f74eaaa5]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:349` (section) [mab_e895bcefe5e1]
+- `mcs-Funktionsübersicht (mab_tilde.cpp)` (section, Zeilen 460-471) - ### mcs-Funktionsübersicht (mab_tilde.cpp)
+- `Threading-Regeln (Phase 6)` (section, Zeilen 472-479) - ### Threading-Regeln (Phase 6)
+- `Testing – Offline-Tests (ohne Max Runtime)` (section, Zeilen 480-486) - ## Testing – Offline-Tests (ohne Max Runtime)
+- `Modell-Inventar & Status (23 TorchScript)` (section, Zeilen 487-508) - ### Modell-Inventar & Status (23 TorchScript)
+- `nn_tilde-Parität: Testrelevante Messages & Attribute` (section, Zeilen 509-529) - ### nn_tilde-Parität: Testrelevante Messages & Attribute
+- `Python-Funktionen für Testing (inference_worker.py)` (section, Zeilen 530-562) - ### Python-Funktionen für Testing (inference_worker.py)
+- `RAVE-Methoden-Parameter-Konvention` (section, Zeilen 563-576) - ### RAVE-Methoden-Parameter-Konvention
+- `decode: input (ci, bs) → z = input[:, -1:] → model(z) → output` (section, Zeilen 577-577) - # decode: input (ci, bs) → z = input[:, -1:] → model(z) → output
+- `prior:  input (ci, bs) → z = input[:, -1:] → model(z) → output` (section, Zeilen 578-583) - # prior:  input (ci, bs) → z = input[:, -1:] → model(z) → output
+- `Test-Ausführung (Lokal, ohne Max)` (section, Zeilen 584-586) - ### Test-Ausführung (Lokal, ohne Max)
+- `Alle Python-Tests:` (section, Zeilen 587-589) - # Alle Python-Tests:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\test_strategy.md:336` (section) [mab_015a9acaf8fe]
-- `Nur Modell-Lade-Tests:` (section, Zeilen 589-591) - # Nur Modell-Lade-Tests:
-- `Nur mab.info-Tests:` (section, Zeilen 592-594) - # Nur mab.info-Tests:
-- `Nur Dispatch-Tests:` (section, Zeilen 595-597) - # Nur Dispatch-Tests:
-- `GPU-Tests (nur mit CUDA):` (section, Zeilen 598-600) - # GPU-Tests (nur mit CUDA):
-- `C++-Tests bauen + ausführen:` (section, Zeilen 601-605) - # C++-Tests bauen + ausführen:
-- `Externe Referenzen` (section, Zeilen 606-616) - ### Externe Referenzen
+- `Nur Modell-Lade-Tests:` (section, Zeilen 590-592) - # Nur Modell-Lade-Tests:
+- `Nur mab.info-Tests:` (section, Zeilen 593-595) - # Nur mab.info-Tests:
+- `Nur Dispatch-Tests:` (section, Zeilen 596-598) - # Nur Dispatch-Tests:
+- `GPU-Tests (nur mit CUDA):` (section, Zeilen 599-601) - # GPU-Tests (nur mit CUDA):
+- `C++-Tests bauen + ausführen:` (section, Zeilen 602-606) - # C++-Tests bauen + ausführen:
+- `Externe Referenzen` (section, Zeilen 607-617) - ### Externe Referenzen
 
 ## C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\test_strategy.md
 
@@ -388,7 +388,7 @@ Symbole:
 - `7. Geschätzter Zeitaufwand (Dev-Agent-Tasks)` (section, Zeilen 317-332) - ## 7. Geschätzter Zeitaufwand (Dev-Agent-Tasks)
 - `8. Test-Ausführung` (section, Zeilen 333-335) - ## 8. Test-Ausführung
 - `Alle Python-Tests:` (section, Zeilen 336-338) - # Alle Python-Tests:
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:586` (section) [mab_172c6b2f19b8]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:587` (section) [mab_348f99ad06a4]
 - `Nur Modell-bezogene Tests:` (section, Zeilen 339-341) - # Nur Modell-bezogene Tests:
 - `GPU-Tests (lokal, CUDA):` (section, Zeilen 342-344) - # GPU-Tests (lokal, CUDA):
 - `Inklusive Audio-Qualität:` (section, Zeilen 345-347) - # Inklusive Audio-Qualität:
@@ -404,7 +404,7 @@ Symbole:
 - `9.2 Audio-Interface (NUR für Max-Runtime-Tests)` (section, Zeilen 394-411) - ### 9.2 Audio-Interface (NUR für Max-Runtime-Tests)
 - `Max Audio-Einstellungen (empfohlen)` (section, Zeilen 412-421) - #### Max Audio-Einstellungen (empfohlen)
 - `Begründung` (section, Zeilen 422-433) - #### Begründung
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:449` (section) [mab_88d41f187e46]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:514` (section) [mab_a717ebe2437b]
 
 ## C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md
 
@@ -473,26 +473,26 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\mab_mcp_server.py:557` (class) [mab_098a2d6b3756]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\mab_mcp_server.py:1088` (method) [mab_f2112ab07112]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\nn_tilde_reference.md:353` (section) [mab_912336da49b7]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:1` (section) [mab_577ae2602c01]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:161` (section) [mab_65b1e5300665]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\WORKSPACE_AGENT_PROMPT.md:74` (section) [mab_5a38cfc04320]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:1` (section) [mab_577ae2602c01]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:162` (section) [mab_a3a635deebb1]
 - `Message-Flow` (section, Zeilen 170-170) - ### Message-Flow
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:94` (section) [mab_eeb49c4c042e]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:95` (section) [mab_a1ff02787272]
 - `Konstanten` (section, Zeilen 171-171) - ### Konstanten
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\mab_mcp_server.py:277` (function) [mab_5a566f6e86b6]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\mab_mcp_server.py:557` (class) [mab_098a2d6b3756]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\mab_mcp_server.py:1088` (method) [mab_f2112ab07112]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\mab_mcp_server.py:1257` (function) [mab_6eca5cd0f4a7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\nn_tilde_parity.md:143` (section) [mab_3538644b75e2]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:1` (section) [mab_577ae2602c01]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:243` (section) [mab_cc083358bdf1]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\AGENTS.md:15` (section) [mab_e451adb6adbd]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\WORKSPACE_AGENT_PROMPT.md:74` (section) [mab_5a38cfc04320]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:1` (section) [mab_577ae2602c01]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:244` (section) [mab_ceb77969ee51]
 - `Build-Targets` (section, Zeilen 172-172) - ### Build-Targets
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:449` (section) [mab_88d41f187e46]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:259` (section) [mab_de0d561aec7e]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:260` (section) [mab_49ea2c4ee552]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:514` (section) [mab_a717ebe2437b]
 - `Datei-Zweck-Übersicht` (section, Zeilen 173-184) - ### Datei-Zweck-Übersicht
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:290` (section) [mab_f3559d541134]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:291` (section) [mab_ac958322276b]
 - `Schritt 3: Re-Index und Verifikation` (section, Zeilen 185-193) - ### Schritt 3: Re-Index und Verifikation
 - `5. Geschätzte Token-Ersparnis` (section, Zeilen 194-205) - ## 5. Geschätzte Token-Ersparnis
 - `6. Nächste Schritte` (section, Zeilen 206-213) - ## 6. Nächste Schritte
@@ -507,7 +507,7 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\wiki_audit_2026-08-11.md:28` (section) [mab_47152b6393d4]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:59` (function) [mab_a04ee96f88c7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_python_shared_memory.py:34` (constant) [mab_fd55b7733a0f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:537` (function) [mab_1a802ac35a82]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:551` (function) [mab_044b231c1804]
 - `PAGE_READWRITE` (constant, Zeilen 49-49) - PAGE_READWRITE     = 0x04   # 0x01 wäre PAGE_NOACCESS -> CreateFileMappingW schlägt fehl (WinError 87)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\wiki_audit_2026-08-11.md:28` (section) [mab_47152b6393d4]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:59` (function) [mab_a04ee96f88c7]
@@ -527,64 +527,64 @@ Symbole:
 - `MAGIC_NUMBER` (constant, Zeilen 54-54) - MAGIC_NUMBER = 0x4D414254  # 'MABT'
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\mab_mcp_server.py:277` (function) [mab_5a566f6e86b6]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\wiki_audit_2026-08-11.md:28` (section) [mab_47152b6393d4]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:291` (constant) [mab_5176c99aecd6]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:286` (module) [mab_02567c00f38f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:299` (function) [mab_a62ab3f23c69]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_python_shared_memory.py:29` (constant) [mab_f9d10c705285]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_python_shared_memory.py:38` (class) [mab_85640f129721]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_python_shared_memory.py:41` (method) [mab_9cbbb0de6bb6]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:243` (section) [mab_cc083358bdf1]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_size_extraction.py:1` (module) [mab_1fad8853a557]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_size_extraction.py:49` (class) [mab_acb152171aca]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_size_extraction.py:52` (method) [mab_5358458d897c]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_size_extraction.py:56` (method) [mab_b5c2bb7015e6]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:244` (section) [mab_ceb77969ee51]
 - `MODEL_API_ROOT` (constant, Zeilen 59-59) - MODEL_API_ROOT = "https://play.forum.ircam.fr/rave-vst-api/"
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\wiki_audit_2026-08-11.md:28` (section) [mab_47152b6393d4]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_attribute_passthrough.py:1` (module) [mab_57098d1cc64a]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_attribute_passthrough.py:205` (class) [mab_9550695f48f4]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_attribute_passthrough.py:206` (method) [mab_f2a53e3707b4]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:243` (section) [mab_cc083358bdf1]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:244` (section) [mab_ceb77969ee51]
 - `SharedMemoryHeader` (class, Zeilen 65-99) - class SharedMemoryHeader(ctypes.Structure) - Header structure that Python creates and C++ reads.
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:38` (section) [mab_1d6aebbb3abe]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:12` (class) [mab_8a1b5e451830]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:44` (class) [mab_3518c375a1fb]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:14` (class) [mab_7c28c9e004d5]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:59` (function) [mab_a04ee96f88c7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:174` (function) [mab_1217cd25cc2b]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:239` (class) [mab_841c08b6c11f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:286` (module) [mab_02567c00f38f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:299` (function) [mab_a62ab3f23c69]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:524` (function) [mab_3505d877152d]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:1` (module) [mab_f9114dba5b7e]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:30` (class) [mab_ea2f0c2cf7c7]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:53` (module) [mab_a780856d383c]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:57` (class) [mab_4ece0a797b10]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:367` (function) [mab_1e74251ac998]
 - `CONTROL_RING_SIZE` (constant, Zeilen 102-102) - CONTROL_RING_SIZE = 256
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\mab_mcp_server.py:1257` (function) [mab_6eca5cd0f4a7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\wiki_audit_2026-08-11.md:28` (section) [mab_47152b6393d4]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_rag_wiki.py:42` (constant) [mab_a17335c9e595]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_rag_wiki.py:80` (class) [mab_d12ec9c8de20]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_rag_wiki.py:105` (method) [mab_7253565cc4fd]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:243` (section) [mab_cc083358bdf1]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_size_extraction.py:122` (class) [mab_65ae964d95dc]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_size_extraction.py:125` (method) [mab_a18a07d5b09a]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_size_extraction.py:130` (method) [mab_172b354267bf]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:244` (section) [mab_ceb77969ee51]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:23` (constant) [mab_b28aae332450]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:1` (module) [mab_73830bb5d42d]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:27` (class) [mab_0416dd0298b3]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:642` (function) [mab_edcf89ebe28e]
 - `CONTROL_MSG_SIZE` (constant, Zeilen 103-103) - CONTROL_MSG_SIZE = 256
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\mab_mcp_server.py:1257` (function) [mab_6eca5cd0f4a7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\wiki_audit_2026-08-11.md:28` (section) [mab_47152b6393d4]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:243` (section) [mab_cc083358bdf1]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_size_extraction.py:122` (class) [mab_65ae964d95dc]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_size_extraction.py:125` (method) [mab_a18a07d5b09a]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_size_extraction.py:135` (method) [mab_6cde100b4d1c]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:244` (section) [mab_ceb77969ee51]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:24` (constant) [mab_b5f5386bfc1f]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:1` (module) [mab_73830bb5d42d]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:27` (class) [mab_0416dd0298b3]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:642` (function) [mab_edcf89ebe28e]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:671` (function) [mab_98505ec488fa]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:810` (function) [mab_66605823751e]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:856` (function) [mab_195e06dd367d]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:689` (function) [mab_9832d9821891]
 - `ControlRingBuffer` (class, Zeilen 105-111) - class ControlRingBuffer(ctypes.Structure) - Lock-free SPSC ring buffer for control messages.
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:37` (class) [mab_30fc7e8e80af]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:44` (class) [mab_3518c375a1fb]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:449` (section) [mab_88d41f187e46]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_size_extraction.py:122` (class) [mab_65ae964d95dc]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_size_extraction.py:125` (method) [mab_a18a07d5b09a]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:23` (section) [mab_f10055e3e333]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:143` (section) [mab_669e5764abf1]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:232` (section) [mab_c7eb78d4a5de]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:144` (section) [mab_fad80abaa309]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:233` (section) [mab_d6a73651439e]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:27` (class) [mab_0416dd0298b3]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:76` (class) [mab_0abfefc5457a]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:537` (function) [mab_1a802ac35a82]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_size_extraction.py:122` (class) [mab_65ae964d95dc]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:551` (function) [mab_044b231c1804]
 - `_method_id` (function, Zeilen 114-119) - def _method_id(name) - Stable 32-bit hash for method names (matches C++ side).
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_shared_memory_v2.py:1` (module) [mab_4f38314eef8e]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_shared_memory_v2.py:82` (class) [mab_b4fdc5c6e05b]
@@ -604,9 +604,9 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_rag_wiki.py:265` (method) [mab_f9eee289bd1a]
 - `SharedMemoryManager.__init__` (method, Zeilen 137-220) - def __init__(self, shm_name, ready_event_name, block_size, channels_in, channels_out, input_ready_event_name='', n_batches=1) - buffers are sized for the MAXIMUM channel counts across all methods,
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_shared_memory_v2.py:131` (class) [mab_9aeea9a55b49]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:60` (section) [mab_2ed8f254f455]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:118` (section) [mab_0862f74eaaa5]
 - `SharedMemoryManager.create` (method, Zeilen 222-305) - def create(self) - Create shared memory and initialize header.
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:193` (section) [mab_84bde21f5d38]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:194` (section) [mab_371838d890d8]
 - `SharedMemoryManager.apply_method` (method, Zeilen 307-320) - def apply_method(self, method, method_params) - Publish the active method layout to the header (read by C++).
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_shared_memory_v2.py:1` (module) [mab_4f38314eef8e]
 - `SharedMemoryManager.signal_ready` (method, Zeilen 322-344) - def signal_ready(self) - Signal to C++ that Python is ready.
@@ -629,7 +629,7 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_query_mode.py:91` (method) [mab_58faed779d4b]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_query_mode.py:98` (method) [mab_08e800107816]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_query_mode.py:104` (method) [mab_8de1409c51cf]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:529` (section) [mab_9cabbc43a0f7]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:530` (section) [mab_2e3749a58b64]
 - `load_model` (function, Zeilen 532-542) - def load_model(model_path, use_gpu) - Load a TorchScript model, moving it to CPU or CUDA as requested.
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\mab_mcp_server.py:1257` (function) [mab_6eca5cd0f4a7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\nn_tilde_reference.md:73` (section) [mab_2bb1b04bc769]
@@ -663,7 +663,7 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_query_mode.py:110` (class) [mab_a5018dffc360]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_query_mode.py:111` (method) [mab_86e74426997b]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_query_mode.py:114` (method) [mab_8608a0850b52]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:529` (section) [mab_9cabbc43a0f7]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:530` (section) [mab_2e3749a58b64]
 - `get_method_labels` (function, Zeilen 655-665) - def get_method_labels(model, method) - Return ({method}_input_labels, {method}_output_labels) or (None, None).
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_query_mode.py:1` (module) [mab_4992fe729295]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_query_mode.py:119` (class) [mab_73a0b8dee1d7]
@@ -674,37 +674,37 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_query_mode.py:119` (class) [mab_73a0b8dee1d7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_query_mode.py:139` (method) [mab_93a8089a4e13]
 - `KNOWN_ATTRIBUTE_PATTERNS` (constant, Zeilen 692-695) - KNOWN_ATTRIBUTE_PATTERNS = (
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:529` (section) [mab_9cabbc43a0f7]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:530` (section) [mab_2e3749a58b64]
 - `detect_model_attributes` (function, Zeilen 698-722) - def detect_model_attributes(model) - Scan the module for small, readable attributes (bounded values only).
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_query_mode.py:1` (module) [mab_4992fe729295]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_query_mode.py:119` (class) [mab_73a0b8dee1d7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_query_mode.py:134` (method) [mab_dbc5bd62e99e]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:529` (section) [mab_9cabbc43a0f7]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:530` (section) [mab_2e3749a58b64]
 - `collect_model_info` (function, Zeilen 725-745) - def collect_model_info(model, model_path) - Build the metadata dict for a loaded model (no file I/O beyond size).
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_query_mode.py:1` (module) [mab_4992fe729295]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_query_mode.py:143` (class) [mab_909e80c0a708]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_query_mode.py:148` (method) [mab_ba9db898ac0e]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\test_strategy.md:72` (section) [mab_94ab6e9b382f]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\test_strategy.md:176` (section) [mab_198d84a76ba5]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:203` (section) [mab_86805533eb42]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:529` (section) [mab_9cabbc43a0f7]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:530` (section) [mab_2e3749a58b64]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:268` (section) [mab_3d78b07aba8f]
 - `print_info_block` (function, Zeilen 748-774) - def print_info_block(info) - Print the MABJSON line + MAB_INFO block for C++ parsing.
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_query_mode.py:1` (module) [mab_4992fe729295]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_query_mode.py:160` (class) [mab_6d7cbd869dfc]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_query_mode.py:161` (method) [mab_5c75f2d5cc70]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_query_mode.py:192` (method) [mab_eeae896f41ad]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\test_strategy.md:72` (section) [mab_94ab6e9b382f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:203` (section) [mab_86805533eb42]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:529` (section) [mab_9cabbc43a0f7]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:530` (section) [mab_2e3749a58b64]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:268` (section) [mab_3d78b07aba8f]
 - `query_model` (function, Zeilen 777-816) - def query_model(model_path) - Load a model, print a machine-readable info block to stdout, exit 0.
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mab_info_models.py:1` (module) [mab_757549a12dff]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mab_info_models.py:59` (function) [mab_9e5781830b56]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mab_info_models.py:84` (module) [mab_5cffb55bb818]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mab_info_models.py:92` (class) [mab_c7be182ee0e0]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\test_strategy.md:103` (section) [mab_076f989748f9]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:203` (section) [mab_86805533eb42]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:379` (section) [mab_43cb26f9140e]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:529` (section) [mab_9cabbc43a0f7]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:530` (section) [mab_2e3749a58b64]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:268` (section) [mab_3d78b07aba8f]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:444` (section) [mab_b457aa4f5151]
 - `compute_layout` (function, Zeilen 819-834) - def compute_layout(method_params, requested_block_size) - Choose block size and channel maxima from all method layouts.
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\nn_tilde_parity.md:95` (section) [mab_75a0185783ea]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_audio_quality.py:1` (module) [mab_4c12229706c9]
@@ -718,7 +718,7 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_infer_all_models.py:206` (function) [mab_1061aed4a219]
 - `ConvStreamingContext` (class, Zeilen 837-919) - class ConvStreamingContext - Cross-block history buffer for convolutional RAVE models.
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:6` (section) [mab_379bf72495e0]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:60` (section) [mab_2ed8f254f455]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:118` (section) [mab_0862f74eaaa5]
 - `ConvStreamingContext.__init__` (method, Zeilen 855-859) - def __init__(self, model, block_size)
 - `ConvStreamingContext._has_conv_layers` (method, Zeilen 862-879) - def _has_conv_layers(model)
 - `ConvStreamingContext.active` (method, Zeilen 882-883) - def active(self)
@@ -726,7 +726,6 @@ Symbole:
 - `ConvStreamingContext.prepend_history` (method, Zeilen 888-910) - def prepend_history(self, method, ci, device, tensor) - Prepend input history to *tensor*.
 - `ConvStreamingContext.save_history` (method, Zeilen 912-919) - def save_history(self, context) - Store the tail of the padded input for the next block.
 - `infer_method` (function, Zeilen 922-1019) - def infer_method(model, device, method, method_params, input_block, streaming_context=None, safety_clip=False) - Run one audio block through the model using nn_tilde semantics.
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:15` (section) [mab_634e17f3172a]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\nn_tilde_parity.md:8` (section) [mab_5205d3d98c6a]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\nn_tilde_parity.md:67` (section) [mab_5e8e6d126476]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\nn_tilde_reference.md:353` (section) [mab_912336da49b7]
@@ -736,6 +735,7 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_audio_quality.py:213` (function) [mab_389a4e7ca4a1]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_audio_quality.py:276` (function) [mab_fce4b112ae6d]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_audio_quality.py:329` (function) [mab_e7a1ce08dffc]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_infer_all_models.py:1` (module) [mab_0202d9f23621]
 - `_coerce_value` (function, Zeilen 1026-1071) - def _coerce_value(raw, current=None) - nn_tilde-style type coercion for attribute values.
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_attribute_passthrough.py:1` (module) [mab_57098d1cc64a]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_attribute_passthrough.py:57` (class) [mab_ae80ffbfa982]
@@ -811,8 +811,6 @@ Symbole:
 - `_load_and_configure` (function, Zeilen 1401-1424) - def _load_and_configure(model_path, use_gpu, active_method, method_params, attrs, shm, streaming_ctx=None) - Load a model, re-validate the method, publish the layout, re-apply
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:6` (section) [mab_379bf72495e0]
 - `main` (function, Zeilen 1427-1838) - def main()
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:44` (section) [mab_f1edca6be051]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:123` (section) [mab_c854df190207]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:115` (section) [mab_b15d84b8687f]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:155` (section) [mab_0e9c390f4881]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:159` (section) [mab_d6ce2984dbf5]
@@ -821,6 +819,8 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_audio_quality.py:361` (module) [mab_d65c5d61ece7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_accumulator.cpp:152` (function) [mab_83aa65d50791]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:180` (function) [mab_9a853679dfa4]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:250` (function) [mab_fad81e309558]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_infer_all_models.py:236` (module) [mab_ce1ad5c8c05e]
 
 ## C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\mab_mcp_server.py
 
@@ -831,30 +831,30 @@ Symbole:
 - `RAG_DB_PATH` (constant, Zeilen 55-55) - RAG_DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "mab_rag.db")
 - `WIKI_PATH` (constant, Zeilen 58-60) - WIKI_PATH = os.path.join(
 - `RAG_SCHEMA_VERSION` (constant, Zeilen 68-68) - RAG_SCHEMA_VERSION = 5
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:243` (section) [mab_cc083358bdf1]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:244` (section) [mab_ceb77969ee51]
 - `RAG_LANGUAGE_EXTENSIONS` (constant, Zeilen 73-82) - RAG_LANGUAGE_EXTENSIONS = {
 - `MODULE_CHUNK_LINES` (constant, Zeilen 85-85) - MODULE_CHUNK_LINES = 60
 - `RAG_IGNORED_DIRS` (constant, Zeilen 90-94) - RAG_IGNORED_DIRS = {
 - `RAG_MAX_FILE_SIZE` (constant, Zeilen 97-97) - RAG_MAX_FILE_SIZE = 2 * 1024 * 1024
 - `RAG_IGNORED_FILENAMES` (constant, Zeilen 100-100) - RAG_IGNORED_FILENAMES = {"code_wiki.md"}
 - `_stable_chunk_id` (function, Zeilen 107-116) - def _stable_chunk_id(file_path, line_start, symbol_name) - Erzeugt eine stabile Chunk-ID aus Dateipfad, Startzeile und Symbolnamen.
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:354` (section) [mab_63ee2e802fab]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:419` (section) [mab_43e937b2fc5f]
 - `_char_ngrams` (function, Zeilen 124-138) - def _char_ngrams(text, n_min=2, n_max=4) - Extrahiert Character-N-Gramme aus einem Text.
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_rag_wiki.py:192` (class) [mab_6acf6e78b450]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_rag_wiki.py:296` (method) [mab_790bef69ec7e]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:354` (section) [mab_63ee2e802fab]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:419` (section) [mab_43e937b2fc5f]
 - `_ngram_embedding` (function, Zeilen 141-155) - def _ngram_embedding(text) - Erzeugt ein TF-gewichtetes N-Gramm-Embedding als Dictionary.
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_rag_wiki.py:192` (class) [mab_6acf6e78b450]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_rag_wiki.py:296` (method) [mab_790bef69ec7e]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_rag_wiki.py:305` (method) [mab_632d564f3c06]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:354` (section) [mab_63ee2e802fab]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:419` (section) [mab_43e937b2fc5f]
 - `_cosine_similarity` (function, Zeilen 158-175) - def _cosine_similarity(a, b) - Berechnet cosine similarity zwischen zwei sparse Embeddings.
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_rag_wiki.py:192` (class) [mab_6acf6e78b450]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_rag_wiki.py:296` (method) [mab_790bef69ec7e]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_rag_wiki.py:305` (method) [mab_632d564f3c06]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:354` (section) [mab_63ee2e802fab]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:419` (section) [mab_43e937b2fc5f]
 - `_semantic_rerank` (function, Zeilen 178-208) - def _semantic_rerank(query, results, top_k) - Rerankt Ergebnisse mittels N-Gramm-Cosine-Ähnlichkeit.
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:354` (section) [mab_63ee2e802fab]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:419` (section) [mab_43e937b2fc5f]
 - `_emit_chunk` (function, Zeilen 211-227) - def _emit_chunk(lines, start, end, symbol_type, symbol_name, signature, docstring, file_path='') - Baut einen Chunk-Datensatz aus 0-basiertem Zeilenbereich [start, end].
 - `_module_chunks` (function, Zeilen 230-240) - def _module_chunks(lines, start, end, file_path='') - Zerlegt einen Bereich ohne benannte Symbole in max. 60-Zeilen-Blöcke.
 - `_py_arglist` (function, Zeilen 243-262) - def _py_arglist(args) - Baut aus einem ast.arguments eine kompakte Parameterliste (mit Defaults).
@@ -880,7 +880,7 @@ Symbole:
 - `_chunk_cpp_defines` (function, Zeilen 487-497) - def _chunk_cpp_defines(lines, file_path='') - Extract #define constants as named chunks.
 - `_chunk_cpp_region` (function, Zeilen 500-527) - def _chunk_cpp_region(lines, start, end, base, file_path='') - Zerlegt einen C++-Bereich: Blöcke auf Tiefe base+1 + Modul-Lücken.
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\wiki_audit_2026-08-11.md:157` (section) [mab_0abce1aabf91]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:320` (section) [mab_870492d3d163]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:385` (section) [mab_6ae4bb972d13]
 - `_chunk_cpp` (function, Zeilen 530-536) - def _chunk_cpp(source, file_path='') - Zerlegt C++-Code strukturiert (brace-basiert, ohne tree-sitter).
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\wiki_audit_2026-08-11.md:157` (section) [mab_0abce1aabf91]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_rag_wiki.py:80` (class) [mab_d12ec9c8de20]
@@ -929,7 +929,7 @@ Symbole:
 - `_wiki_anchor` (function, Zeilen 1172-1175) - def _wiki_anchor(path) - Baut einen GitHub-Stil-Markdown-Anker aus einem Dateipfad.
 - `run_cpp_tests` (function, Zeilen 1183-1253) - def run_cpp_tests() - Baut das mab~ External über CMake-Presets und führt alle Test-Binaries aus.
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\MCP_README.md:54` (section) [mab_e55d5dd823ce]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:320` (section) [mab_870492d3d163]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:385` (section) [mab_6ae4bb972d13]
 - `get_project_summary` (function, Zeilen 1257-1357) - def get_project_summary() - Liefert eine dynamische Zusammenfassung des mab~ Projekts.
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\MCP_README.md:58` (section) [mab_a423382915c6]
 - `index_project_code` (function, Zeilen 1366-1414) - def index_project_code(directory_path) - Indiziert das Projektverzeichnis in die SQLite-RAG-Datenbank (mab_rag.db).
@@ -938,19 +938,19 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\wiki_audit_2026-08-11.md:173` (section) [mab_1b817c6e76f5]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\wiki_audit_2026-08-11.md:185` (section) [mab_9b6438e83919]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\wiki_audit_2026-08-11.md:206` (section) [mab_f341cb96894c]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:290` (section) [mab_f3559d541134]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\AGENTS.md:15` (section) [mab_e451adb6adbd]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\AGENTS.md:37` (section) [mab_dd792cb00a2e]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\WORKSPACE_AGENT_PROMPT.md:74` (section) [mab_5a38cfc04320]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:291` (section) [mab_ac958322276b]
 - `query_code_rag` (function, Zeilen 1418-1446) - def query_code_rag(query, top_k=3, format='text', semantic=False) - Durchsucht die RAG-Datenbank nach Code-Stellen passend zur Suchanfrage.
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\MCP_README.md:108` (section) [mab_74ddd27256fc]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\MCP_README.md:130` (section) [mab_95b7b2b48848]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\MCP_README.md:145` (section) [mab_f63ff4eb2bf8]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:1` (section) [mab_98cb05bf139c]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:354` (section) [mab_63ee2e802fab]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\AGENTS.md:15` (section) [mab_e451adb6adbd]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\AGENTS.md:37` (section) [mab_dd792cb00a2e]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\WORKSPACE_AGENT_PROMPT.md:74` (section) [mab_5a38cfc04320]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:1` (section) [mab_98cb05bf139c]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:419` (section) [mab_43e937b2fc5f]
 - `get_rag_chunk` (function, Zeilen 1450-1494) - def get_rag_chunk(chunk_id) - Holt den vollständigen Inhalt eines einzelnen RAG-Chunks (transient).
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\MCP_README.md:108` (section) [mab_74ddd27256fc]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\MCP_README.md:123` (section) [mab_05855513de5b]
@@ -964,10 +964,10 @@ Symbole:
 - `query_code_wiki` (function, Zeilen 1498-1544) - def query_code_wiki(query, max_results=12, format='text') - Durchsucht den Code-Wiki-Symbolindex nach Klassen, Funktionen und Methoden.
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\MCP_README.md:130` (section) [mab_95b7b2b48848]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\MCP_README.md:145` (section) [mab_f63ff4eb2bf8]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:1` (section) [mab_98cb05bf139c]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\AGENTS.md:15` (section) [mab_e451adb6adbd]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\AGENTS.md:37` (section) [mab_dd792cb00a2e]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\WORKSPACE_AGENT_PROMPT.md:74` (section) [mab_5a38cfc04320]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:1` (section) [mab_98cb05bf139c]
 - `_rag_has_data` (function, Zeilen 1547-1554) - def _rag_has_data() - Prüft, ob die RAG-Datenbank bereits Code-Chunks enthält.
 - `inspect_rave_model` (function, Zeilen 1562-1596) - def inspect_rave_model(model_path) - Analysiert ein RAVE/ONNX/TorchScript-Modell auf seine Ein-/Ausgangsstruktur.
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\MCP_README.md:66` (section) [mab_85917f7659fb]
@@ -985,11 +985,10 @@ Symbole:
 
 Symbole:
 - `convert_d2f` (function, Zeilen 16-29) - static inline void convert_d2f(const double* __restrict src, float* __restrict dst, size_t n)
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:123` (section) [mab_c854df190207]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:124` (section) [mab_7eb700a153a7]
 - `convert_f2d` (function, Zeilen 31-46) - static inline void convert_f2d(const float* __restrict src, double* __restrict dst, size_t n)
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:123` (section) [mab_c854df190207]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:124` (section) [mab_7eb700a153a7]
 - `block_accumulate_write` (function, Zeilen 56-77) - inline bool block_accumulate_write(float* buffer, long channels, long block_size, long n, const double* const* ins, long numins, long& pos)
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:95` (section) [mab_692f3342a9a1]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_accumulator.cpp:19` (function) [mab_ad55965ab5d7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_accumulator.cpp:40` (function) [mab_6ed44016d283]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_accumulator.cpp:61` (function) [mab_2da56ef20dab]
@@ -999,17 +998,18 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:222` (function) [mab_0a9483266461]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mc_mab_tilde.cpp:205` (function) [mab_10b53843aa6a]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mc_mab_tilde.cpp:258` (function) [mab_4030b13a3c6a]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:96` (section) [mab_dd5942427d51]
 - `block_accumulate_read` (function, Zeilen 84-110) - inline bool block_accumulate_read(float* buffer, long channels, long block_size, long n, double** outs, long numouts, long& pos)
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:95` (section) [mab_692f3342a9a1]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_accumulator.cpp:61` (function) [mab_2da56ef20dab]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_accumulator.cpp:100` (function) [mab_25a205eeb2d8]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_accumulator.cpp:122` (function) [mab_33df6f7ed20a]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:256` (function) [mab_9659867439cc]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:306` (function) [mab_134a6c8c89f1]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mc_mab_tilde.cpp:205` (function) [mab_10b53843aa6a]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:210` (section) [mab_26e987b7cbe6]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:1137` (function) [mab_e454442e422e]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:1484` (function) [mab_eb496895e9b5]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:96` (section) [mab_dd5942427d51]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:211` (section) [mab_7a7c45645b36]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:1188` (function) [mab_bc7d3479d437]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:1538` (function) [mab_85bf4268a826]
 
 ## C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\buffer_manager.h
 
@@ -1018,8 +1018,8 @@ Symbole:
 Symbole:
 - `BufferRef` (class, Zeilen 19-24) - struct BufferRef {
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\nn_tilde_reference.md:166` (section) [mab_8de45418a671]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:223` (section) [mab_75d74f7e2c11]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:290` (section) [mab_f3559d541134]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:291` (section) [mab_ac958322276b]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:288` (section) [mab_cc6703b2f6bd]
 - `BufferManager` (class, Zeilen 27-31) - struct BufferManager {
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\nn_tilde_parity.md:22` (section) [mab_cdb6c2ffe7c9]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\nn_tilde_reference.md:12` (section) [mab_435cc5860927]
@@ -1028,13 +1028,13 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\nn_tilde_reference.md:152` (section) [mab_b6457b784362]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\nn_tilde_reference.md:166` (section) [mab_8de45418a671]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\nn_tilde_reference.md:366` (section) [mab_f5fe9e8a1099]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:223` (section) [mab_75d74f7e2c11]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:290` (section) [mab_f3559d541134]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:291` (section) [mab_ac958322276b]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:76` (class) [mab_0abfefc5457a]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:288` (section) [mab_cc6703b2f6bd]
 - `buffer_manager_init` (function, Zeilen 34-44) - static inline void buffer_manager_init(BufferManager* bm)
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:223` (section) [mab_75d74f7e2c11]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:953` (function) [mab_1125e4cc7a01]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:1301` (function) [mab_f9f93af4667a]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:1000` (function) [mab_502c05f864df]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:1352` (function) [mab_e199041ee141]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:288` (section) [mab_cc6703b2f6bd]
 
 ## C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_info.cpp
 
@@ -1044,8 +1044,8 @@ Symbole:
 Symbole:
 - `MAB_INFO_DICT_JSON` (constant, Zeilen 25-25) - #define MAB_INFO_DICT_JSON 16384
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\wiki_audit_2026-08-11.md:28` (section) [mab_47152b6393d4]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:94` (section) [mab_eeb49c4c042e]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:243` (section) [mab_cc083358bdf1]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:95` (section) [mab_a1ff02787272]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:244` (section) [mab_ceb77969ee51]
 - `_mab_info` (class, Zeilen 29-61) - typedef struct _mab_info {
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\mab_mcp_server.py:450` (function) [mab_0da3f2603f92]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\wiki_audit_2026-08-11.md:15` (section) [mab_664c6595d3ba]
@@ -1053,19 +1053,19 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\mab_mcp_server.py:450` (function) [mab_0da3f2603f92]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\wiki_audit_2026-08-11.md:15` (section) [mab_664c6595d3ba]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\wiki_audit_2026-08-11.md:185` (section) [mab_9b6438e83919]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:94` (section) [mab_eeb49c4c042e]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:95` (section) [mab_a1ff02787272]
 - `mab_info_drain_stdout` (function, Zeilen 70-99) - static void mab_info_drain_stdout(const WorkerProcess* wp, std::string* text)
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:94` (section) [mab_eeb49c4c042e]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:95` (section) [mab_a1ff02787272]
 - `mab_info_query_thread` (function, Zeilen 101-127) - static void mab_info_query_thread(t_mab_info* x)
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:161` (section) [mab_65b1e5300665]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:162` (section) [mab_a3a635deebb1]
 - `mab_info_make_dict` (function, Zeilen 133-154) - static void mab_info_make_dict(t_mab_info* x, t_dictionary** out_dict)
 - `mab_info_out_dict` (function, Zeilen 156-160) - static void mab_info_out_dict(t_mab_info* x, t_dictionary* d)
 - `mab_info_apply` (function, Zeilen 166-188) - static void mab_info_apply(t_mab_info* x)
 - `mab_info_cmd_thread` (function, Zeilen 198-229) - static void mab_info_cmd_thread(t_mab_info* x)
 - `mab_info_apply_cmd` (function, Zeilen 234-252) - static void mab_info_apply_cmd(t_mab_info* x)
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:94` (section) [mab_eeb49c4c042e]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:95` (section) [mab_a1ff02787272]
 - `mab_info_run_command` (function, Zeilen 255-271) - static void mab_info_run_command(t_mab_info* x, const char* arg_string)
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:94` (section) [mab_eeb49c4c042e]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:95` (section) [mab_a1ff02787272]
 - `mab_info_start_query` (function, Zeilen 277-289) - static void mab_info_start_query(t_mab_info* x)
 - `mab_info_set` (function, Zeilen 291-302) - static void mab_info_set(t_mab_info* x, t_symbol* s, long argc, t_atom* argv)
 - `mab_info_path` (function, Zeilen 304-310) - static void mab_info_path(t_mab_info* x, t_symbol* s, long argc, t_atom* argv)
@@ -1077,12 +1077,12 @@ Symbole:
 - `mab_info_dump_dict` (function, Zeilen 369-373) - static void mab_info_dump_dict(t_mab_info* x)
 - `mab_info_dict` (function, Zeilen 375-382) - static void mab_info_dict(t_mab_info* x, t_symbol* name)
 - `mab_info_download` (function, Zeilen 385-400) - static void mab_info_download(t_mab_info* x, t_symbol* s, long argc, t_atom* argv)
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:223` (section) [mab_75d74f7e2c11]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:94` (section) [mab_eeb49c4c042e]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:95` (section) [mab_a1ff02787272]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:288` (section) [mab_cc6703b2f6bd]
 - `mab_info_delete` (function, Zeilen 403-413) - static void mab_info_delete(t_mab_info* x, t_symbol* s, long argc, t_atom* argv)
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:223` (section) [mab_75d74f7e2c11]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:288` (section) [mab_cc6703b2f6bd]
 - `mab_info_print` (function, Zeilen 416-418) - static void mab_info_print(t_mab_info* x)
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:223` (section) [mab_75d74f7e2c11]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:288` (section) [mab_cc6703b2f6bd]
 - `mab_info_new` (function, Zeilen 424-458) - static void* mab_info_new(t_symbol* s, long argc, t_atom* argv)
 - `mab_info_free` (function, Zeilen 460-482) - static void mab_info_free(t_mab_info* x)
 - `mab_info_assist` (function, Zeilen 484-497) - static void mab_info_assist(t_mab_info* x, void* b, long m, long a, char* s)
@@ -1090,7 +1090,7 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:159` (section) [mab_d6ce2984dbf5]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:171` (section) [mab_d4af5234b95e]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\WORKSPACE_AGENT_PROMPT.md:36` (section) [mab_d13da7008faa]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:158` (module) [mab_de7644f526f9]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:159` (module) [mab_4750b40f4258]
 
 ## C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp
 
@@ -1101,14 +1101,14 @@ Symbole:
 - `MAX_CHANNELS` (constant, Zeilen 21-21) - #define MAX_CHANNELS 16
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\mab_mcp_server.py:1257` (function) [mab_6eca5cd0f4a7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\wiki_audit_2026-08-11.md:28` (section) [mab_47152b6393d4]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:293` (constant) [mab_63347666758f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:286` (module) [mab_02567c00f38f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:438` (function) [mab_c6758b535b91]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:1` (module) [mab_f9114dba5b7e]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:69` (function) [mab_43a31240a695]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:97` (function) [mab_3479be45707f]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:113` (function) [mab_a6eb819c8f1a]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:130` (function) [mab_6b7dc9f18f85]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:146` (function) [mab_d01b79918b9e]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:188` (function) [mab_a27aa3e436e1]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:222` (function) [mab_0a9483266461]
 - `MAX_BLOCK_SIZE` (constant, Zeilen 22-22) - #define MAX_BLOCK_SIZE 4096
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\mab_mcp_server.py:1257` (function) [mab_6eca5cd0f4a7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\mab_mcp_server.py:1674` (function) [mab_28b1e49f11b8]
@@ -1117,54 +1117,54 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_model_edge_cases.py:153` (class) [mab_84c68a74e066]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_python_shared_memory.py:31` (constant) [mab_291269f4b508]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\test_strategy.md:151` (section) [mab_598cbd14643c]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:379` (section) [mab_43cb26f9140e]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:243` (section) [mab_cc083358bdf1]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\inference_worker.py:465` (module) [mab_ce3eeebf91d0]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:244` (section) [mab_ceb77969ee51]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:444` (section) [mab_b457aa4f5151]
 - `CONTROL_RING_SIZE` (constant, Zeilen 23-23) - #define CONTROL_RING_SIZE 256
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\mab_mcp_server.py:1257` (function) [mab_6eca5cd0f4a7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\wiki_audit_2026-08-11.md:28` (section) [mab_47152b6393d4]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_rag_wiki.py:42` (constant) [mab_a17335c9e595]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_rag_wiki.py:80` (class) [mab_d12ec9c8de20]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_rag_wiki.py:105` (method) [mab_7253565cc4fd]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:243` (section) [mab_cc083358bdf1]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\inference_worker.py:102` (constant) [mab_88a80d1c8d3c]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\inference_worker.py:105` (class) [mab_1172fbfe4efb]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\inference_worker.py:1427` (function) [mab_b12b1af891c8]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_size_extraction.py:122` (class) [mab_65ae964d95dc]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_size_extraction.py:125` (method) [mab_a18a07d5b09a]
 - `CONTROL_MSG_SIZE` (constant, Zeilen 24-24) - #define CONTROL_MSG_SIZE 256
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\mab_mcp_server.py:1257` (function) [mab_6eca5cd0f4a7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\wiki_audit_2026-08-11.md:28` (section) [mab_47152b6393d4]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:243` (section) [mab_cc083358bdf1]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\inference_worker.py:103` (constant) [mab_c4a902e41dd5]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\inference_worker.py:105` (class) [mab_1172fbfe4efb]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\inference_worker.py:1427` (function) [mab_b12b1af891c8]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_size_extraction.py:122` (class) [mab_65ae964d95dc]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_size_extraction.py:125` (method) [mab_a18a07d5b09a]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_size_extraction.py:135` (method) [mab_6cde100b4d1c]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:244` (section) [mab_ceb77969ee51]
 - `ControlRingBuffer` (class, Zeilen 27-31) - struct ControlRingBuffer {
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:37` (class) [mab_30fc7e8e80af]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:44` (class) [mab_3518c375a1fb]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:449` (section) [mab_88d41f187e46]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:23` (section) [mab_f10055e3e333]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:143` (section) [mab_669e5764abf1]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:232` (section) [mab_c7eb78d4a5de]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\inference_worker.py:105` (class) [mab_1172fbfe4efb]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\inference_worker.py:126` (class) [mab_af3e72ab5cd9]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\inference_worker.py:137` (method) [mab_4a165523ae39]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\inference_worker.py:222` (method) [mab_641a5dcc9c70]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\inference_worker.py:465` (module) [mab_ce3eeebf91d0]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_size_extraction.py:122` (class) [mab_65ae964d95dc]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_size_extraction.py:125` (method) [mab_a18a07d5b09a]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:23` (section) [mab_f10055e3e333]
 - `SharedMemoryHeader` (class, Zeilen 40-65) - struct SharedMemoryHeader {
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:38` (section) [mab_1d6aebbb3abe]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:12` (class) [mab_8a1b5e451830]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:44` (class) [mab_3518c375a1fb]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:14` (class) [mab_7c28c9e004d5]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:59` (function) [mab_a04ee96f88c7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:174` (function) [mab_1217cd25cc2b]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:239` (class) [mab_841c08b6c11f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:286` (module) [mab_02567c00f38f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:299` (function) [mab_a62ab3f23c69]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:524` (function) [mab_3505d877152d]
-- `_mab_tilde` (class, Zeilen 76-145) - typedef struct _mab_tilde {
-- `t_mab_tilde` (class, Zeilen 76-145) - typedef struct _mab_tilde {
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:1` (module) [mab_f9114dba5b7e]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:30` (class) [mab_ea2f0c2cf7c7]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:53` (module) [mab_a780856d383c]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:57` (class) [mab_4ece0a797b10]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:367` (function) [mab_1e74251ac998]
+- `_mab_tilde` (class, Zeilen 76-146) - typedef struct _mab_tilde {
+- `t_mab_tilde` (class, Zeilen 76-146) - typedef struct _mab_tilde {
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\nn_tilde_parity.md:8` (section) [mab_5205d3d98c6a]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\nn_tilde_reference.md:366` (section) [mab_f5fe9e8a1099]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:171` (section) [mab_d4af5234b95e]
@@ -1175,11 +1175,11 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_anything_handler.cpp:31` (function) [mab_61972bea5c07]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:44` (class) [mab_3518c375a1fb]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:133` (function) [mab_c49eef3c8cac]
-- `mab_tilde_prefix` (function, Zeilen 149-152) - static const char* mab_tilde_prefix(t_mab_tilde* x)
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:284` (section) [mab_1529be7d259f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:449` (section) [mab_88d41f187e46]
+- `mab_tilde_prefix` (function, Zeilen 150-153) - static const char* mab_tilde_prefix(t_mab_tilde* x)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:23` (section) [mab_f10055e3e333]
-- `ext_main` (function, Zeilen 215-250) - void ext_main(void* r)
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:349` (section) [mab_e895bcefe5e1]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:514` (section) [mab_a717ebe2437b]
+- `ext_main` (function, Zeilen 216-251) - void ext_main(void* r)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\nn_tilde_parity.md:67` (section) [mab_5e8e6d126476]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\nn_tilde_reference.md:366` (section) [mab_f5fe9e8a1099]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:115` (section) [mab_b15d84b8687f]
@@ -1187,10 +1187,10 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:159` (section) [mab_d6ce2984dbf5]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:171` (section) [mab_d4af5234b95e]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_info.cpp:503` (function) [mab_095f60de0810]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:284` (section) [mab_1529be7d259f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:449` (section) [mab_88d41f187e46]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:161` (section) [mab_65b1e5300665]
-- `ext_main` (function, Zeilen 252-287) - void ext_main(void* r)
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:162` (section) [mab_a3a635deebb1]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:260` (section) [mab_49ea2c4ee552]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:315` (section) [mab_3925523b9fae]
+- `ext_main` (function, Zeilen 253-288) - void ext_main(void* r)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\nn_tilde_parity.md:67` (section) [mab_5e8e6d126476]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\nn_tilde_reference.md:366` (section) [mab_f5fe9e8a1099]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:115` (section) [mab_b15d84b8687f]
@@ -1198,63 +1198,63 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:159` (section) [mab_d6ce2984dbf5]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:171` (section) [mab_d4af5234b95e]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_info.cpp:503` (function) [mab_095f60de0810]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:284` (section) [mab_1529be7d259f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:449` (section) [mab_88d41f187e46]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:161` (section) [mab_65b1e5300665]
-- `mab_tilde_shared_free` (function, Zeilen 290-350) - void mab_tilde_shared_free(t_mab_tilde* x)
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:449` (section) [mab_88d41f187e46]
-- `mab_tilde_assist` (function, Zeilen 352-374) - void mab_tilde_assist(t_mab_tilde* x, void* b, long m, long a, char* s)
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:162` (section) [mab_a3a635deebb1]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:260` (section) [mab_49ea2c4ee552]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:315` (section) [mab_3925523b9fae]
+- `mab_tilde_shared_free` (function, Zeilen 291-351) - void mab_tilde_shared_free(t_mab_tilde* x)
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:514` (section) [mab_a717ebe2437b]
+- `mab_tilde_assist` (function, Zeilen 353-375) - void mab_tilde_assist(t_mab_tilde* x, void* b, long m, long a, char* s)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mab_tilde_assist.cpp:1` (module) [mab_5eb289d3ee2f]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mab_tilde_assist.cpp:10` (function) [mab_4b6c6e7f2fae]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mab_tilde_assist.cpp:14` (function) [mab_f71ee375bf02]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:449` (section) [mab_88d41f187e46]
-- `mab_tilde_check_crash` (function, Zeilen 378-421) - void mab_tilde_check_crash(t_mab_tilde* x)
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:123` (section) [mab_c854df190207]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:449` (section) [mab_88d41f187e46]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:161` (section) [mab_65b1e5300665]
-- `mab_tilde_rebuild_io` (function, Zeilen 426-461) - void mab_tilde_rebuild_io(t_mab_tilde* x, long new_in, long new_out)
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:60` (section) [mab_2ed8f254f455]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:240` (section) [mab_fae7124021d2]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:284` (section) [mab_1529be7d259f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:449` (section) [mab_88d41f187e46]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:356` (section) [mab_d9bab46c73e2]
-- `mab_tilde_apply_io` (function, Zeilen 463-527) - void mab_tilde_apply_io(t_mab_tilde* x)
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:514` (section) [mab_a717ebe2437b]
+- `mab_tilde_check_crash` (function, Zeilen 379-422) - void mab_tilde_check_crash(t_mab_tilde* x)
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:124` (section) [mab_7eb700a153a7]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:162` (section) [mab_a3a635deebb1]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:514` (section) [mab_a717ebe2437b]
+- `mab_tilde_rebuild_io` (function, Zeilen 427-462) - void mab_tilde_rebuild_io(t_mab_tilde* x, long new_in, long new_out)
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:357` (section) [mab_1e507af6c0cf]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:118` (section) [mab_0862f74eaaa5]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:305` (section) [mab_ec6275156055]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:349` (section) [mab_e895bcefe5e1]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:514` (section) [mab_a717ebe2437b]
+- `mab_tilde_apply_io` (function, Zeilen 464-541) - void mab_tilde_apply_io(t_mab_tilde* x)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:1` (module) [mab_f9114dba5b7e]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:67` (module) [mab_1128fc758245]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mc_mab_tilde.cpp:1` (module) [mab_21507bee1b44]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mc_mab_tilde.cpp:85` (module) [mab_a2485a9418d1]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:240` (section) [mab_fae7124021d2]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:284` (section) [mab_1529be7d259f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:449` (section) [mab_88d41f187e46]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\WORKSPACE_AGENT_PROMPT.md:9` (section) [mab_9ff27aa772fd]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:23` (section) [mab_f10055e3e333]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:161` (section) [mab_65b1e5300665]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:193` (section) [mab_84bde21f5d38]
-- `init_worker` (function, Zeilen 537-629) - extern "C" void init_worker(t_mab_tilde* x)
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:162` (section) [mab_a3a635deebb1]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:194` (section) [mab_371838d890d8]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:396` (section) [mab_f7248826a76f]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:460` (section) [mab_37fbb9123c37]
+- `init_worker` (function, Zeilen 551-676) - extern "C" void init_worker(t_mab_tilde* x)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\wiki_audit_2026-08-11.md:15` (section) [mab_664c6595d3ba]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\wiki_audit_2026-08-11.md:74` (section) [mab_d8c1a315dab3]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\wiki_audit_2026-08-11.md:185` (section) [mab_9b6438e83919]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_rag_wiki.py:42` (constant) [mab_a17335c9e595]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_rag_wiki.py:80` (class) [mab_d12ec9c8de20]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_rag_wiki.py:105` (method) [mab_7253565cc4fd]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:60` (section) [mab_2ed8f254f455]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:240` (section) [mab_fae7124021d2]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:284` (section) [mab_1529be7d259f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:449` (section) [mab_88d41f187e46]
-- `init_worker_thread` (function, Zeilen 631-633) - void init_worker_thread(t_mab_tilde* x)
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:23` (section) [mab_f10055e3e333]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:162` (section) [mab_a3a635deebb1]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:175` (section) [mab_40fb17f0642e]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:194` (section) [mab_371838d890d8]
+- `init_worker_thread` (function, Zeilen 678-680) - void init_worker_thread(t_mab_tilde* x)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker.cpp:1` (module) [mab_11baef9c6ebb]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker.cpp:8` (function) [mab_2c498f66abe4]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread.cpp:1` (module) [mab_2f3d1be3504c]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread.cpp:10` (function) [mab_ac679903543c]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread.cpp:17` (function) [mab_8db1b54e70f6]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:1` (module) [mab_7dd3dfde0ca1]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:477` (module) [mab_388c624c8517]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:482` (function) [mab_36a99c70aa38]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:449` (section) [mab_88d41f187e46]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:23` (section) [mab_f10055e3e333]
-- `mab_enqueue_control` (function, Zeilen 642-659) - static bool mab_enqueue_control(t_mab_tilde* x, const char* msg)
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:449` (section) [mab_88d41f187e46]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:232` (section) [mab_c7eb78d4a5de]
-- `mab_tilde_enable` (function, Zeilen 661-669) - void mab_tilde_enable(t_mab_tilde* x, long flag)
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:162` (section) [mab_a3a635deebb1]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:194` (section) [mab_371838d890d8]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:1` (module) [mab_7dd3dfde0ca1]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:482` (module) [mab_9adbf8433f67]
+- `mab_enqueue_control` (function, Zeilen 689-706) - static bool mab_enqueue_control(t_mab_tilde* x, const char* msg)
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:233` (section) [mab_d6a73651439e]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:514` (section) [mab_a717ebe2437b]
+- `mab_tilde_enable` (function, Zeilen 708-716) - void mab_tilde_enable(t_mab_tilde* x, long flag)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_message_handlers.cpp:13` (module) [mab_7c701175de59]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_message_handlers.cpp:35` (function) [mab_75a1204a8534]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_message_handlers.cpp:67` (function) [mab_ca321f0a46aa]
@@ -1265,112 +1265,114 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_rag_wiki.py:192` (class) [mab_6acf6e78b450]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_rag_wiki.py:214` (method) [mab_4b9d59c2db58]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_rag_wiki.py:227` (method) [mab_29608e76c340]
-- `mab_tilde_gpu` (function, Zeilen 671-688) - void mab_tilde_gpu(t_mab_tilde* x, long flag)
+- `mab_tilde_gpu` (function, Zeilen 718-735) - void mab_tilde_gpu(t_mab_tilde* x, long flag)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\nn_tilde_parity.md:95` (section) [mab_75a0185783ea]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_message_handlers.cpp:13` (module) [mab_7c701175de59]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_message_handlers.cpp:39` (function) [mab_3ea0d0fd60cc]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_message_handlers.cpp:67` (function) [mab_ca321f0a46aa]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:60` (section) [mab_2ed8f254f455]
-- `mab_tilde_gpu_reload_done` (function, Zeilen 690-702) - void mab_tilde_gpu_reload_done(t_mab_tilde* x)
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:449` (section) [mab_88d41f187e46]
-- `mab_tilde_reload` (function, Zeilen 704-783) - void mab_tilde_reload(t_mab_tilde* x, t_symbol* s)
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:118` (section) [mab_0862f74eaaa5]
+- `mab_tilde_gpu_reload_done` (function, Zeilen 737-749) - void mab_tilde_gpu_reload_done(t_mab_tilde* x)
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:514` (section) [mab_a717ebe2437b]
+- `mab_tilde_reload` (function, Zeilen 751-830) - void mab_tilde_reload(t_mab_tilde* x, t_symbol* s)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_message_handlers.cpp:13` (module) [mab_7c701175de59]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_message_handlers.cpp:43` (function) [mab_dd846e33cb3a]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_message_handlers.cpp:67` (function) [mab_ca321f0a46aa]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:60` (section) [mab_2ed8f254f455]
-- `mab_tilde_dump` (function, Zeilen 785-808) - void mab_tilde_dump(t_mab_tilde* x)
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:118` (section) [mab_0862f74eaaa5]
+- `mab_tilde_dump` (function, Zeilen 832-855) - void mab_tilde_dump(t_mab_tilde* x)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_message_handlers.cpp:13` (module) [mab_7c701175de59]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_message_handlers.cpp:47` (function) [mab_2849bae36327]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_message_handlers.cpp:67` (function) [mab_ca321f0a46aa]
-- `mab_tilde_set` (function, Zeilen 810-854) - void mab_tilde_set(t_mab_tilde* x, t_symbol* s, long argc, t_atom* argv)
+- `mab_tilde_set` (function, Zeilen 857-901) - void mab_tilde_set(t_mab_tilde* x, t_symbol* s, long argc, t_atom* argv)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_message_handlers.cpp:13` (module) [mab_7c701175de59]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_message_handlers.cpp:51` (function) [mab_d48df804d8a9]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_message_handlers.cpp:67` (function) [mab_ca321f0a46aa]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:232` (section) [mab_c7eb78d4a5de]
-- `mab_tilde_get` (function, Zeilen 856-882) - void mab_tilde_get(t_mab_tilde* x, t_symbol* s)
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:233` (section) [mab_d6a73651439e]
+- `mab_tilde_get` (function, Zeilen 903-929) - void mab_tilde_get(t_mab_tilde* x, t_symbol* s)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_message_handlers.cpp:13` (module) [mab_7c701175de59]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_message_handlers.cpp:55` (function) [mab_e92e7c9fb27c]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_message_handlers.cpp:67` (function) [mab_ca321f0a46aa]
-- `mab_tilde_method` (function, Zeilen 884-898) - void mab_tilde_method(t_mab_tilde* x, t_symbol* s, long argc, t_atom* argv)
+- `mab_tilde_method` (function, Zeilen 931-945) - void mab_tilde_method(t_mab_tilde* x, t_symbol* s, long argc, t_atom* argv)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_message_handlers.cpp:13` (module) [mab_7c701175de59]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_message_handlers.cpp:59` (function) [mab_3771396b1712]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_message_handlers.cpp:67` (function) [mab_ca321f0a46aa]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:203` (section) [mab_86805533eb42]
-- `mab_tilde_load` (function, Zeilen 900-911) - void mab_tilde_load(t_mab_tilde* x, t_symbol* s)
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:268` (section) [mab_3d78b07aba8f]
+- `mab_tilde_load` (function, Zeilen 947-958) - void mab_tilde_load(t_mab_tilde* x, t_symbol* s)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_message_handlers.cpp:13` (module) [mab_7c701175de59]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_message_handlers.cpp:63` (function) [mab_1b38a3d39e2f]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_message_handlers.cpp:67` (function) [mab_ca321f0a46aa]
-- `mab_tilde_anything` (function, Zeilen 914-945) - void mab_tilde_anything(t_mab_tilde* x, t_symbol* s, long argc, t_atom* argv)
+- `mab_tilde_anything` (function, Zeilen 961-992) - void mab_tilde_anything(t_mab_tilde* x, t_symbol* s, long argc, t_atom* argv)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\nn_tilde_parity.md:95` (section) [mab_75a0185783ea]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_anything_handler.cpp:1` (module) [mab_4dad4ad5b5bf]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_anything_handler.cpp:27` (function) [mab_30d17986c7d3]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_anything_handler.cpp:31` (function) [mab_61972bea5c07]
-- `mc_mab_tilde_new` (function, Zeilen 953-1084) - void* mc_mab_tilde_new(t_symbol* s, long argc, t_atom* argv)
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:60` (section) [mab_2ed8f254f455]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:223` (section) [mab_75d74f7e2c11]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:240` (section) [mab_fae7124021d2]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:356` (section) [mab_d9bab46c73e2]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:395` (section) [mab_53c4a87ea817]
-- `mc_mab_tilde_dsp64` (function, Zeilen 1093-1130) - void mc_mab_tilde_dsp64(t_mab_tilde* x, t_object* dsp64, short* count, double samplerate, long maxvectorsize, long flags)
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:60` (section) [mab_2ed8f254f455]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:240` (section) [mab_fae7124021d2]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:181` (section) [mab_c4d22928c7c1]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:356` (section) [mab_d9bab46c73e2]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:395` (section) [mab_53c4a87ea817]
-- `mc_mab_tilde_perform64` (function, Zeilen 1137-1242) - void mc_mab_tilde_perform64(t_mab_tilde* x, t_object* dsp64, double** ins, long numins, double** outs, long numouts, long sampleframes, long flags, void* userparam)
+- `mc_mab_tilde_new` (function, Zeilen 1000-1135) - void* mc_mab_tilde_new(t_symbol* s, long argc, t_atom* argv)
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:357` (section) [mab_1e507af6c0cf]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:396` (section) [mab_f7248826a76f]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:31` (section) [mab_02e6b0494ef5]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:118` (section) [mab_0862f74eaaa5]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:288` (section) [mab_cc6703b2f6bd]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:305` (section) [mab_ec6275156055]
+- `mc_mab_tilde_dsp64` (function, Zeilen 1144-1181) - void mc_mab_tilde_dsp64(t_mab_tilde* x, t_object* dsp64, short* count, double samplerate, long maxvectorsize, long flags)
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:182` (section) [mab_5426d112cebd]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:357` (section) [mab_1e507af6c0cf]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:396` (section) [mab_f7248826a76f]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:118` (section) [mab_0862f74eaaa5]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:305` (section) [mab_ec6275156055]
+- `mc_mab_tilde_perform64` (function, Zeilen 1188-1293) - void mc_mab_tilde_perform64(t_mab_tilde* x, t_object* dsp64, double** ins, long numins, double** outs, long numouts, long sampleframes, long flags, void* userparam)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mc_mab_tilde.cpp:205` (function) [mab_10b53843aa6a]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:60` (section) [mab_2ed8f254f455]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:240` (section) [mab_fae7124021d2]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:356` (section) [mab_d9bab46c73e2]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:395` (section) [mab_53c4a87ea817]
-- `mc_multichanneloutputs` (function, Zeilen 1247-1252) - long mc_multichanneloutputs(t_mab_tilde* x, long index, long count)
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:357` (section) [mab_1e507af6c0cf]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:396` (section) [mab_f7248826a76f]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:118` (section) [mab_0862f74eaaa5]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:305` (section) [mab_ec6275156055]
+- `mc_multichanneloutputs` (function, Zeilen 1298-1303) - long mc_multichanneloutputs(t_mab_tilde* x, long index, long count)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mc_mab_tilde.cpp:1` (module) [mab_21507bee1b44]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mc_mab_tilde.cpp:62` (module) [mab_4409cb6e48e4]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mc_mab_tilde.cpp:64` (function) [mab_27cbcc30dc72]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mc_mab_tilde.cpp:153` (function) [mab_d33197747134]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:240` (section) [mab_fae7124021d2]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:395` (section) [mab_53c4a87ea817]
-- `mc_inputchanged` (function, Zeilen 1257-1273) - long mc_inputchanged(t_mab_tilde* x, long index, long count)
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:396` (section) [mab_f7248826a76f]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:305` (section) [mab_ec6275156055]
+- `mc_inputchanged` (function, Zeilen 1308-1324) - long mc_inputchanged(t_mab_tilde* x, long index, long count)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mc_mab_tilde.cpp:1` (module) [mab_21507bee1b44]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mc_mab_tilde.cpp:71` (module) [mab_2a25aff06b6d]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mc_mab_tilde.cpp:73` (function) [mab_33efb6309963]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mc_mab_tilde.cpp:166` (function) [mab_bf222974d69b]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:240` (section) [mab_fae7124021d2]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:356` (section) [mab_d9bab46c73e2]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:395` (section) [mab_53c4a87ea817]
-- `mc_mab_tilde_chans` (function, Zeilen 1278-1283) - void mc_mab_tilde_chans(t_mab_tilde* x, long n)
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:357` (section) [mab_1e507af6c0cf]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:396` (section) [mab_f7248826a76f]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:305` (section) [mab_ec6275156055]
+- `mc_mab_tilde_chans` (function, Zeilen 1329-1334) - void mc_mab_tilde_chans(t_mab_tilde* x, long n)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\nn_tilde_parity.md:127` (section) [mab_7671415bab00]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:240` (section) [mab_fae7124021d2]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:284` (section) [mab_1529be7d259f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:395` (section) [mab_53c4a87ea817]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:459` (section) [mab_b92042f2f1d6]
-- `mcs_mab_tilde_new` (function, Zeilen 1301-1439) - void* mcs_mab_tilde_new(t_symbol* s, long argc, t_atom* argv)
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:60` (section) [mab_2ed8f254f455]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:223` (section) [mab_75d74f7e2c11]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:284` (section) [mab_1529be7d259f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:459` (section) [mab_b92042f2f1d6]
-- `mcs_mab_tilde_dsp64` (function, Zeilen 1444-1476) - void mcs_mab_tilde_dsp64(t_mab_tilde* x, t_object* dsp64, short* count, double samplerate, long maxvectorsize, long flags)
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:60` (section) [mab_2ed8f254f455]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:181` (section) [mab_c4d22928c7c1]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:459` (section) [mab_b92042f2f1d6]
-- `mcs_mab_tilde_perform64` (function, Zeilen 1484-1636) - void mcs_mab_tilde_perform64(t_mab_tilde* x, t_object* dsp64, double** ins, long numins, double** outs, long numouts, long sampleframes, long flags, void* userparam)
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:396` (section) [mab_f7248826a76f]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:460` (section) [mab_37fbb9123c37]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:305` (section) [mab_ec6275156055]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:349` (section) [mab_e895bcefe5e1]
+- `mcs_mab_tilde_new` (function, Zeilen 1352-1493) - void* mcs_mab_tilde_new(t_symbol* s, long argc, t_atom* argv)
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:460` (section) [mab_37fbb9123c37]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:31` (section) [mab_02e6b0494ef5]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:118` (section) [mab_0862f74eaaa5]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:288` (section) [mab_cc6703b2f6bd]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:349` (section) [mab_e895bcefe5e1]
+- `mcs_mab_tilde_dsp64` (function, Zeilen 1498-1530) - void mcs_mab_tilde_dsp64(t_mab_tilde* x, t_object* dsp64, short* count, double samplerate, long maxvectorsize, long flags)
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:182` (section) [mab_5426d112cebd]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:460` (section) [mab_37fbb9123c37]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:118` (section) [mab_0862f74eaaa5]
+- `mcs_mab_tilde_perform64` (function, Zeilen 1538-1690) - void mcs_mab_tilde_perform64(t_mab_tilde* x, t_object* dsp64, double** ins, long numins, double** outs, long numouts, long sampleframes, long flags, void* userparam)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:109` (module) [mab_bdc8018bc1bc]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:60` (section) [mab_2ed8f254f455]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:459` (section) [mab_b92042f2f1d6]
-- `mcs_multichanneloutputs` (function, Zeilen 1642-1648) - long mcs_multichanneloutputs(t_mab_tilde* x, long index, long count)
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:460` (section) [mab_37fbb9123c37]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:118` (section) [mab_0862f74eaaa5]
+- `mcs_multichanneloutputs` (function, Zeilen 1696-1702) - long mcs_multichanneloutputs(t_mab_tilde* x, long index, long count)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:1` (module) [mab_f9114dba5b7e]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:86` (module) [mab_25aad7fdbc14]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:88` (function) [mab_2ca4b3d83f3d]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:354` (function) [mab_a0a99c65d244]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:284` (section) [mab_1529be7d259f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:459` (section) [mab_b92042f2f1d6]
-- `mcs_inputchanged` (function, Zeilen 1654-1675) - long mcs_inputchanged(t_mab_tilde* x, long index, long count)
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:460` (section) [mab_37fbb9123c37]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:349` (section) [mab_e895bcefe5e1]
+- `mcs_inputchanged` (function, Zeilen 1708-1729) - long mcs_inputchanged(t_mab_tilde* x, long index, long count)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:1` (module) [mab_f9114dba5b7e]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:95` (module) [mab_0df14c177f82]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:97` (function) [mab_3479be45707f]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:367` (function) [mab_1e74251ac998]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:284` (section) [mab_1529be7d259f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:459` (section) [mab_b92042f2f1d6]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:460` (section) [mab_37fbb9123c37]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:349` (section) [mab_e895bcefe5e1]
 
 ## C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\max_path_resolve.cpp
 
@@ -1384,10 +1386,10 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_info.cpp:291` (function) [mab_dc87d4b65983]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_info.cpp:424` (function) [mab_71926c5ab9e8]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\max_path_resolve.h:1` (module) [mab_5713be1b07d8]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:704` (function) [mab_b3ee4433309e]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:900` (function) [mab_82f776a8b920]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:953` (function) [mab_1125e4cc7a01]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:1301` (function) [mab_f9f93af4667a]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:751` (function) [mab_b0c7208dc5d6]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:947` (function) [mab_8ee6c4fb456c]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:1000` (function) [mab_502c05f864df]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:1352` (function) [mab_e199041ee141]
 
 ## C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\max_path_resolve.h
 
@@ -1437,13 +1439,13 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_info.cpp:198` (function) [mab_110947119e02]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_worker_launch.cpp:29` (function) [mab_71125556bc41]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\worker_launch.cpp:164` (function) [mab_aa08c763aa21]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:537` (function) [mab_1a802ac35a82]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:551` (function) [mab_044b231c1804]
 - `WorkerModelInfo` (class, Zeilen 24-37) - struct WorkerModelInfo {
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_info.cpp:29` (class) [mab_7a705530907c]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_worker_launch.cpp:29` (function) [mab_71125556bc41]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\worker_launch.cpp:60` (function) [mab_a0153d71eb6c]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:94` (section) [mab_eeb49c4c042e]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:148` (section) [mab_ae55c1bc9c6b]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:95` (section) [mab_a1ff02787272]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:149` (section) [mab_70db6e74bbd7]
 
 ## C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\benchmark_models.py
 
@@ -1504,8 +1506,6 @@ Symbole:
 - `_device_line` (function, Zeilen 125-134) - def _device_line(args)
 - `append_run_to_report` (function, Zeilen 137-182) - def append_run_to_report(report_path, args, rows, notes) - Fuegt die Messung als neuen nummerierten Testrun oben ein.
 - `main` (function, Zeilen 185-285) - def main()
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:44` (section) [mab_f1edca6be051]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:123` (section) [mab_c854df190207]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:115` (section) [mab_b15d84b8687f]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:155` (section) [mab_0e9c390f4881]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:159` (section) [mab_d6ce2984dbf5]
@@ -1514,6 +1514,8 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_audio_quality.py:361` (module) [mab_d65c5d61ece7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_accumulator.cpp:152` (function) [mab_83aa65d50791]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:180` (function) [mab_9a853679dfa4]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:250` (function) [mab_fad81e309558]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_infer_all_models.py:236` (module) [mab_ce1ad5c8c05e]
 
 ## C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_anything_handler.cpp
 
@@ -1524,13 +1526,11 @@ Symbole:
 - `_mab_tilde` (class, Zeilen 14-24) - struct _mab_tilde {
 - `mab_tilde_anything` (function, Zeilen 27-29) - extern "C" void mab_tilde_anything(t_mab_tilde* x, void* s, long argc, void* argv)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\nn_tilde_parity.md:95` (section) [mab_75a0185783ea]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:158` (module) [mab_de7644f526f9]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:215` (function) [mab_d8e5232557c7]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:252` (function) [mab_bc7b89603705]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:914` (function) [mab_1f43258fac5a]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:159` (module) [mab_4750b40f4258]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:216` (function) [mab_9626924868fd]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:253` (function) [mab_3c5be894d1e1]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:961` (function) [mab_07dd1f3acb07]
 - `main` (function, Zeilen 31-58) - int main()
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:44` (section) [mab_f1edca6be051]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:123` (section) [mab_c854df190207]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:115` (section) [mab_b15d84b8687f]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:155` (section) [mab_0e9c390f4881]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:159` (section) [mab_d6ce2984dbf5]
@@ -1539,6 +1539,8 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_accumulator.cpp:152` (function) [mab_83aa65d50791]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:180` (function) [mab_9a853679dfa4]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:250` (function) [mab_fad81e309558]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_infer_all_models.py:236` (module) [mab_ce1ad5c8c05e]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker.cpp:12` (function) [mab_16e464ece78c]
 
 ## C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_attribute_passthrough.py
 
@@ -1671,7 +1673,7 @@ Symbole:
 - `pearson_correlation` (function, Zeilen 103-112) - def pearson_correlation(a, b)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\test_strategy.md:229` (section) [mab_af494054940a]
 - `_test_signal` (function, Zeilen 115-121) - def _test_signal(block_size, sr=48000, duration_ratio=1.0) - Harmonisches Testsignal (Summe von Sinen), sample-genau wiederholbar.
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:379` (section) [mab_43cb26f9140e]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:444` (section) [mab_b457aa4f5151]
 - `_make_input` (function, Zeilen 124-125) - def _make_input(ci, block_size, sig)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_infer_all_models.py:88` (function) [mab_e8c0d1a6fecf]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_infer_all_models.py:111` (function) [mab_c380fb941866]
@@ -1712,8 +1714,6 @@ Symbole:
 - `test_missing_outlets_skipped` (function, Zeilen 122-134) - static void test_missing_outlets_skipped()
 - `test_missing_inlets_zero_filled` (function, Zeilen 137-150) - static void test_missing_inlets_zero_filled()
 - `main` (function, Zeilen 152-163) - int main()
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:44` (section) [mab_f1edca6be051]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:123` (section) [mab_c854df190207]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:115` (section) [mab_b15d84b8687f]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:155` (section) [mab_0e9c390f4881]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:159` (section) [mab_d6ce2984dbf5]
@@ -1722,6 +1722,8 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_audio_quality.py:361` (module) [mab_d65c5d61ece7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:180` (function) [mab_9a853679dfa4]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:250` (function) [mab_fad81e309558]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_infer_all_models.py:236` (module) [mab_ce1ad5c8c05e]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker.cpp:12` (function) [mab_16e464ece78c]
 
 ## C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_size_extraction.py
 
@@ -1754,27 +1756,27 @@ Symbole:
 
 Symbole:
 - `SharedMemoryHeader` (class, Zeilen 12-34) - struct SharedMemoryHeader {
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:38` (section) [mab_1d6aebbb3abe]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:14` (class) [mab_7c28c9e004d5]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:59` (function) [mab_a04ee96f88c7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:174` (function) [mab_1217cd25cc2b]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:239` (class) [mab_841c08b6c11f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:286` (module) [mab_02567c00f38f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:299` (function) [mab_a62ab3f23c69]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:524` (function) [mab_3505d877152d]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:1` (module) [mab_f9114dba5b7e]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:30` (class) [mab_ea2f0c2cf7c7]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:53` (module) [mab_a780856d383c]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:57` (class) [mab_4ece0a797b10]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:367` (function) [mab_1e74251ac998]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mc_mab_tilde.cpp:1` (module) [mab_21507bee1b44]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mc_mab_tilde.cpp:27` (class) [mab_4c98d4472eff]
 - `ControlRingBuffer` (class, Zeilen 37-41) - struct ControlRingBuffer {
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:449` (section) [mab_88d41f187e46]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:23` (section) [mab_f10055e3e333]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:143` (section) [mab_669e5764abf1]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:232` (section) [mab_c7eb78d4a5de]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\inference_worker.py:105` (class) [mab_1172fbfe4efb]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\inference_worker.py:126` (class) [mab_af3e72ab5cd9]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\inference_worker.py:137` (method) [mab_4a165523ae39]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\inference_worker.py:222` (method) [mab_641a5dcc9c70]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\inference_worker.py:465` (module) [mab_ce3eeebf91d0]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:27` (class) [mab_0416dd0298b3]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_size_extraction.py:122` (class) [mab_65ae964d95dc]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_size_extraction.py:125` (method) [mab_a18a07d5b09a]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:23` (section) [mab_f10055e3e333]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:144` (section) [mab_fad80abaa309]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:233` (section) [mab_d6a73651439e]
 - `t_mab_tilde` (class, Zeilen 44-61) - struct t_mab_tilde {
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\nn_tilde_parity.md:8` (section) [mab_5205d3d98c6a]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\nn_tilde_reference.md:366` (section) [mab_f5fe9e8a1099]
@@ -1791,8 +1793,6 @@ Symbole:
 - `test_crash_state_transition` (function, Zeilen 133-168) - void test_crash_state_transition()
 - `test_still_active_constant` (function, Zeilen 171-178) - void test_still_active_constant()
 - `main` (function, Zeilen 180-197) - int main()
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:44` (section) [mab_f1edca6be051]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:123` (section) [mab_c854df190207]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:115` (section) [mab_b15d84b8687f]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:155` (section) [mab_0e9c390f4881]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:159` (section) [mab_d6ce2984dbf5]
@@ -1801,6 +1801,8 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_audio_quality.py:361` (module) [mab_d65c5d61ece7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_accumulator.cpp:152` (function) [mab_83aa65d50791]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:250` (function) [mab_fad81e309558]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_infer_all_models.py:236` (module) [mab_ce1ad5c8c05e]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker.cpp:12` (function) [mab_16e464ece78c]
 
 ## C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp
 
@@ -1809,23 +1811,21 @@ Symbole:
 
 Symbole:
 - `SharedMemoryHeader` (class, Zeilen 14-36) - struct SharedMemoryHeader {
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:38` (section) [mab_1d6aebbb3abe]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:12` (class) [mab_8a1b5e451830]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:44` (class) [mab_3518c375a1fb]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:239` (class) [mab_841c08b6c11f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:286` (module) [mab_02567c00f38f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:299` (function) [mab_a62ab3f23c69]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:524` (function) [mab_3505d877152d]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:1` (module) [mab_f9114dba5b7e]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:30` (class) [mab_ea2f0c2cf7c7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:53` (module) [mab_a780856d383c]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:57` (class) [mab_4ece0a797b10]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:367` (function) [mab_1e74251ac998]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mc_mab_tilde.cpp:1` (module) [mab_21507bee1b44]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mc_mab_tilde.cpp:27` (class) [mab_4c98d4472eff]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mc_mab_tilde.cpp:50` (module) [mab_cfde30293e9d]
 - `test_shm_name_generation` (function, Zeilen 39-56) - void test_shm_name_generation()
 - `test_shared_memory_creation` (function, Zeilen 59-171) - void test_shared_memory_creation()
 - `test_atomic_flags` (function, Zeilen 174-205) - void test_atomic_flags()
 - `test_buffer_calculations` (function, Zeilen 208-248) - void test_buffer_calculations()
 - `main` (function, Zeilen 250-267) - int main()
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:44` (section) [mab_f1edca6be051]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:123` (section) [mab_c854df190207]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:115` (section) [mab_b15d84b8687f]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:155` (section) [mab_0e9c390f4881]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:159` (section) [mab_d6ce2984dbf5]
@@ -1834,6 +1834,8 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_audio_quality.py:361` (module) [mab_d65c5d61ece7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_accumulator.cpp:152` (function) [mab_83aa65d50791]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:180` (function) [mab_9a853679dfa4]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_infer_all_models.py:236` (module) [mab_ce1ad5c8c05e]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker.cpp:12` (function) [mab_16e464ece78c]
 
 ## C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_infer_all_models.py
 
@@ -1946,16 +1948,14 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread.cpp:1` (module) [mab_2f3d1be3504c]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread.cpp:10` (function) [mab_ac679903543c]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread.cpp:17` (function) [mab_8db1b54e70f6]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:1` (module) [mab_7dd3dfde0ca1]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:477` (module) [mab_388c624c8517]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:482` (function) [mab_36a99c70aa38]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:449` (section) [mab_88d41f187e46]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:23` (section) [mab_f10055e3e333]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:161` (section) [mab_65b1e5300665]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:193` (section) [mab_84bde21f5d38]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:162` (section) [mab_a3a635deebb1]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:194` (section) [mab_371838d890d8]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:159` (module) [mab_4750b40f4258]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:551` (function) [mab_044b231c1804]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:678` (function) [mab_6a09557b6b44]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:751` (function) [mab_b0c7208dc5d6]
 - `main` (function, Zeilen 12-16) - int main()
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:44` (section) [mab_f1edca6be051]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:123` (section) [mab_c854df190207]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:115` (section) [mab_b15d84b8687f]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:155` (section) [mab_0e9c390f4881]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:159` (section) [mab_d6ce2984dbf5]
@@ -1964,6 +1964,8 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_audio_quality.py:361` (module) [mab_d65c5d61ece7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_accumulator.cpp:152` (function) [mab_83aa65d50791]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:180` (function) [mab_9a853679dfa4]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:250` (function) [mab_fad81e309558]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_infer_all_models.py:236` (module) [mab_ce1ad5c8c05e]
 
 ## C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread.cpp
 
@@ -1974,17 +1976,15 @@ Symbole:
 - `init_worker_thread` (function, Zeilen 10-12) - extern "C" void init_worker_thread(t_mab_tilde* x)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker.cpp:1` (module) [mab_11baef9c6ebb]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker.cpp:8` (function) [mab_2c498f66abe4]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:1` (module) [mab_7dd3dfde0ca1]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:477` (module) [mab_388c624c8517]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:482` (function) [mab_36a99c70aa38]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:449` (section) [mab_88d41f187e46]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:23` (section) [mab_f10055e3e333]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:161` (section) [mab_65b1e5300665]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:193` (section) [mab_84bde21f5d38]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:158` (module) [mab_de7644f526f9]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:162` (section) [mab_a3a635deebb1]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:194` (section) [mab_371838d890d8]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:159` (module) [mab_4750b40f4258]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:551` (function) [mab_044b231c1804]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:678` (function) [mab_6a09557b6b44]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:751` (function) [mab_b0c7208dc5d6]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:1000` (function) [mab_502c05f864df]
 - `main` (function, Zeilen 17-36) - int main()
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:44` (section) [mab_f1edca6be051]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:123` (section) [mab_c854df190207]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:115` (section) [mab_b15d84b8687f]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:155` (section) [mab_0e9c390f4881]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:159` (section) [mab_d6ce2984dbf5]
@@ -1993,6 +1993,8 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_audio_quality.py:361` (module) [mab_d65c5d61ece7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_accumulator.cpp:152` (function) [mab_83aa65d50791]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:180` (function) [mab_9a853679dfa4]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:250` (function) [mab_fad81e309558]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_infer_all_models.py:236` (module) [mab_ce1ad5c8c05e]
 
 ## C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp
 
@@ -2004,14 +2006,13 @@ Symbole:
 - `t_pxobject` (class, Zeilen 17-230) - typedef struct _t_pxobject {
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:199` (section) [mab_9c9860442be1]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:23` (section) [mab_f10055e3e333]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:356` (section) [mab_d9bab46c73e2]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:357` (section) [mab_1e507af6c0cf]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:76` (class) [mab_0abfefc5457a]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:290` (function) [mab_a03964355a08]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:426` (function) [mab_f447d06e6fd0]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:953` (function) [mab_1125e4cc7a01]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:1301` (function) [mab_f9f93af4667a]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:291` (function) [mab_cea82fd96c18]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:427` (function) [mab_9f6ac6c074ba]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:1000` (function) [mab_502c05f864df]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:1352` (function) [mab_e199041ee141]
 - `SharedMemoryHeader` (class, Zeilen 239-261) - struct SharedMemoryHeader {
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:38` (section) [mab_1d6aebbb3abe]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:12` (class) [mab_8a1b5e451830]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:44` (class) [mab_3518c375a1fb]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:14` (class) [mab_7c28c9e004d5]
@@ -2021,6 +2022,7 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:30` (class) [mab_ea2f0c2cf7c7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:53` (module) [mab_a780856d383c]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:57` (class) [mab_4ece0a797b10]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:367` (function) [mab_1e74251ac998]
 - `_mab_tilde` (class, Zeilen 267-285) - typedef struct _mab_tilde {
 - `t_mab_tilde` (class, Zeilen 267-285) - typedef struct _mab_tilde {
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\nn_tilde_parity.md:8` (section) [mab_5205d3d98c6a]
@@ -2039,11 +2041,11 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_python_shared_memory.py:29` (constant) [mab_f9d10c705285]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_python_shared_memory.py:38` (class) [mab_85640f129721]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_python_shared_memory.py:41` (method) [mab_9cbbb0de6bb6]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:243` (section) [mab_cc083358bdf1]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\inference_worker.py:54` (constant) [mab_effb7c91728c]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\inference_worker.py:126` (class) [mab_af3e72ab5cd9]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\inference_worker.py:222` (method) [mab_641a5dcc9c70]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_size_extraction.py:1` (module) [mab_1fad8853a557]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_size_extraction.py:49` (class) [mab_acb152171aca]
 - `DEFAULT_BUFFER_SIZE` (constant, Zeilen 292-292) - #define DEFAULT_BUFFER_SIZE 512
 - `MAX_CHANNELS` (constant, Zeilen 293-293) - #define MAX_CHANNELS 16
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\mab_mcp_server.py:1257` (function) [mab_6eca5cd0f4a7]
@@ -2058,17 +2060,16 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:222` (function) [mab_0a9483266461]
 - `test_shared_memory_header_layout` (function, Zeilen 299-339) - void test_shared_memory_header_layout()
 - `test_mab_tilde_structure_layout` (function, Zeilen 345-377) - void test_mab_tilde_structure_layout()
-- `test_instance_id_generation` (function, Zeilen 383-393) - void test_instance_id_generation()
-- `test_shared_memory_name_generation` (function, Zeilen 399-412) - void test_shared_memory_name_generation()
-- `test_buffer_size_validation` (function, Zeilen 418-432) - void test_buffer_size_validation()
-- `test_channel_count_validation` (function, Zeilen 438-452) - void test_channel_count_validation()
-- `test_atomic_flag_operations` (function, Zeilen 458-476) - void test_atomic_flag_operations()
-- `test_thread_safety` (function, Zeilen 482-502) - void test_thread_safety()
-- `test_process_handle_management` (function, Zeilen 508-518) - void test_process_handle_management()
-- `test_memory_offset_calculations` (function, Zeilen 524-542) - void test_memory_offset_calculations()
-- `main` (function, Zeilen 548-562) - int main()
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:44` (section) [mab_f1edca6be051]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:123` (section) [mab_c854df190207]
+- `test_instance_id_generation` (function, Zeilen 383-398) - void test_instance_id_generation()
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:31` (section) [mab_02e6b0494ef5]
+- `test_shared_memory_name_generation` (function, Zeilen 404-417) - void test_shared_memory_name_generation()
+- `test_buffer_size_validation` (function, Zeilen 423-437) - void test_buffer_size_validation()
+- `test_channel_count_validation` (function, Zeilen 443-457) - void test_channel_count_validation()
+- `test_atomic_flag_operations` (function, Zeilen 463-481) - void test_atomic_flag_operations()
+- `test_thread_safety` (function, Zeilen 487-507) - void test_thread_safety()
+- `test_process_handle_management` (function, Zeilen 513-523) - void test_process_handle_management()
+- `test_memory_offset_calculations` (function, Zeilen 529-547) - void test_memory_offset_calculations()
+- `main` (function, Zeilen 553-567) - int main()
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:115` (section) [mab_b15d84b8687f]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:155` (section) [mab_0e9c390f4881]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:159` (section) [mab_d6ce2984dbf5]
@@ -2077,6 +2078,8 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_audio_quality.py:361` (module) [mab_d65c5d61ece7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_accumulator.cpp:152` (function) [mab_83aa65d50791]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:180` (function) [mab_9a853679dfa4]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:250` (function) [mab_fad81e309558]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_infer_all_models.py:236` (module) [mab_ce1ad5c8c05e]
 
 ## C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mab_info_models.py
 
@@ -2160,14 +2163,12 @@ Symbole:
 
 Symbole:
 - `mab_tilde_assist` (function, Zeilen 10-12) - extern "C" void mab_tilde_assist(t_mab_tilde* x, void* b, long m, long a, char* s)
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:449` (section) [mab_88d41f187e46]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:158` (module) [mab_de7644f526f9]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:215` (function) [mab_d8e5232557c7]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:252` (function) [mab_bc7b89603705]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:352` (function) [mab_dbedb32b07bb]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:159` (module) [mab_4750b40f4258]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:216` (function) [mab_9626924868fd]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:253` (function) [mab_3c5be894d1e1]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:353` (function) [mab_55aab9dfd73c]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:514` (section) [mab_a717ebe2437b]
 - `main` (function, Zeilen 14-31) - int main()
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:44` (section) [mab_f1edca6be051]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:123` (section) [mab_c854df190207]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:115` (section) [mab_b15d84b8687f]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:155` (section) [mab_0e9c390f4881]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:159` (section) [mab_d6ce2984dbf5]
@@ -2176,6 +2177,8 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_audio_quality.py:361` (module) [mab_d65c5d61ece7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_accumulator.cpp:152` (function) [mab_83aa65d50791]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:180` (function) [mab_9a853679dfa4]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:250` (function) [mab_fad81e309558]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_infer_all_models.py:236` (module) [mab_ce1ad5c8c05e]
 
 ## C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mab_tilde_dsp64.cpp
 
@@ -2184,11 +2187,9 @@ Symbole:
 Symbole:
 - `mab_tilde_dsp64` (function, Zeilen 13-16) - extern "C" void mab_tilde_dsp64(t_mab_tilde* x, t_object* dsp64, short* count, double samplerate, long maxvectorsize, long flags)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:171` (section) [mab_d4af5234b95e]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:449` (section) [mab_88d41f187e46]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:161` (section) [mab_65b1e5300665]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:162` (section) [mab_a3a635deebb1]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:514` (section) [mab_a717ebe2437b]
 - `main` (function, Zeilen 18-36) - int main()
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:44` (section) [mab_f1edca6be051]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:123` (section) [mab_c854df190207]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:115` (section) [mab_b15d84b8687f]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:155` (section) [mab_0e9c390f4881]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:159` (section) [mab_d6ce2984dbf5]
@@ -2197,6 +2198,8 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_audio_quality.py:361` (module) [mab_d65c5d61ece7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_accumulator.cpp:152` (function) [mab_83aa65d50791]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:180` (function) [mab_9a853679dfa4]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:250` (function) [mab_fad81e309558]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_infer_all_models.py:236` (module) [mab_ce1ad5c8c05e]
 
 ## C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mab_tilde_free.cpp
 
@@ -2205,13 +2208,11 @@ Symbole:
 Symbole:
 - `mab_tilde_free` (function, Zeilen 10-12) - extern "C" void mab_tilde_free(t_mab_tilde* x)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:171` (section) [mab_d4af5234b95e]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:60` (section) [mab_2ed8f254f455]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:449` (section) [mab_88d41f187e46]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:23` (section) [mab_f10055e3e333]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:161` (section) [mab_65b1e5300665]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:162` (section) [mab_a3a635deebb1]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:118` (section) [mab_0862f74eaaa5]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:514` (section) [mab_a717ebe2437b]
 - `main` (function, Zeilen 14-27) - int main()
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:44` (section) [mab_f1edca6be051]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:123` (section) [mab_c854df190207]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:115` (section) [mab_b15d84b8687f]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:155` (section) [mab_0e9c390f4881]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:159` (section) [mab_d6ce2984dbf5]
@@ -2220,6 +2221,8 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_audio_quality.py:361` (module) [mab_d65c5d61ece7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_accumulator.cpp:152` (function) [mab_83aa65d50791]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:180` (function) [mab_9a853679dfa4]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:250` (function) [mab_fad81e309558]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_infer_all_models.py:236` (module) [mab_ce1ad5c8c05e]
 
 ## C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mab_tilde_new.cpp
 
@@ -2227,19 +2230,17 @@ Symbole:
 
 Symbole:
 - `mab_tilde_new` (function, Zeilen 12-15) - extern "C" void* mab_tilde_new(t_symbol* s, long argc, t_atom* argv)
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:44` (section) [mab_f1edca6be051]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\nn_tilde_reference.md:366` (section) [mab_f5fe9e8a1099]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:171` (section) [mab_d4af5234b95e]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:199` (section) [mab_9c9860442be1]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\buffer_manager.h:32` (module) [mab_605d875df0f7]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:60` (section) [mab_2ed8f254f455]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:203` (section) [mab_86805533eb42]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:449` (section) [mab_88d41f187e46]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:45` (section) [mab_1addd82e1b75]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:23` (section) [mab_f10055e3e333]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:161` (section) [mab_65b1e5300665]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:162` (section) [mab_a3a635deebb1]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:194` (section) [mab_371838d890d8]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:344` (section) [mab_c2c33988dbd1]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:118` (section) [mab_0862f74eaaa5]
 - `main` (function, Zeilen 17-32) - int main()
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:44` (section) [mab_f1edca6be051]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:123` (section) [mab_c854df190207]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:115` (section) [mab_b15d84b8687f]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:155` (section) [mab_0e9c390f4881]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:159` (section) [mab_d6ce2984dbf5]
@@ -2248,6 +2249,8 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_audio_quality.py:361` (module) [mab_d65c5d61ece7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_accumulator.cpp:152` (function) [mab_83aa65d50791]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:180` (function) [mab_9a853679dfa4]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:250` (function) [mab_fad81e309558]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_infer_all_models.py:236` (module) [mab_ce1ad5c8c05e]
 
 ## C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mab_tilde_perform64.cpp
 
@@ -2257,12 +2260,10 @@ Symbole:
 - `mab_tilde_perform64` (function, Zeilen 12-15) - extern "C" void mab_tilde_perform64(t_mab_tilde* x, t_object* dsp64, double** ins, long numins, double** outs, long numouts, long sampleframes, long flags, void* userparam)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\nn_tilde_reference.md:353` (section) [mab_912336da49b7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:171` (section) [mab_d4af5234b95e]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:60` (section) [mab_2ed8f254f455]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:449` (section) [mab_88d41f187e46]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:161` (section) [mab_65b1e5300665]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:162` (section) [mab_a3a635deebb1]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:118` (section) [mab_0862f74eaaa5]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:514` (section) [mab_a717ebe2437b]
 - `main` (function, Zeilen 17-38) - int main()
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:44` (section) [mab_f1edca6be051]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:123` (section) [mab_c854df190207]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:115` (section) [mab_b15d84b8687f]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:155` (section) [mab_0e9c390f4881]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:159` (section) [mab_d6ce2984dbf5]
@@ -2271,6 +2272,8 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_audio_quality.py:361` (module) [mab_d65c5d61ece7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_accumulator.cpp:152` (function) [mab_83aa65d50791]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:180` (function) [mab_9a853679dfa4]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:250` (function) [mab_fad81e309558]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_infer_all_models.py:236` (module) [mab_ce1ad5c8c05e]
 
 ## C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mc_mab_tilde.cpp
 
@@ -2279,30 +2282,30 @@ Symbole:
 
 Symbole:
 - `SharedMemoryHeader` (class, Zeilen 27-49) - struct SharedMemoryHeader {
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:38` (section) [mab_1d6aebbb3abe]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:12` (class) [mab_8a1b5e451830]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:44` (class) [mab_3518c375a1fb]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:14` (class) [mab_7c28c9e004d5]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:59` (function) [mab_a04ee96f88c7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:174` (function) [mab_1217cd25cc2b]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:239` (class) [mab_841c08b6c11f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:286` (module) [mab_02567c00f38f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:299` (function) [mab_a62ab3f23c69]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:524` (function) [mab_3505d877152d]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:1` (module) [mab_f9114dba5b7e]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:30` (class) [mab_ea2f0c2cf7c7]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:53` (module) [mab_a780856d383c]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:57` (class) [mab_4ece0a797b10]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:367` (function) [mab_1e74251ac998]
 - `McState` (class, Zeilen 54-61) - struct McState {
 - `mc_multichanneloutputs` (function, Zeilen 64-70) - static long mc_multichanneloutputs(McState* x, long index, long count)
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:240` (section) [mab_fae7124021d2]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:395` (section) [mab_53c4a87ea817]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:158` (module) [mab_de7644f526f9]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:252` (function) [mab_bc7b89603705]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:1247` (function) [mab_08c178e369f4]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:396` (section) [mab_f7248826a76f]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:159` (module) [mab_4750b40f4258]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:253` (function) [mab_3c5be894d1e1]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:1298` (function) [mab_87ae3adb576a]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:305` (section) [mab_ec6275156055]
 - `mc_inputchanged` (function, Zeilen 73-84) - static long mc_inputchanged(McState* x, long index, long count)
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:240` (section) [mab_fae7124021d2]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:356` (section) [mab_d9bab46c73e2]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:395` (section) [mab_53c4a87ea817]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:158` (module) [mab_de7644f526f9]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:252` (function) [mab_bc7b89603705]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:1257` (function) [mab_569b31ce6794]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:357` (section) [mab_1e507af6c0cf]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:396` (section) [mab_f7248826a76f]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:159` (module) [mab_4750b40f4258]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:253` (function) [mab_3c5be894d1e1]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:1308` (function) [mab_38b49046eb0c]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:305` (section) [mab_ec6275156055]
 - `apply_io_decision` (function, Zeilen 87-103) - static void apply_io_decision(McState* x, long model_in, long model_out, long* io_in, long* io_out)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:69` (function) [mab_43a31240a695]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:146` (function) [mab_d01b79918b9e]
@@ -2320,8 +2323,6 @@ Symbole:
 - `test_latent_decode_mc_roundtrip` (function, Zeilen 205-255) - static void test_latent_decode_mc_roundtrip()
 - `test_fewer_connected_channels_zero_padded` (function, Zeilen 258-281) - static void test_fewer_connected_channels_zero_padded()
 - `main` (function, Zeilen 283-295) - int main()
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:44` (section) [mab_f1edca6be051]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:123` (section) [mab_c854df190207]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:115` (section) [mab_b15d84b8687f]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:155` (section) [mab_0e9c390f4881]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:159` (section) [mab_d6ce2984dbf5]
@@ -2330,6 +2331,8 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_audio_quality.py:361` (module) [mab_d65c5d61ece7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_accumulator.cpp:152` (function) [mab_83aa65d50791]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:180` (function) [mab_9a853679dfa4]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:250` (function) [mab_fad81e309558]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_infer_all_models.py:236` (module) [mab_ce1ad5c8c05e]
 
 ## C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp
 
@@ -2338,34 +2341,34 @@ Symbole:
 
 Symbole:
 - `SharedMemoryHeader` (class, Zeilen 30-52) - struct SharedMemoryHeader {
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:38` (section) [mab_1d6aebbb3abe]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:12` (class) [mab_8a1b5e451830]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:44` (class) [mab_3518c375a1fb]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:14` (class) [mab_7c28c9e004d5]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:59` (function) [mab_a04ee96f88c7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:174` (function) [mab_1217cd25cc2b]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:239` (class) [mab_841c08b6c11f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:286` (module) [mab_02567c00f38f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:299` (function) [mab_a62ab3f23c69]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:524` (function) [mab_3505d877152d]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mc_mab_tilde.cpp:1` (module) [mab_21507bee1b44]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mc_mab_tilde.cpp:27` (class) [mab_4c98d4472eff]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mc_mab_tilde.cpp:50` (module) [mab_cfde30293e9d]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mc_mab_tilde.cpp:54` (class) [mab_82931e05c311]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mc_mab_tilde.cpp:166` (function) [mab_bf222974d69b]
 - `McsState` (class, Zeilen 57-66) - struct McsState {
 - `apply_io_decision` (function, Zeilen 69-85) - static void apply_io_decision(McsState* x, long model_in, long model_out, long* io_in, long* io_out)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mc_mab_tilde.cpp:87` (function) [mab_dfa288d0f3f7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mc_mab_tilde.cpp:115` (function) [mab_c3b8c166471c]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mc_mab_tilde.cpp:139` (function) [mab_e124f78bcd79]
 - `mcs_multichanneloutputs` (function, Zeilen 88-94) - static long mcs_multichanneloutputs(McsState* x, long index, long count)
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:284` (section) [mab_1529be7d259f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:459` (section) [mab_b92042f2f1d6]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:158` (module) [mab_de7644f526f9]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:215` (function) [mab_d8e5232557c7]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:1484` (function) [mab_eb496895e9b5]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:1642` (function) [mab_0bdf478ea110]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:460` (section) [mab_37fbb9123c37]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:159` (module) [mab_4750b40f4258]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:216` (function) [mab_9626924868fd]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:1538` (function) [mab_85bf4268a826]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:1696` (function) [mab_48f000c86683]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:349` (section) [mab_e895bcefe5e1]
 - `mcs_inputchanged` (function, Zeilen 97-108) - static long mcs_inputchanged(McsState* x, long index, long count)
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:284` (section) [mab_1529be7d259f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:459` (section) [mab_b92042f2f1d6]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:158` (module) [mab_de7644f526f9]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:215` (function) [mab_d8e5232557c7]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:1654` (function) [mab_237c954f04ef]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:460` (section) [mab_37fbb9123c37]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:159` (module) [mab_4750b40f4258]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:216` (function) [mab_9626924868fd]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:1708` (function) [mab_f33e570b9660]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:349` (section) [mab_e895bcefe5e1]
 - `wire_batch_input` (function, Zeilen 113-126) - static void wire_batch_input(const double* const* ins, long numins, long n_batches, long ci, const long* channel_map, const double* wired[MAX_CHANNELS * MAX_CHANNELS])
 - `wire_batch_output` (function, Zeilen 130-142) - static void wire_batch_output(double** outs, long numouts, long n_batches, long co, long per_outlet, double* wired[MAX_CHANNELS * MAX_CHANNELS])
 - `test_mcs_io_is_n_batches_in_n_batches_out` (function, Zeilen 146-171) - static void test_mcs_io_is_n_batches_in_n_batches_out()
@@ -2381,8 +2384,6 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mc_mab_tilde.cpp:166` (function) [mab_bf222974d69b]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mc_mab_tilde.cpp:283` (function) [mab_84cb1d7c758a]
 - `main` (function, Zeilen 389-402) - int main()
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:44` (section) [mab_f1edca6be051]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:123` (section) [mab_c854df190207]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:115` (section) [mab_b15d84b8687f]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:155` (section) [mab_0e9c390f4881]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:159` (section) [mab_d6ce2984dbf5]
@@ -2391,6 +2392,8 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_audio_quality.py:361` (module) [mab_d65c5d61ece7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_accumulator.cpp:152` (function) [mab_83aa65d50791]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:180` (function) [mab_9a853679dfa4]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:250` (function) [mab_fad81e309558]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_infer_all_models.py:236` (module) [mab_ce1ad5c8c05e]
 
 ## C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_message_handlers.cpp
 
@@ -2412,49 +2415,47 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_rag_wiki.py:278` (method) [mab_eab26e671188]
 - `mab_tilde_gpu` (function, Zeilen 39-41) - extern "C" void mab_tilde_gpu(t_mab_tilde* x, long flag)
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\nn_tilde_parity.md:95` (section) [mab_75a0185783ea]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:60` (section) [mab_2ed8f254f455]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:158` (module) [mab_de7644f526f9]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:215` (function) [mab_d8e5232557c7]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:252` (function) [mab_bc7b89603705]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:671` (function) [mab_98505ec488fa]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:810` (function) [mab_66605823751e]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:159` (module) [mab_4750b40f4258]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:216` (function) [mab_9626924868fd]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:253` (function) [mab_3c5be894d1e1]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:718` (function) [mab_5805ee6fafa8]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:857` (function) [mab_98baa36d80e1]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:118` (section) [mab_0862f74eaaa5]
 - `mab_tilde_reload` (function, Zeilen 43-45) - extern "C" void mab_tilde_reload(t_mab_tilde* x, void* s)
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:60` (section) [mab_2ed8f254f455]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:158` (module) [mab_de7644f526f9]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:215` (function) [mab_d8e5232557c7]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:252` (function) [mab_bc7b89603705]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:704` (function) [mab_b3ee4433309e]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:900` (function) [mab_82f776a8b920]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:159` (module) [mab_4750b40f4258]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:216` (function) [mab_9626924868fd]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:253` (function) [mab_3c5be894d1e1]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:751` (function) [mab_b0c7208dc5d6]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:947` (function) [mab_8ee6c4fb456c]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:118` (section) [mab_0862f74eaaa5]
 - `mab_tilde_dump` (function, Zeilen 47-49) - extern "C" void mab_tilde_dump(t_mab_tilde* x)
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:158` (module) [mab_de7644f526f9]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:215` (function) [mab_d8e5232557c7]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:252` (function) [mab_bc7b89603705]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:785` (function) [mab_243f80e5f0da]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:159` (module) [mab_4750b40f4258]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:216` (function) [mab_9626924868fd]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:253` (function) [mab_3c5be894d1e1]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:832` (function) [mab_3ac01ff30b09]
 - `mab_tilde_set` (function, Zeilen 51-53) - extern "C" void mab_tilde_set(t_mab_tilde* x, void* s, long argc, void* argv)
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:232` (section) [mab_c7eb78d4a5de]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:158` (module) [mab_de7644f526f9]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:215` (function) [mab_d8e5232557c7]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:252` (function) [mab_bc7b89603705]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:810` (function) [mab_66605823751e]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:233` (section) [mab_d6a73651439e]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:159` (module) [mab_4750b40f4258]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:216` (function) [mab_9626924868fd]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:253` (function) [mab_3c5be894d1e1]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:857` (function) [mab_98baa36d80e1]
 - `mab_tilde_get` (function, Zeilen 55-57) - extern "C" void mab_tilde_get(t_mab_tilde* x, void* s)
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:158` (module) [mab_de7644f526f9]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:215` (function) [mab_d8e5232557c7]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:252` (function) [mab_bc7b89603705]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:856` (function) [mab_195e06dd367d]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:159` (module) [mab_4750b40f4258]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:216` (function) [mab_9626924868fd]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:253` (function) [mab_3c5be894d1e1]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:903` (function) [mab_71633d5d2997]
 - `mab_tilde_method` (function, Zeilen 59-61) - extern "C" void mab_tilde_method(t_mab_tilde* x, void* s, long argc, void* argv)
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:203` (section) [mab_86805533eb42]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:158` (module) [mab_de7644f526f9]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:215` (function) [mab_d8e5232557c7]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:252` (function) [mab_bc7b89603705]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:884` (function) [mab_bd70b6ea3446]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:159` (module) [mab_4750b40f4258]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:216` (function) [mab_9626924868fd]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:253` (function) [mab_3c5be894d1e1]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:931` (function) [mab_abb7174843f5]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:268` (section) [mab_3d78b07aba8f]
 - `mab_tilde_load` (function, Zeilen 63-65) - extern "C" void mab_tilde_load(t_mab_tilde* x, void* s)
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:158` (module) [mab_de7644f526f9]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:215` (function) [mab_d8e5232557c7]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:252` (function) [mab_bc7b89603705]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:900` (function) [mab_82f776a8b920]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:159` (module) [mab_4750b40f4258]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:216` (function) [mab_9626924868fd]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:253` (function) [mab_3c5be894d1e1]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:947` (function) [mab_8ee6c4fb456c]
 - `main` (function, Zeilen 67-117) - int main()
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:44` (section) [mab_f1edca6be051]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:123` (section) [mab_c854df190207]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:115` (section) [mab_b15d84b8687f]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:155` (section) [mab_0e9c390f4881]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:159` (section) [mab_d6ce2984dbf5]
@@ -2463,6 +2464,8 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_audio_quality.py:361` (module) [mab_d65c5d61ece7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_accumulator.cpp:152` (function) [mab_83aa65d50791]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:180` (function) [mab_9a853679dfa4]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:250` (function) [mab_fad81e309558]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_infer_all_models.py:236` (module) [mab_ce1ad5c8c05e]
 
 ## C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_method_layout.py
 
@@ -2508,7 +2511,7 @@ Symbole:
 - `TestInferMethodSemantics.test_output_trims_extra_samples` (method, Zeilen 163-171) - def test_output_trims_extra_samples(self)
 - `TestInferMethodBatched` (class, Zeilen 174-230) - class TestInferMethodBatched(unittest.TestCase) - Phase 6 (mcs.mab~): 3-D input (n_batches, ci, block) is fed through the
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\test_strategy.md:72` (section) [mab_94ab6e9b382f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:284` (section) [mab_1529be7d259f]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:349` (section) [mab_e895bcefe5e1]
 - `TestInferMethodBatched.setUp` (method, Zeilen 178-180) - def setUp(self)
 - `TestInferMethodBatched.test_forward_batched_keeps_batch_dim` (method, Zeilen 182-190) - def test_forward_batched_keeps_batch_dim(self)
 - `TestInferMethodBatched.test_encode_batched` (method, Zeilen 192-199) - def test_encode_batched(self)
@@ -2568,7 +2571,7 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_infer_all_models.py:111` (function) [mab_c380fb941866]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_infer_all_models.py:163` (function) [mab_083bac621d9e]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_infer_all_models.py:206` (function) [mab_1061aed4a219]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:379` (section) [mab_43cb26f9140e]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:444` (section) [mab_b457aa4f5151]
 - `_cleanup` (function, Zeilen 72-75) - def _cleanup()
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_audio_quality.py:71` (function) [mab_f419c6395ed8]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_audio_quality.py:147` (function) [mab_ca1127542130]
@@ -2694,16 +2697,16 @@ Symbole:
 
 Symbole:
 - `SharedMemoryHeader` (class, Zeilen 11-33) - struct SharedMemoryHeader {
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:38` (section) [mab_1d6aebbb3abe]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:12` (class) [mab_8a1b5e451830]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:44` (class) [mab_3518c375a1fb]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:14` (class) [mab_7c28c9e004d5]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:59` (function) [mab_a04ee96f88c7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:174` (function) [mab_1217cd25cc2b]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:239` (class) [mab_841c08b6c11f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:286` (module) [mab_02567c00f38f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:299` (function) [mab_a62ab3f23c69]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:524` (function) [mab_3505d877152d]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:1` (module) [mab_f9114dba5b7e]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:30` (class) [mab_ea2f0c2cf7c7]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:53` (module) [mab_a780856d383c]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:57` (class) [mab_4ece0a797b10]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:367` (function) [mab_1e74251ac998]
 - `test_single_channel_layout` (function, Zeilen 36-64) - void test_single_channel_layout()
 - `test_stereo_layout` (function, Zeilen 67-95) - void test_stereo_layout()
 - `test_quad_layout` (function, Zeilen 98-126) - void test_quad_layout()
@@ -2711,8 +2714,6 @@ Symbole:
 - `test_numpy_reshape_dimensions` (function, Zeilen 166-194) - void test_numpy_reshape_dimensions()
 - `test_channel_stride` (function, Zeilen 197-236) - void test_channel_stride()
 - `main` (function, Zeilen 238-261) - int main()
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:44` (section) [mab_f1edca6be051]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:123` (section) [mab_c854df190207]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:115` (section) [mab_b15d84b8687f]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:155` (section) [mab_0e9c390f4881]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:159` (section) [mab_d6ce2984dbf5]
@@ -2721,6 +2722,8 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_audio_quality.py:361` (module) [mab_d65c5d61ece7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_accumulator.cpp:152` (function) [mab_83aa65d50791]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:180` (function) [mab_9a853679dfa4]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:250` (function) [mab_fad81e309558]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_infer_all_models.py:236` (module) [mab_ce1ad5c8c05e]
 
 ## C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_python_shared_memory.py
 
@@ -2731,25 +2734,25 @@ Symbole:
 - `MAGIC_NUMBER` (constant, Zeilen 29-29) - MAGIC_NUMBER = 0x4D414254  # 'MABT'
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\mab_mcp_server.py:277` (function) [mab_5a566f6e86b6]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\wiki_audit_2026-08-11.md:28` (section) [mab_47152b6393d4]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:291` (constant) [mab_5176c99aecd6]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:286` (module) [mab_02567c00f38f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:299` (function) [mab_a62ab3f23c69]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:243` (section) [mab_cc083358bdf1]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\inference_worker.py:54` (constant) [mab_effb7c91728c]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\inference_worker.py:126` (class) [mab_af3e72ab5cd9]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\inference_worker.py:222` (method) [mab_641a5dcc9c70]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_size_extraction.py:1` (module) [mab_1fad8853a557]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_size_extraction.py:49` (class) [mab_acb152171aca]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_size_extraction.py:52` (method) [mab_5358458d897c]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_size_extraction.py:56` (method) [mab_b5c2bb7015e6]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:244` (section) [mab_ceb77969ee51]
 - `MAX_CHANNELS` (constant, Zeilen 30-30) - MAX_CHANNELS = 16
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\mab_mcp_server.py:1257` (function) [mab_6eca5cd0f4a7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\wiki_audit_2026-08-11.md:28` (section) [mab_47152b6393d4]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:293` (constant) [mab_63347666758f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:286` (module) [mab_02567c00f38f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:438` (function) [mab_c6758b535b91]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:1` (module) [mab_f9114dba5b7e]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:69` (function) [mab_43a31240a695]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:97` (function) [mab_3479be45707f]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:113` (function) [mab_a6eb819c8f1a]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:130` (function) [mab_6b7dc9f18f85]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:146` (function) [mab_d01b79918b9e]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:188` (function) [mab_a27aa3e436e1]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:222` (function) [mab_0a9483266461]
 - `MAX_BLOCK_SIZE` (constant, Zeilen 31-31) - MAX_BLOCK_SIZE = 4096
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\mab_mcp_server.py:1257` (function) [mab_6eca5cd0f4a7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\mab_mcp_server.py:1674` (function) [mab_28b1e49f11b8]
@@ -2757,17 +2760,17 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_model_edge_cases.py:1` (module) [mab_5faa438889a1]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_model_edge_cases.py:153` (class) [mab_84c68a74e066]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\test_strategy.md:151` (section) [mab_598cbd14643c]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:379` (section) [mab_43cb26f9140e]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:243` (section) [mab_cc083358bdf1]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\inference_worker.py:465` (module) [mab_ce3eeebf91d0]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\projektwissen.md:244` (section) [mab_ceb77969ee51]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:22` (constant) [mab_482ca523c487]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:1` (module) [mab_73830bb5d42d]
 - `FILE_MAP_ALL_ACCESS` (constant, Zeilen 34-34) - FILE_MAP_ALL_ACCESS = 0x00F001F
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\wiki_audit_2026-08-11.md:28` (section) [mab_47152b6393d4]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:59` (function) [mab_a04ee96f88c7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\inference_worker.py:48` (constant) [mab_5f42b8f3f4c5]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\inference_worker.py:126` (class) [mab_af3e72ab5cd9]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\inference_worker.py:222` (method) [mab_641a5dcc9c70]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:537` (function) [mab_1a802ac35a82]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\source\projects\mab_tilde\mab_tilde.cpp:551` (function) [mab_044b231c1804]
 - `PAGE_READWRITE` (constant, Zeilen 35-35) - PAGE_READWRITE = 0x01
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\wiki_audit_2026-08-11.md:28` (section) [mab_47152b6393d4]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:59` (function) [mab_a04ee96f88c7]
@@ -2885,19 +2888,17 @@ Symbole:
 
 Symbole:
 - `SharedMemoryHeader` (class, Zeilen 9-31) - struct SharedMemoryHeader {
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:38` (section) [mab_1d6aebbb3abe]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:12` (class) [mab_8a1b5e451830]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:44` (class) [mab_3518c375a1fb]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:14` (class) [mab_7c28c9e004d5]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:59` (function) [mab_a04ee96f88c7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:174` (function) [mab_1217cd25cc2b]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:239` (class) [mab_841c08b6c11f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:286` (module) [mab_02567c00f38f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:299` (function) [mab_a62ab3f23c69]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:524` (function) [mab_3505d877152d]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:1` (module) [mab_f9114dba5b7e]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:30` (class) [mab_ea2f0c2cf7c7]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:53` (module) [mab_a780856d383c]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:57` (class) [mab_4ece0a797b10]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:367` (function) [mab_1e74251ac998]
 - `main` (function, Zeilen 33-85) - int main()
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:44` (section) [mab_f1edca6be051]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:123` (section) [mab_c854df190207]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:115` (section) [mab_b15d84b8687f]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:155` (section) [mab_0e9c390f4881]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:159` (section) [mab_d6ce2984dbf5]
@@ -2906,6 +2907,8 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_audio_quality.py:361` (module) [mab_d65c5d61ece7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_accumulator.cpp:152` (function) [mab_83aa65d50791]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:180` (function) [mab_9a853679dfa4]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:250` (function) [mab_fad81e309558]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_infer_all_models.py:236` (module) [mab_ce1ad5c8c05e]
 
 ## C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_shared_memory_header_compatibility.cpp
 
@@ -2914,25 +2917,23 @@ Symbole:
 
 Symbole:
 - `SharedMemoryHeader` (class, Zeilen 16-38) - struct SharedMemoryHeader {
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:38` (section) [mab_1d6aebbb3abe]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:12` (class) [mab_8a1b5e451830]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:44` (class) [mab_3518c375a1fb]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:14` (class) [mab_7c28c9e004d5]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:59` (function) [mab_a04ee96f88c7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:174` (function) [mab_1217cd25cc2b]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:239` (class) [mab_841c08b6c11f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:286` (module) [mab_02567c00f38f]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:299` (function) [mab_a62ab3f23c69]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_init_worker_thread_comprehensive.cpp:524` (function) [mab_3505d877152d]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:1` (module) [mab_f9114dba5b7e]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:30` (class) [mab_ea2f0c2cf7c7]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:53` (module) [mab_a780856d383c]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:57` (class) [mab_4ece0a797b10]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_mcs_mab_tilde.cpp:367` (function) [mab_1e74251ac998]
 - `test_field_offsets` (function, Zeilen 42-117) - void test_field_offsets()
 - `test_struct_size` (function, Zeilen 120-134) - void test_struct_size()
 - `test_header_usage` (function, Zeilen 137-184) - void test_header_usage()
 - `test_buffer_offsets` (function, Zeilen 187-217) - void test_buffer_offsets()
 - `test_multichannel_layout` (function, Zeilen 220-245) - void test_multichannel_layout()
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:60` (section) [mab_2ed8f254f455]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:118` (section) [mab_0862f74eaaa5]
 - `main` (function, Zeilen 247-267) - int main()
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:44` (section) [mab_f1edca6be051]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:123` (section) [mab_c854df190207]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:115` (section) [mab_b15d84b8687f]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:155` (section) [mab_0e9c390f4881]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:159` (section) [mab_d6ce2984dbf5]
@@ -2941,6 +2942,8 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_audio_quality.py:361` (module) [mab_d65c5d61ece7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_accumulator.cpp:152` (function) [mab_83aa65d50791]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:180` (function) [mab_9a853679dfa4]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:250` (function) [mab_fad81e309558]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_infer_all_models.py:236` (module) [mab_ce1ad5c8c05e]
 
 ## C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_shared_memory_v2.py
 
@@ -2971,7 +2974,7 @@ Symbole:
 - `TestApplyMethod.test_unknown_method_is_noop` (method, Zeilen 117-123) - def test_unknown_method_is_noop(self)
 - `TestApplyMethod.test_no_params_is_noop` (method, Zeilen 125-128) - def test_no_params_is_noop(self)
 - `TestRingBlockStrideBug12` (class, Zeilen 131-189) - class TestRingBlockStrideBug12(unittest.TestCase) - Bug 12 regression: the ring-block byte stride (spacing between
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:60` (section) [mab_2ed8f254f455]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\checklist.md:118` (section) [mab_0862f74eaaa5]
 - `TestRingBlockStrideBug12.test_output_stride_uses_max_not_active_channels` (method, Zeilen 148-171) - def test_output_stride_uses_max_not_active_channels(self)
 - `TestRingBlockStrideBug12.test_input_stride_uses_max_not_active_channels` (method, Zeilen 173-189) - def test_input_stride_uses_max_not_active_channels(self)
 - `TestChannelMapPhase5` (class, Zeilen 192-215) - class TestChannelMapPhase5(unittest.TestCase) - Phase 5: mc.mab~ publishes per-inlet channel counts in the header.
@@ -2988,8 +2991,6 @@ Symbole:
 Symbole:
 - `read_all` (function, Zeilen 20-27) - static bool read_all(HANDLE pipe, std::string* out)
 - `main` (function, Zeilen 29-154) - int main()
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:44` (section) [mab_f1edca6be051]
-  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\mab_dev_architecture.md:123` (section) [mab_c854df190207]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:115` (section) [mab_b15d84b8687f]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:155` (section) [mab_0e9c390f4881]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\doc\toolchain.md:159` (section) [mab_d6ce2984dbf5]
@@ -2998,4 +2999,6 @@ Symbole:
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_audio_quality.py:361` (module) [mab_d65c5d61ece7]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_block_accumulator.cpp:152` (function) [mab_83aa65d50791]
   - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_crash_monitoring.cpp:180` (function) [mab_9a853679dfa4]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_handshake_integration.cpp:250` (function) [mab_fad81e309558]
+  - *used by* `C:\Users\marku\Documents\GitHub\artqcid\ai-projects\mab_tilde\test\test_infer_all_models.py:236` (module) [mab_ce1ad5c8c05e]
 
