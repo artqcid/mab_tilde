@@ -77,6 +77,7 @@ typedef struct _mab_tilde {
     t_pxobject ob;
     long is_ready;           // 1 = Python is connected & ready
     long is_bypass;          // 1 = bypass audio processing
+    uint32_t instance_id;    // FR5: per-object unique ID for SHM/event naming (obj pointer)
     
     // Threading & Process
     std::thread* init_thread;
@@ -474,19 +475,27 @@ void mab_tilde_apply_io(t_mab_tilde* x) {
     if (model_in > MAX_CHANNELS) model_in = MAX_CHANNELS;
     if (model_out > MAX_CHANNELS) model_out = MAX_CHANNELS;
 
+    long old_channels_in = x->channels_in;
+    long old_channels_out = x->channels_out;
+    bool layout_changed = (old_channels_in != model_in ||
+                           old_channels_out != model_out ||
+                           strcmp(x->active_method, x->header->method) != 0);
+
     x->channels_in = model_in;
     x->channels_out = model_out;
     strncpy(x->active_method, x->header->method, sizeof(x->active_method) - 1);
     x->active_method[sizeof(x->active_method) - 1] = '\0';
     x->active_method_id = x->header->method_id;
 
-    // Block-Geometrie hat sich geändert: Teilblöcke der alten Methode
-    // verwerfen (verhindert versetzte Frames nach einem Methoden-/Modell-Wechsel).
-    x->in_pos = 0;
-    x->out_pos = 0;
-    // v4: Ausstehende Output-Ringblöcke der alten Methode sind stale - wieder
-    // primen (drain_block=-1) bis Python neue Blöcke schreibt.
-    x->drain_block = -1;
+    if (layout_changed) {
+        // Block-Geometrie hat sich geändert: Teilblöcke der alten Methode
+        // verwerfen (verhindert versetzte Frames nach einem Methoden-/Modell-Wechsel).
+        x->in_pos = 0;
+        x->out_pos = 0;
+        // v4: Ausstehende Output-Ringblöcke der alten Methode sind stale - wieder
+        // primen (drain_block=-1) bis Python neue Blöcke schreibt.
+        x->drain_block = -1;
+    }
 
     // Phase 5/6: mc.mab~ hat IMMER genau 1 Multichannel-Inlet + 1 Multichannel-
     // Outlet; mcs.mab~ hat `mcs_batches` Multichannel-Inlets/-Outlets (eines pro
@@ -501,9 +510,14 @@ void mab_tilde_apply_io(t_mab_tilde* x) {
     if (io_in == x->last_io_in && io_out == x->last_io_out) {
         x->method_pending = 0;
         InterlockedExchange(&x->is_bypass, 0);
-        const char* prefix = mab_tilde_prefix(x);
-        post("%s: IO layout unchanged (%ld in / %ld out, method=%s)",
-             prefix, io_in, io_out, x->active_method);
+        // Only log if something actually changed (suppress noise for mc.mab~
+        // whose MC in/out count is always 1).
+        if (layout_changed) {
+            const char* prefix = mab_tilde_prefix(x);
+            post("%s: method layout changed (%ld in → %ld, %ld out → %ld, method=%s)",
+                 prefix, old_channels_in, model_in,
+                 old_channels_out, model_out, x->active_method);
+        }
         return;
     }
     {
@@ -535,8 +549,10 @@ void mab_tilde_apply_io(t_mab_tilde* x) {
 // ============================================================================
 
 extern "C" void init_worker(t_mab_tilde* x) {
-    // Generate unique instance ID from process ID
-    unsigned int instance_id = GetCurrentProcessId();
+    // FR5: per-object unique instance ID (obj pointer). Replaces the old
+    // GetCurrentProcessId(), which collided for multiple objects in the same
+    // Max process (same PID -> same SHM/event names -> corrupt IPC).
+    unsigned int instance_id = x->instance_id;
     
     wchar_t event_name[128];
     wchar_t shm_name[128];
@@ -954,6 +970,10 @@ void* mc_mab_tilde_new(t_symbol* s, long argc, t_atom* argv) {
     t_mab_tilde* x = (t_mab_tilde*)object_alloc(mc_mab_tilde_class);
     if (!x) return nullptr;
 
+    // FR5: unique per-object instance ID for SHM/event naming. The heap pointer
+    // is unique per allocation and stable for the object's lifetime.
+    x->instance_id = (uint32_t)((uintptr_t)x);
+
     // Use dsp_setup with 1 inlet initially (will be resized after worker connects)
     dsp_setup((t_pxobject*)x, 1);
     // Phase 5: Multichannel-Fähigkeit aktivieren (Z_MC_INLETS = Kanalzahl der
@@ -1301,6 +1321,9 @@ void mc_mab_tilde_chans(t_mab_tilde* x, long n) {
 void* mcs_mab_tilde_new(t_symbol* s, long argc, t_atom* argv) {
     t_mab_tilde* x = (t_mab_tilde*)object_alloc(mcs_mab_tilde_class);
     if (!x) return nullptr;
+
+    // FR5: unique per-object instance ID for SHM/event naming (obj pointer).
+    x->instance_id = (uint32_t)((uintptr_t)x);
 
     // Phase 6: mcs.mab~ hat `mcs_batches` Multichannel-Inlets/-Outlets.
     // Start mit 1 Inlet/Outlet; apply_io baut nach Worker-Connect um.

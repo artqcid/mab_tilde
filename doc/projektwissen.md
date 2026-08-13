@@ -27,6 +27,7 @@ typedef struct _mab_tilde {
     t_pxobject ob;              // Max MSP Basis-Objekt (DSP)
     long is_ready;              // 1 = Python verbunden & bereit
     long is_bypass;             // 1 = Bypass (kein Audio-Durchsatz)
+    uint32_t instance_id;       // FR5: per-Objekt eindeutige ID für SHM/Event-Namen (= Objekt-Zeiger)
     
     // Threading & Prozess
     std::thread* init_thread;   // Hintergrund-Thread für Worker-Start

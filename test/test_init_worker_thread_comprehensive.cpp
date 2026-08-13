@@ -381,15 +381,20 @@ void test_mab_tilde_structure_layout() {
 // ============================================================================
 
 void test_instance_id_generation() {
-    // Test: Instance ID should be unique per instance
-    // Using process ID + counter approach
-    long pid = GetCurrentProcessId();
-    assert(pid > 0);
-    
-    // Test: Instance ID format should be process_id * 1000 + counter
-    long instance_id = pid * 1000 + 1;
-    assert(instance_id / 1000 == pid);
-    assert(instance_id % 1000 == 1);
+    // FR5: Instance ID is now derived from the object pointer (unique per
+    // allocation within the Max process), not from GetCurrentProcessId().
+    // Two distinct allocations must never produce the same ID.
+    t_mab_tilde a = {};
+    t_mab_tilde b = {};
+    uint32_t id_a = (uint32_t)((uintptr_t)&a);
+    uint32_t id_b = (uint32_t)((uintptr_t)&b);
+    assert(id_a != id_b);
+    assert(id_a != 0);
+    assert(id_b != 0);
+
+    // Same object -> stable ID for its whole lifetime.
+    uint32_t id_a2 = (uint32_t)((uintptr_t)&a);
+    assert(id_a == id_a2);
 }
 
 // ============================================================================

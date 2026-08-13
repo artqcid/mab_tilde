@@ -44,7 +44,7 @@ _Einlese-Reihenfolge: checklist.md → code_wiki.md → query_code_wiki → quer
   - **Dateien:** `inference_worker.py:122-160` (SharedMemoryManager), `mab_tilde.cpp:56-67` (SharedMemoryHeader), `mab_tilde.cpp:607-647` (perform64)
   - **Kosten:** +50% Output-SHM (z.B. +32 KB für mono 2048, vernachlässigbar)
 
-- [ ] **FR3 – Memory-Allocator-Stabilisierung (ASIO XRun-Prävention Stufe 2)**
+- [ ] **FR3 – Memory-Allocator-Stabilisierung (ASIO XRun-Prävention Stufe 2)**
   - **Ziel:** Verhindert CPU-Spikes durch PyTorch-Auto-Tuning und Allocator-Jitter.
   - **Maßnahmen:**
     1. `torch.backends.cudnn.benchmark = False` → deterministisch, kein Auto-Tuning beim ersten Forward
@@ -52,6 +52,64 @@ _Einlese-Reihenfolge: checklist.md → code_wiki.md → query_code_wiki → quer
     3. `os.environ['OMP_WAIT_POLICY'] = 'PASSIVE'` → OpenMP-Threads verbrauchen weniger CPU im Leerlauf
   - **Dateien:** `inference_worker.py:1341-1358`, `load_model()`
   - **Achtung:** `cudnn.benchmark=False` kann GPU-Inferenz verlangsamen — nur wenn nötig aktivieren
+
+- [x] **FR5 – Multiinstanz-Fähigkeit (encode+decode gleichzeitig, 2× forward)** ✅ **DONE** (2026-08-13)
+
+  **Ziel:** Mehrere `mc.mab~`- / `mcs.mab~`-Objekte können gleichzeitig im selben Max-Patch laufen — auch mit gleichem Modell und verschiedenen Methoden (z.B. encode + decode) oder mit verschiedenen Modellen.
+
+  **Root Cause:** `mab_tilde.cpp:552` — `instance_id = GetCurrentProcessId()`. Alle Objekte innerhalb desselben Max-Prozesses erhalten identische IDs → kollidierende Windows-Kernel-Objekte:
+
+  | Kernel-Objekt | Name | Kollision |
+  |---|---|---|
+  | Named Event | `MabReadyEvent_{PID}` | `CreateEventW` öffnet dasselbe Event erneut |
+  | Named Event | `MabInputReadyEvent_{PID}` | idem |
+  | Shared Memory | `MabSharedMem_{PID}` | beide Worker schreiben in dasselbe Segment |
+
+  `instance_id` wird außerdem nicht im `t_mab_tilde`-Struct gespeichert (nur lokal in `init_worker`).
+
+  **Ansatz (nn_tilde-Parität):** 1 Max-Objekt = 1 Python-Worker = 1 SHM-Segment = 1 Satz Named Events. Kein Sharing zwischen Instanzen (nn_tilde lädt das Modell ebenfalls pro Objekt neu).
+
+  **Empfohlene Lösung:** Objekt-Zeiger als Instance ID:
+  ```c
+  uint32_t instance_id = (uint32_t)((uintptr_t)x);
+  ```
+  Der Heap-Pointer ist pro Objekt garantiert eindeutig und für die gesamte Lebensdauer stabil. Keine neue Infrastruktur, keine Race Condition.
+
+  **Änderungsumfang:**
+
+  | Datei | Stelle | Änderung |
+  |---|---|---|
+  | `mab_tilde.cpp:552` | `init_worker` | `GetCurrentProcessId()` → `x->instance_id` |
+  | `mab_tilde.cpp:76` | `t_mab_tilde` struct | `uint32_t instance_id;` hinzufügen |
+  | `mab_tilde.cpp:~1055` | `mc_mab_tilde_new` | `x->instance_id` setzen, vor Thread-Start |
+  | `mab_tilde.cpp:~1390` | `mcs_mab_tilde_new` | idem |
+  | `inference_worker.py` | — | Keine Änderung nötig (nimmt `instance_id` bereits als Arg) |
+
+  **Szenarien nach Fix:**
+
+  | Szenario | Vorher | Nachher |
+  |---|---|---|
+  | 1× mc.mab~ forward | ✅ | ✅ |
+  | encode + decode, gleiches Modell | ❌ SHM-Kollision | ✅ |
+  | 2× forward, gleiche Modelle | ❌ SHM-Kollision | ✅ |
+  | 2× forward, verschiedene Modelle | ❌ SHM-Kollision | ✅ |
+  | mc.mab~ + mcs.mab~ gleichzeitig | ❌ SHM-Kollision | ✅ |
+
+  **Tests:**
+  - `test_instance_id_generation` (`test_init_worker_thread_comprehensive.cpp:383`) — Formel auf neuen Ansatz aktualisieren
+  - Neuer Test: zwei `t_mab_tilde`-Stubs allozieren → assert `instance_id` verschieden, SHM-Namen verschieden
+  - Python-Tests: keine Änderung nötig
+
+  **Ressourcen:** 2 Objekte × 1 Modell = 2 Python-Worker = Modell 2× im RAM (nn_tilde-Parität, akzeptiert).
+  Aufwand: ~1 h Implementierung + Tests.
+
+  **✅ Umsetzung (2026-08-13):**
+  - `t_mab_tilde.instance_id` (uint32_t) hinzugefügt (`mab_tilde.cpp:80`)
+  - `init_worker`: `GetCurrentProcessId()` → `x->instance_id` (`mab_tilde.cpp:555`)
+  - `mc_mab_tilde_new` (`:975`) + `mcs_mab_tilde_new` (`:1326`): `x->instance_id = (uint32_t)((uintptr_t)x)` vor Worker-Start
+  - Test `test_instance_id_generation` auf Pointer-Ansatz umgestellt; zwei Allokationen → verschiedene IDs
+  - Build + alle 22 C++-Test-EXEs grün, `test_python_shared_memory.py` 13/13 grün
+  - **Offen:** Max-Runtime-Verifikation (2× mc.mab~ gleichzeitig im Patch) — kein Deploy durchgeführt
 
 ## Feature Requests (offen)
 

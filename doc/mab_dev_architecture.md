@@ -36,10 +36,11 @@ Python runs in separate process. No PyTorch in Max address space. Benefits:
 - No C++ threading issues (nn_tilde Windows memory leak #24237 avoided)
 
 ### 3.2 Lock-Free IPC
-- Shared memory `MabSharedMem_{PID}` with `SharedMemoryHeader` v2
+- Shared memory `MabSharedMem_{instance_id}` with `SharedMemoryHeader` v4
 - SPSC ring buffer for control messages (head=C++ producer, tail=Python consumer)
 - Named events for signaling (`MabReadyEvent_{instance_id}`, `MabInputReadyEvent_{instance_id}`)
 - Double-buffering for audio blocks during inference overlap
+- FR5: `instance_id` = Objekt-Zeiger (per-Objekt eindeutig, multiinstanzfähig)
 
 ### 3.3 Async Initialization
 `mab_tilde_new` never blocks Max main thread. Worker spawns in detached C++
